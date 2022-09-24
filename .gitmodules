@@ -1,0 +1,3 @@
+[submodule "macos/Classes/mdkSwift"]
+	path = macos/Classes/mdkSwift
+	url = https://github.com/wang-bin/mdkSwift.git

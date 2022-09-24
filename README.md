@@ -5,6 +5,7 @@ Flutter Video Player based on [libmdk](https://github.com/wang-bin/mdk-sdk)
 ## Build
 
 ```
+git submodule update --init
 cd example
 flutter run
 ```
