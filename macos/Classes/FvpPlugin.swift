@@ -83,7 +83,7 @@ public class FvpPlugin: NSObject, FlutterPlugin {
             self.registry.textureFrameAvailable(texId)
         }
 
-        player.media = "/tmp/test.mp4"
+        player.media = "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/level_4.m3u8"
         player.state = .Playing
     }
 

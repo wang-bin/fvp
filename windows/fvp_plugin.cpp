@@ -119,7 +119,7 @@ void FvpPlugin::HandleMethodCall(
           player_.renderVideo();
           texture_registrar_->MarkTextureFrameAvailable(texture_id_);
           });
-      player_.setMedia("D:\\\\v\\Xperia_HLG.mp4");
+      player_.setMedia("https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/level_4.m3u8");
       player_.set(State::Playing);
   }
   else {
