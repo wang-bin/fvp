@@ -23,7 +23,7 @@ class FvpPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
 
-  FvpPlugin(flutter::TextureRegistrar* tr, IDXGIAdapter* adapter);
+  FvpPlugin(flutter::TextureRegistrar* tr, IDXGIAdapter* adapter = nullptr);
 
   virtual ~FvpPlugin();
 

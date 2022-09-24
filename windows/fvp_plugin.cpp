@@ -1,11 +1,5 @@
 #include "fvp_plugin.h"
 
-// This must be included before many other Windows headers.
-#include <windows.h>
-
-// For getPlatformVersion; remove unless needed for your plugin implementation.
-#include <VersionHelpers.h>
-
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
@@ -37,8 +31,11 @@ void FvpPlugin::RegisterWithRegistrar(
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           registrar->messenger(), "fvp",
           &flutter::StandardMethodCodec::GetInstance());
-  // TODO: check version GetGraphicsAdapter()
-  auto plugin = std::make_unique<FvpPlugin>(registrar->texture_registrar(), registrar->GetView()->GetGraphicsAdapter());
+  auto plugin = std::make_unique<FvpPlugin>(registrar->texture_registrar()
+#ifdef VIEW_HAS_GetGraphicsAdapter
+      , registrar->GetView()->GetGraphicsAdapter()
+#endif
+      );
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
@@ -58,21 +55,8 @@ FvpPlugin::~FvpPlugin() {}
 void FvpPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (method_call.method_name().compare("getPlatformVersion") == 0) {
-    std::ostringstream version_stream;
-    version_stream << "Windows ";
-    if (IsWindows10OrGreater()) {
-      version_stream << "10+";
-    } else if (IsWindows8OrGreater()) {
-      version_stream << "8";
-    } else if (IsWindows7OrGreater()) {
-      version_stream << "7";
-    }
-    result->Success(flutter::EncodableValue(version_stream.str()));
-  }
-  else if (method_call.method_name() == "CreateRT") {
-      MS_WARN(D3D11CreateDevice(adapter_.Get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &dev_, nullptr, &ctx_));
-      //MS_WARN(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &dev_, nullptr, &ctx_));
+  if (method_call.method_name() == "CreateRT") {
+      MS_WARN(D3D11CreateDevice(adapter_.Get(), adapter_ ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &dev_, nullptr, &ctx_));
       if (!dev_) {
           result->Error("device", "create device failed");
           return;
@@ -125,7 +109,7 @@ void FvpPlugin::HandleMethodCall(
       result->Success(flutter::EncodableValue(texture_id_));
 
       player_.setLoop(-1);
-      player_.setDecoders(MediaType::Video, { "MFT:d3d=11", "FFmpeg" });
+      player_.setDecoders(MediaType::Video, { "MFT:d3d=11", "D3D11", "FFmpeg" });
       D3D11RenderAPI ra{};
       ra.rtv = tex_.Get();
       player_.setRenderAPI(&ra);
@@ -135,7 +119,7 @@ void FvpPlugin::HandleMethodCall(
           player_.renderVideo();
           texture_registrar_->MarkTextureFrameAvailable(texture_id_);
           });
-      player_.setMedia("D:\\\\ibingow\\v\\Xperia_HLG.mp4");
+      player_.setMedia("D:\\\\v\\Xperia_HLG.mp4");
       player_.set(State::Playing);
   }
   else {

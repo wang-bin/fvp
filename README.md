@@ -1,8 +1,11 @@
 # fvp
 
-Flutter Video Player based on [libmdk](https://github.com/wang-bin/mdk-sdk)
+Flutter Video Player example based on [libmdk](https://github.com/wang-bin/mdk-sdk). Accelerated by D3D11/Metal without cpu copy.
 
 ## Build
+
+- Windows: download [libmdk sdk](https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-windows-desktop-vs2022.7z/download) and extract in `windows` dir
+- macOS: the [latest sdk](https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-apple.zip/download) will be downloaded by cocoapods
 
 ```
 git submodule update --init
