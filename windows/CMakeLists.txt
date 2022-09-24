@@ -65,6 +65,23 @@ if(VIEW_HAS_GetGraphicsAdapter)
   target_compile_definitions(${PLUGIN_NAME} PRIVATE VIEW_HAS_GetGraphicsAdapter=1)
 endif()
 
+set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-windows-desktop-vs2022.7z")
+set(MDK_SDK_SAVE ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk-windows-desktop-vs2022.7z)
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
+  if(NOT EXISTS ${MDK_SDK_SAVE})
+    message("Downloading mdk-sdk from ${MDK_SDK_URL}")
+    file(DOWNLOAD ${MDK_SDK_URL} ${MDK_SDK_SAVE} SHOW_PROGRESS)
+  endif()
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E tar "xvf" ${MDK_SDK_SAVE} "--format=7zip"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE EXTRACT_RET
+  )
+  if(NOT EXTRACT_RET EQUAL 0)
+    message(FATAL_ERROR "Failed to extract mdk-sdk. You can download manually from ${MDK_SDK_URL} and extract to ${CMAKE_CURRENT_SOURCE_DIR}")
+  endif()
+endif()
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
