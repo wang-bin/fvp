@@ -49,7 +49,7 @@ class FvpPlugin : public flutter::Plugin {
   ComPtr<IDXGIAdapter> adapter_;
   HANDLE shared_handle_;
 
-  Player player_;
+  std::unique_ptr<Player> player_;
 };
 
 }  // namespace fvp

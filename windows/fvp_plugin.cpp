@@ -79,10 +79,6 @@ void FvpPlugin::HandleMethodCall(
           result->Success();
           return;
       }
-      ComPtr<ID3D11RenderTargetView> rtv;
-      dev_->CreateRenderTargetView(tex_.Get(), nullptr, &rtv);
-      const float c[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-      ctx_->ClearRenderTargetView(rtv.Get(), c);
 
       ComPtr<IDXGIResource> res;
       MS_WARN(tex_.As(&res));
@@ -108,19 +104,17 @@ void FvpPlugin::HandleMethodCall(
       texture_id_ = texture_registrar_->RegisterTexture(fltex_.get());
       result->Success(flutter::EncodableValue(texture_id_));
 
-      player_.setLoop(-1);
-      player_.setDecoders(MediaType::Video, { "MFT:d3d=11", "D3D11", "FFmpeg" });
-      D3D11RenderAPI ra{};
-      ra.rtv = tex_.Get();
-      player_.setRenderAPI(&ra);
-      player_.setVideoSurfaceSize(desc.Width, desc.Height);
-      player_.setBackgroundColor(1, 0, 0, 1);
-      player_.setRenderCallback([&](void*) {
-          player_.renderVideo();
-          texture_registrar_->MarkTextureFrameAvailable(texture_id_);
-          });
-      player_.setMedia("https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/level_4.m3u8");
-      player_.set(State::Playing);
+        auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
+        const auto handle = args[flutter::EncodableValue("player")].LongValue();
+        player_ = make_unique<Player>(reinterpret_cast<mdkPlayerAPI*>(handle));
+        D3D11RenderAPI ra{};
+        ra.rtv = tex_.Get();
+        player_->setRenderAPI(&ra);
+        player_->setVideoSurfaceSize(desc.Width, desc.Height);
+        player_->setRenderCallback([&](void*) {
+            player_->renderVideo();
+            texture_registrar_->MarkTextureFrameAvailable(texture_id_);
+        });
   }
   else {
     result->NotImplemented();

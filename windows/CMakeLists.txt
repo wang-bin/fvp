@@ -87,7 +87,7 @@ endif()
 # external build triggered from this build file.
 set(fvp_bundled_libraries
     ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/bin/x64/mdk.dll
-    ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/bin/x64/ffmpeg-5.dll
+    ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/bin/x64/ffmpeg-6.dll
   PARENT_SCOPE
 )
 
