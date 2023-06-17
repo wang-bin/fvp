@@ -1,0 +1,51 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    //"runner": "terminal",
+    "command": "flutter",
+    //"isShellCommand": true,
+    "options": {
+        "env":{
+            "NINJA_STATUS": "[%f/%t %e %r %s]"
+        }
+    },
+    "tasks": [
+        {
+            "label": "Run Debug",
+            "args": [
+                "run",
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/example",
+                "env": {
+                    "MDK_CLOG": 1,
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build",
+            "args": [
+                "build",
+                "macos"
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/example",
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "ffigen",
+            "command": "dart",
+            "args": [
+                "run",
+                "ffigen",
+            ]
+        }
+    ],
+}

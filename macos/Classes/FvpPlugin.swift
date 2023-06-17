@@ -11,10 +11,20 @@ fileprivate class FvpRenderer: NSObject, FlutterTexture {
     private var pixbuf : CVPixelBuffer!
     private var texCache : CVMetalTextureCache!
     private var player : Player!
+    private var registry: FlutterTextureRegistry
+    var textureId: Int64 = 0
 
-    init(player: Player) {
+    init(player: Player, textureRegistry: FlutterTextureRegistry) {
+        registry = textureRegistry
         super.init()
         self.player = player
+        self.textureId = registry.register(self)
+
+        self.player.setRenderCallback { [weak self] in
+            guard let self = self else { return }
+            _ = self.player.renderVideo()
+            self.registry.textureFrameAvailable(self.textureId)
+        }
 
         device = MTLCreateSystemDefaultDevice()
         cmdQueue = device.makeCommandQueue()
@@ -51,40 +61,18 @@ fileprivate class FvpRenderer: NSObject, FlutterTexture {
         ra.device = bridge(obj: device)
         ra.cmdQueue = bridge(obj: cmdQueue)
         ra.texture = bridge(obj: texture)
-        player.setRendAPI(&ra)
+        player.setRenderAPI(&ra)
         player.setVideoSurfaceSize(Int32(width), Int32(height)) // enable renderer
     }
 
 }
 
 public class FvpPlugin: NSObject, FlutterPlugin {
-    private let player = Player()
-    var textureId: Int64?;
     private var registry: FlutterTextureRegistry;
 
     init(textureRegistry: FlutterTextureRegistry) {
         registry = textureRegistry;
         super.init()
-
-        player.loop = -1
-        player.videoDecoders = ["VT:copy=0", "FFmpeg"]
-        player.currentMediaChanged({
-            print("++++++++++currentMediaChanged: \(self.player.media)+++++++")
-        })
-        player.onMediaStatusChanged {
-            print(".....Status changed to \($0)....")
-            return true
-        }
-
-        player.setRenderCallback { [weak self] in
-            guard let self = self else { return }
-            guard let texId = self.textureId else {return}
-            _ = self.player.renderVideo()
-            self.registry.textureFrameAvailable(texId)
-        }
-
-        player.media = "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/level_4.m3u8"
-        player.state = .Playing
     }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -96,9 +84,11 @@ public class FvpPlugin: NSObject, FlutterPlugin {
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "CreateRT":
-        let render = FvpRenderer(player: player)
-        textureId = registry.register(render)
-        result(textureId)
+        let args = call.arguments as! [String: Any]
+        let handle = args["player"] as! Int64
+        let player = Player(UnsafePointer<mdkPlayerAPI>(OpaquePointer(bitPattern: Int(handle))))
+        let render = FvpRenderer(player: player, textureRegistry: registry)
+        result(render.textureId)
     default:
       result(FlutterMethodNotImplemented)
     }

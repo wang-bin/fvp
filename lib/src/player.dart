@@ -6,6 +6,7 @@ import 'package:fvp/src/generated_bindings.dart';
 
 import 'global.dart';
 import 'lib.dart';
+import 'extensions.dart';
 
 class Player {
 
@@ -93,15 +94,11 @@ class Player {
       _vdec = value;
     default:
     }
-    final u8l = value.map((e) => e.toNativeUtf8()).toList();
-    final Pointer<Pointer<Utf8>> u8p = malloc.allocate(value.length * sizeOf<Pointer<Utf8>>());
-    for (int i = 0; i < value.length; ++i) {
-      u8p[i] = u8l[i];
-    }
-    //final Pointer<Pointer<Utf8>> u8p = calloc<Pointer<Utf8>>(value.length);
+
+    final u8p = value.toCZ();
     _player.ref.setDecoders.asFunction<void Function(Pointer<mdkPlayer>, int, Pointer<Pointer<Char>>)>()(_player.ref.object, type.rawValue, u8p.cast());
     malloc.free(u8p);
-    u8l.forEach(malloc.free);
+    //u8p.free();
   }
 
   void setActiveTracks(MediaType type, List<int> value) {
@@ -114,12 +111,12 @@ class Player {
       _activeST = value;
     default:
     }
-    final Pointer<Int> ca = malloc.allocate(value.length * sizeOf<Int>());
+    final ca = calloc.allocate<Int>(value.length);
     for (int i = 0; i < value.length; ++i) {
       ca[i] = value[i];
     }
     _player.ref.setActiveTracks.asFunction<void Function(Pointer<mdkPlayer>, int, Pointer<Int>, int)>()(_player.ref.object, type.rawValue, ca.cast(), value.length);
-    malloc.free(ca);
+    calloc.free(ca);
   }
 
   void setMedia(String uri, MediaType type) {
@@ -209,12 +206,12 @@ class Player {
   void setBackground(Color c, {Object? vid}) => _player.ref.setBackgroundColor.asFunction<void Function(Pointer<mdkPlayer>, double, double, double, double, Pointer<Void>)>()(_player.ref.object, c.red/255, c.green/255, c.blue/255, c.alpha/255, Pointer.fromAddress(vid.hashCode));
 
   void setVideoEffect(VideoEffect effect, List<double> value, {Object? vid}) {
-    final Pointer<Float> cv = malloc.allocate(value.length * sizeOf<Float>());
+    final cv = calloc.allocate<Float>(value.length);
     for (int i = 0; i < value.length; ++i) {
       cv[i] = value[i];
     }
     _player.ref.setVideoEffect.asFunction<void Function(Pointer<mdkPlayer>, int, Pointer<Float>, Pointer<Void>)>()(_player.ref.object, effect.rawValue, cv.cast(), Pointer.fromAddress(vid.hashCode));
-    malloc.free(cv);
+    calloc.free(cv);
   }
 
   void setColorSpace(ColorSpace value, {Object? vid}) => _player.ref.setColorSpace.asFunction<void Function(Pointer<mdkPlayer>, int, Pointer<Void>)>()(_player.ref.object, value.rawValue, Pointer.fromAddress(vid.hashCode));

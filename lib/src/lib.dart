@@ -4,20 +4,20 @@ import 'generated_bindings.dart';
 
 abstract class Libmdk {
   static DynamicLibrary _load() {
-    const name = {
-      'windows': 'mdk.dll',
-      'macos': 'mdk.framework/mdk',
-      'ios': 'mdk.framework/mdk',
-      'linux': 'libmdk.so.0',
-      'android': 'libmdk.so',
-    };
-    if (!name.containsKey(Platform.operatingSystem)) {
-      throw Exception(
-        'Unsupported operating system: ${Platform.operatingSystem}.',
-      );
+    String name;
+    switch (Platform.operatingSystem) {
+      case 'windows': name = 'mdk.dll';
+      case 'macos': name = 'mdk.framework/mdk';
+      case 'ios': name = 'mdk.framework/mdk';
+      case 'linux': name ='libmdk.so.0';
+      case 'android': name = 'libmdk.so';
+      default:
+        throw Exception(
+          'Unsupported operating system: ${Platform.operatingSystem}.',
+        );
     }
     try {
-      return DynamicLibrary.open(name[Platform.operatingSystem]!);
+      return DynamicLibrary.open(name);
     } catch(e) {
       rethrow;
     }

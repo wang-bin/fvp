@@ -18,6 +18,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final _fvpPlugin = Fvp();
   int? _textureId;
+  String? _mdkVersion;
 
   @override
   void initState() {
@@ -33,8 +34,10 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     int textureId = await _fvpPlugin.createTexture();
+    int v = _fvpPlugin.getMdkVersion();
+    _mdkVersion = '${(v >> 16) & 0xff}.${(v >> 8) & 0xff}.${v & 0xff}';
 
-    print('textureId: $_textureId');
+    print('textureId: $_textureId. mdk: $_mdkVersion');
     setState(() {
       _textureId = textureId;
     });
@@ -46,7 +49,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Flutter Video Player based on libmdk. textureId: $_textureId'),
+          title: Text('Flutter Video Player based on libmdk$_mdkVersion. textureId: $_textureId'),
         ),
         body: Center(
           child: AspectRatio(
