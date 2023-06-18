@@ -9,10 +9,11 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
 A new Flutter plugin project.
                        DESC
-  s.homepage         = 'https:/qtav.org'
+  s.homepage         = 'https://qtav.org'
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Wang Bin' => 'wbsecg1@gmail.com' }
 
+#  s.compiler_flags   = '-Wdocumentation'
   s.source           = { :path => '.' }
   s.source_files     = 'Classes/**/*'
   s.ios.dependency 'Flutter'

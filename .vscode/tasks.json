@@ -4,7 +4,7 @@
     "version": "2.0.0",
     //"runner": "terminal",
     "command": "flutter",
-    //"isShellCommand": true,
+    "isShellCommand": true, // use "type": "shell" in task
     "options": {
         "env":{
             "NINJA_STATUS": "[%f/%t %e %r %s]"
@@ -13,6 +13,7 @@
     "tasks": [
         {
             "label": "Run Debug",
+            //"type": "shell",
             "args": [
                 "run",
             ],
@@ -28,10 +29,11 @@
             "label": "Build",
             "args": [
                 "build",
-                "macos"
+                "macos",
+                //"--verbose"
             ],
             "options": {
-                "cwd": "${workspaceRoot}/example",
+                "cwd": "${workspaceRoot}/example"
             },
             "group": {
                 "kind": "build",
@@ -40,12 +42,13 @@
             "problemMatcher": []
         },
         {
-            "label": "ffigen",
+            "label": "FFIGen",
             "command": "dart",
             "args": [
                 "run",
-                "ffigen",
-            ]
+                "ffigen"
+            ],
+            "problemMatcher": []
         }
     ],
 }

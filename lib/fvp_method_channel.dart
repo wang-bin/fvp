@@ -23,4 +23,11 @@ class MethodChannelFvp extends FvpPlatform {
     return tex;
   }
 
+  @override
+  Future<void> releaseTexture(int playerHandle, int textureId) async {
+    await methodChannel.invokeMethod('ReleaseRT', {
+      "player": playerHandle,
+      "texture": textureId,
+    });
+  }
 }
