@@ -1,5 +1,8 @@
-import Cocoa
+#if canImport(Flutter)
+import Flutter
+#else
 import FlutterMacOS
+#endif
 import Metal
 import CoreVideo
 import mdk
@@ -30,6 +33,11 @@ fileprivate class FvpRenderer: NSObject, FlutterTexture {
         cmdQueue = device.makeCommandQueue()
         CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device!, nil, &texCache)
         createTexture(width:1920, height:1080)
+    }
+
+    deinit {
+        print("FvpRenderer.deinit")
+        player.setVideoSurfaceSize(Int32(-1), Int32(-1))
     }
 
     func copyPixelBuffer() -> Unmanaged<CVPixelBuffer>? {
@@ -70,14 +78,23 @@ fileprivate class FvpRenderer: NSObject, FlutterTexture {
 public class FvpPlugin: NSObject, FlutterPlugin {
     private var registry: FlutterTextureRegistry;
 
+    private var renderers: [Int64: FvpRenderer] = [:];
+
     init(textureRegistry: FlutterTextureRegistry) {
         registry = textureRegistry;
         super.init()
     }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "fvp", binaryMessenger: registrar.messenger)
-      let instance = FvpPlugin(textureRegistry: registrar.textures)
+#if canImport(Flutter)
+    let binaryMessenger = registrar.messenger()
+    let textureRegistry = registrar.textures()
+#else
+    let binaryMessenger = registrar.messenger
+    let textureRegistry = registrar.textures
+#endif
+    let channel = FlutterMethodChannel(name: "fvp", binaryMessenger: binaryMessenger)
+    let instance = FvpPlugin(textureRegistry: textureRegistry)
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 
@@ -88,7 +105,13 @@ public class FvpPlugin: NSObject, FlutterPlugin {
         let handle = args["player"] as! Int64
         let player = Player(UnsafePointer<mdkPlayerAPI>(OpaquePointer(bitPattern: Int(handle))))
         let render = FvpRenderer(player: player, textureRegistry: registry)
+        renderers[render.textureId] = render
         result(render.textureId)
+    case "ReleaseRT":
+        let args = call.arguments as! [String: Any]
+        let tex = args["texture"] as! Int64
+        renderers.removeValue(forKey: tex)
+        result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }

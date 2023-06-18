@@ -75,10 +75,12 @@ flutter:
         pluginClass: FvpPlugin
       ios:
         pluginClass: FvpPlugin
+        sharedDarwinSource: true
       linux:
         pluginClass: FvpPlugin
       macos:
         pluginClass: FvpPlugin
+        sharedDarwinSource: true
       windows:
         pluginClass: FvpPluginCApi
 
