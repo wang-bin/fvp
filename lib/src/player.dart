@@ -97,8 +97,7 @@ class Player {
 
     final u8p = value.toCZ();
     _player.ref.setDecoders.asFunction<void Function(Pointer<mdkPlayer>, int, Pointer<Pointer<Char>>)>()(_player.ref.object, type.rawValue, u8p.cast());
-    malloc.free(u8p);
-    //u8p.free();
+    u8p.free();
   }
 
   void setActiveTracks(MediaType type, List<int> value) {
@@ -111,7 +110,7 @@ class Player {
       _activeST = value;
     default:
     }
-    final ca = calloc.allocate<Int>(value.length);
+    final ca = calloc<Int>(value.length);
     for (int i = 0; i < value.length; ++i) {
       ca[i] = value[i];
     }
@@ -206,7 +205,7 @@ class Player {
   void setBackground(Color c, {Object? vid}) => _player.ref.setBackgroundColor.asFunction<void Function(Pointer<mdkPlayer>, double, double, double, double, Pointer<Void>)>()(_player.ref.object, c.red/255, c.green/255, c.blue/255, c.alpha/255, Pointer.fromAddress(vid.hashCode));
 
   void setVideoEffect(VideoEffect effect, List<double> value, {Object? vid}) {
-    final cv = calloc.allocate<Float>(value.length);
+    final cv = calloc<Float>(value.length);
     for (int i = 0; i < value.length; ++i) {
       cv[i] = value[i];
     }
