@@ -1,66 +1,75 @@
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// This file is used to extract code samples for the README.md file.
+// Run update-excerpts if you modify this file.
+
+// ignore_for_file: library_private_types_in_public_api, public_member_api_docs
+
+// #docregion basic-example
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:video_player/video_player.dart';
+import 'package:fvp/video_player_mdk.dart';
 
-import 'package:flutter/services.dart';
-import 'package:fvp/fvp.dart';
+void main() => runApp(const VideoApp());
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+/// Stateful widget to fetch and then display video content.
+class VideoApp extends StatefulWidget {
+  const VideoApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  _VideoAppState createState() => _VideoAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  final _fvpPlugin = Fvp();
-  int? _textureId;
-  String? _mdkVersion;
+class _VideoAppState extends State<VideoApp> {
+  late VideoPlayerController _controller;
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    int textureId = await _fvpPlugin.createTexture();
-    int v = _fvpPlugin.getMdkVersion();
-    _mdkVersion = '${(v >> 16) & 0xff}.${(v >> 8) & 0xff}.${v & 0xff}';
-
-    print('textureId: $_textureId. mdk: $_mdkVersion');
-    setState(() {
-      _textureId = textureId;
-    });
+    MdkVideoPlayer.registerWith();
+    _controller = VideoPlayerController.network(
+        'https://live.nodemedia.cn:8443/live/b480_265.flv')
+      ..initialize().then((_) {
+        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+        setState(() {});
+      });
   }
 
   @override
   Widget build(BuildContext context) {
-    print('build textureId: $_textureId');
     return MaterialApp(
+      title: 'Video Demo',
       home: Scaffold(
-        appBar: AppBar(
-          title: Text('Flutter Video Player based on libmdk$_mdkVersion. textureId: $_textureId'),
-        ),
         body: Center(
-          child: AspectRatio(
-            aspectRatio: 16.0/9.0,
-            child: _textureId == null ? null : Texture(
-                  textureId: _textureId!,
-                  filterQuality: FilterQuality.high,
-                ),
-          )
+          child: _controller.value.isInitialized
+              ? AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                )
+              : Container(),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              _controller.value.isPlaying
+                  ? _controller.pause()
+                  : _controller.play();
+            });
+          },
+          child: Icon(
+            _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+          ),
         ),
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
 }
+// #enddocregion basic-example

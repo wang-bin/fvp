@@ -143,6 +143,13 @@ class Player {
     return MediaInfo.from(_mediaInfoC);
   }
 
+  void prepare({int position = 0, SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags)}) {
+    final cb = calloc<mdkPrepareCallback>();
+    //cb.ref.cb =
+    _player.ref.prepare.asFunction<void Function(Pointer<mdkPlayer>, int, mdkPrepareCallback, int)>()(_player.ref.object, position, cb.ref, flags.rawValue);
+    calloc.free(cb);
+  }
+
   void setDecoders(MediaType type, List<String> value) {
     switch (type) {
     case MediaType.audio:
@@ -192,6 +199,7 @@ class Player {
   bool seek({required int position, SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags), void Function(int)? callback}) {
     final cb = calloc<mdkSeekCallback>();
     //cb.ref.cb =
+    // FIXME: seek flags seems not work
     final ret =_player.ref.seekWithFlags.asFunction<bool Function(Pointer<mdkPlayer>, int, int, mdkSeekCallback)>()(_player.ref.object, position, flags.rawValue, cb.ref);
     calloc.free(cb);
     return ret;

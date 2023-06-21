@@ -1,8 +1,7 @@
 # fvp
 
-Flutter Video Player example based on [libmdk](https://github.com/wang-bin/mdk-sdk). Accelerated by D3D11/Metal without cpu copy.
+[Flutter Video Player](https://pub.dev/packages/video_player) **Plugin** based on [libmdk](https://github.com/wang-bin/mdk-sdk). Accelerated by D3D11/Metal without cpu copy. Will support all mobile and desktop platforms.
 
-It's still under development. You can change your video via `player.media = ` in [lib/fvp.dart](lib/fvp.dart)
 
 ## Build
 
@@ -15,10 +14,16 @@ cd example
 flutter run
 ```
 
+## How to Use
+Add 2 lines in your video_player examples
+- `import 'package:fvp/video_player_mdk.dart';`
+- `MdkVideoPlayer.registerWith();`
 ## TODO:
-- video_player plugin
-- Linux
-- Android
+- [x] macOS, iOS
+- [x] Windows
+- [x] video_player plugin
+- [ ] Linux
+- [ ] Android
 
 
 

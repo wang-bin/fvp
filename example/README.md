@@ -2,6 +2,8 @@
 
 Demonstrates how to use the fvp plugin.
 
+main.dart is copy from https://github.com/flutter/packages/tree/main/packages/video_player/video_player/example/lib with 2 additional lines to enable the plugin.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

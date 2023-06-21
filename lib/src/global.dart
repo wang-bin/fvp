@@ -108,12 +108,12 @@ class SeekFlag {
   @override
   String toString() {
     var s = 'SeekFlag(';
-    if (test(from0)) s += 'from0';
-    if (test(fromStart)) s += 'fromStart';
-    if (test(fromNow)) s += 'fromNow';
-    if (test(frame)) s += 'frame';
-    if (test(keyFrame)) s += 'keyFrame';
-    if (test(inCache)) s += 'inCache';
+    if (test(from0)) s += '+from0';
+    if (test(fromStart)) s += '+fromStart';
+    if (test(fromNow)) s += '+fromNow';
+    if (test(frame)) s += '+frame';
+    if (test(keyFrame)) s += '+keyFrame';
+    if (test(inCache)) s += '+inCache';
     return '$s)';
   }
 }

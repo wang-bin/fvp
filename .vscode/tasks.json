@@ -16,11 +16,15 @@
             //"type": "shell",
             "args": [
                 "run",
+                //"-d",
+                //"macos",
+                //"--verbose",
             ],
             "options": {
                 "cwd": "${workspaceRoot}/example",
                 "env": {
-                    "MDK_CLOG": 1
+                    //"MDK_CLOG": 1,
+                    "MDK_LOG_STATUS": 1,
                 }
             },
             "problemMatcher": []
