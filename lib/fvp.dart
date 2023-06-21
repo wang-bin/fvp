@@ -28,6 +28,10 @@ class Fvp {
     });
     player.onMediaStatusChanged((oldValue, newValue) {
       print('onMediaStatusChanged: $oldValue => $newValue');
+      if (!oldValue.test(mdk.MediaStatus.loaded) && newValue.test(mdk.MediaStatus.loaded)) {
+        final info = player.mediaInfo;
+        print('$info');
+      }
       return true;
     });
 

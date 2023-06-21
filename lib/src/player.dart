@@ -7,6 +7,7 @@ import 'package:ffi/ffi.dart';
 
 import 'generated_bindings.dart';
 import 'global.dart';
+import 'media_info.dart';
 import 'lib.dart';
 import 'extensions.dart';
 
@@ -137,7 +138,10 @@ class Player {
 
   double get playbackRate => _playbackRate;
 
-  // TODO: get mediaInfo
+  MediaInfo get mediaInfo {
+    _mediaInfoC = _player.ref.mediaInfo.asFunction<Pointer<mdkMediaInfo> Function(Pointer<mdkPlayer>)>()(_player.ref.object);
+    return MediaInfo.from(_mediaInfoC);
+  }
 
   void setDecoders(MediaType type, List<String> value) {
     switch (type) {
@@ -344,6 +348,7 @@ class Player {
   int _loop = 0;
   bool _preloadImmediately = true;
   double _playbackRate = 1.0;
+  Pointer<mdkMediaInfo> _mediaInfoC = nullptr; // MediaInfo has views on mdkMediaInfo
 }
 
 
