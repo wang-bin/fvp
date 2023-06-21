@@ -7,13 +7,13 @@ Pod::Spec.new do |s|
   s.version          = '0.0.1'
   s.summary          = 'libmdk based video player Flutter plugin project.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+Flutter video player plugin.
                        DESC
   s.homepage         = 'https://qtav.org'
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Wang Bin' => 'wbsecg1@gmail.com' }
 
-#  s.compiler_flags   = '-Wdocumentation'
+  s.compiler_flags   = '-Wno-documentation -std=c++20'
   s.source           = { :path => '.' }
   s.source_files     = 'Classes/**/*'
   s.ios.dependency 'Flutter'

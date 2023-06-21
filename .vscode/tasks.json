@@ -4,7 +4,7 @@
     "version": "2.0.0",
     //"runner": "terminal",
     "command": "flutter",
-    "isShellCommand": true, // use "type": "shell" in task
+    "isShellCommand": true,
     "options": {
         "env":{
             "NINJA_STATUS": "[%f/%t %e %r %s]"
@@ -20,7 +20,7 @@
             "options": {
                 "cwd": "${workspaceRoot}/example",
                 "env": {
-                    "MDK_CLOG": 1,
+                    "MDK_CLOG": 1
                 }
             },
             "problemMatcher": []

@@ -22,12 +22,14 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> dispose(int textureId) {
+  Future<void> dispose(int textureId) async {
     final p = _players[textureId];
     if (p == null)
       return;
-    FvpPlatform.instance.releaseTexture(p.nativeHandle, textureId);
+    // await: ensure player deleted when no use in fvp plugin
+    await FvpPlatform.instance.releaseTexture(p.nativeHandle, textureId);
     _players.remove(textureId);
+    p.dispose();
   }
 
   @override

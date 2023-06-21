@@ -23,6 +23,14 @@ class Fvp {
         player.videoDecoders = ['AMediaCodec', 'FFmpeg'];
     }
 
+    player.onStateChanged((oldValue, newValue) {
+      print('onStateChanged: $oldValue => $newValue');
+    });
+    player.onMediaStatusChanged((oldValue, newValue) {
+      print('onMediaStatusChanged: $oldValue => $newValue');
+      return true;
+    });
+
     player.media = "https://live.nodemedia.cn:8443/live/b480_265.flv";
     player.state = mdk.State.playing;
     //player.setAspectRatio(mdk.ignoreAspectRatio);

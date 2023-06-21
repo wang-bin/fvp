@@ -45,6 +45,26 @@ class MediaStatus {
 
   final int rawValue;
   const MediaStatus(this.rawValue);
+
+  bool test(int s) {
+    return (rawValue & s) != 0;
+  }
+
+  @override
+  String toString() {
+    var s = 'MediaStatus(';
+    if (rawValue == 0) s += 'noMedia';
+    if (test(unloaded)) s += '+unloaded';
+    if (test(loading)) s += '+loading';
+    if (test(loaded)) s += '+loaded';
+    if (test(prepared)) s += '+prepared';
+    if (test(stalled)) s += '+stalled';
+    if (test(buffering)) s += '+buffering';
+    if (test(buffered)) s += '+buffered';
+    if (test(end)) s += '+end';
+    if (test(invalid)) s += '+invalid';
+    return '$s)';
+  }
 }
 
 enum State {
@@ -57,6 +77,15 @@ enum State {
 
   final int rawValue;
   const State(this.rawValue);
+
+  factory State.from(int i) {
+    const states = [
+            State.stopped,
+            State.playing,
+            State.paused,
+          ];
+    return states[i];
+  }
 }
 
 class SeekFlag {
@@ -71,6 +100,22 @@ class SeekFlag {
 
   final int rawValue;
   const SeekFlag(this.rawValue);
+
+  bool test(int s) {
+    return (rawValue & s) != 0;
+  }
+
+  @override
+  String toString() {
+    var s = 'SeekFlag(';
+    if (test(from0)) s += 'from0';
+    if (test(fromStart)) s += 'fromStart';
+    if (test(fromNow)) s += 'fromNow';
+    if (test(frame)) s += 'frame';
+    if (test(keyFrame)) s += 'keyFrame';
+    if (test(inCache)) s += 'inCache';
+    return '$s)';
+  }
 }
 
 enum VideoEffect {

@@ -1,9 +1,11 @@
 import 'dart:ffi';
+import 'dart:io';
+import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:ffi/ffi.dart';
-import 'package:fvp/src/generated_bindings.dart';
 
+import 'generated_bindings.dart';
 import 'global.dart';
 import 'lib.dart';
 import 'extensions.dart';
@@ -11,6 +13,57 @@ import 'extensions.dart';
 class Player {
 
   int get nativeHandle => _player.address;
+
+  Player() {
+    _pp.value = _player;
+    _fi.attach(this, this);
+    _registerPort(nativeHandle, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
+    _receivePort.listen((message) {
+      final type = message[0] as int;
+      final rep = calloc<_CallbackReply>();
+      switch (type) {
+        case 0: { // event
+        }
+        case 1: { // state
+          final oldValue = message[1] as int;
+          final newValue = message[2] as int;
+          if (_stateCb != null) {
+            _stateCb!(State.from(oldValue), State.from(newValue));
+          }
+          _replyType(nativeHandle, type, nullptr);
+        }
+        case 2: { // media status
+          final oldValue = message[1] as int;
+          final newValue = message[2] as int;
+          bool ret = true;
+          if (_statusCb != null) {
+            ret = _statusCb!(MediaStatus(oldValue), MediaStatus(newValue));
+          }
+          rep.ref.mediaStatus.ret = ret;
+          _replyType(nativeHandle, type, rep.cast());
+        }
+      }
+      calloc.free(rep);
+    });
+  }
+
+  void dispose() {
+    print('Player.dispose()');
+    if (_pp == nullptr) {
+      return;
+    }
+    state = State.stopped;
+    onStateChanged(null);
+    onMediaStatusChanged(null);
+
+    _unregisterPort(nativeHandle);
+
+    _receivePort.close();
+
+    Libmdk.instance.mdkPlayerAPI_delete(_pp);
+    calloc.free(_pp);
+    _pp = nullptr;
+  }
 
   set mute(bool value) {
     _mute = value;
@@ -217,22 +270,67 @@ class Player {
 
   double renderVideo({Object? vid}) => _player.ref.renderVideo.asFunction<double Function(Pointer<mdkPlayer>, Pointer<Void>)>()(_player.ref.object, Pointer.fromAddress(vid.hashCode));
 
+  // callbacks
+  //void onEvent()
+
+  void onStateChanged(void Function(State oldValue, State newValue)? callback) {
+    _stateCb = callback;
+    if (callback == null) {
+      _unregisterType(nativeHandle, 1);
+    } else {
+      _registerType(nativeHandle, 1);
+    }
+  }
+
+  void onMediaStatusChanged(bool Function(MediaStatus oldValue, MediaStatus newValue)? callback) {
+    _statusCb = callback;
+    if (callback == null) {
+      _unregisterType(nativeHandle, 2);
+    } else {
+      _registerType(nativeHandle, 2);
+    }
+  }
 
   final _player = Libmdk.instance.mdkPlayerAPI_new();
-  final _pp = calloc<Pointer<mdkPlayerAPI>>();
+  var _pp = calloc<Pointer<mdkPlayerAPI>>();
 
   static final _fi = Finalizer((p0) {
     final p = p0 as Player;
     print('finalizing $p');
-    Libmdk.instance.mdkPlayerAPI_delete(p._pp);
-    calloc.free(p._pp);
+    p.dispose();
   });
 
-  Player() {
-    _pp.value = _player;
-    _fi.attach(this, this);
+
+  static DynamicLibrary _loadCallbacks() {
+    String name;
+    if (Platform.isWindows) {
+      name = 'fvp.dll';
+    } else if (Platform.isIOS || Platform.isMacOS) {
+      name = 'fvp.framework/fvp';
+    } else if (Platform.isAndroid || Platform.isLinux) {
+      name = 'libfvp.so';
+    } else {
+      throw Exception(
+          'Unsupported operating system: ${Platform.operatingSystem}.',
+        );
+    }
+    try {
+      return DynamicLibrary.open(name);
+    } catch(e) {
+      rethrow;
+    }
   }
 
+  static final _dso = _loadCallbacks();
+  final _receivePort = ReceivePort();
+  final _registerPort = _dso.lookupFunction<Void Function(Int64, Pointer<Void>, Int64), void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
+  final _unregisterPort = _dso.lookupFunction<Void Function(Int64), void Function(int)>('MdkCallbacksUnregisterPort');
+  final _registerType = _dso.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksRegisterType');
+  final _unregisterType = _dso.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
+  final _replyType = _dso.lookupFunction<Void Function(Int64, Int, Pointer<Void>), void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
+
+  void Function(State oldValue, State newValue)? _stateCb;
+  bool Function(MediaStatus oldValue, MediaStatus newValue)? _statusCb;
 
   bool _mute = false;
   double _volume = 1.0;
@@ -246,4 +344,28 @@ class Player {
   int _loop = 0;
   bool _preloadImmediately = true;
   double _playbackRate = 1.0;
+}
+
+
+final class _CallbackReply extends Union {
+  external UnnamedStruct5 mediaStatus;
+  external UnnamedStruct6 sync1;
+  external UnnamedStruct7 prepared;
+}
+
+final class UnnamedStruct5 extends Struct {
+  @Bool()
+  external bool ret;
+}
+
+final class UnnamedStruct6 extends Struct {
+  @Double()
+  external double ret;
+}
+
+final class UnnamedStruct7 extends Struct {
+  @Bool()
+  external bool ret;
+  @Bool()
+  external bool boost;
 }
