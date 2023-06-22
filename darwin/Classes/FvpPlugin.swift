@@ -37,6 +37,7 @@ fileprivate class FvpRenderer: NSObject, FlutterTexture {
 
     deinit {
         print("FvpRenderer.deinit")
+        player.setRenderCallback(nil)
         player.setVideoSurfaceSize(Int32(-1), Int32(-1))
     }
 

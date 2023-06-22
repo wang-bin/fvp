@@ -10,8 +10,7 @@
 
 using namespace std;
 
-
-class Player : public mdk::Player
+class Player final: public mdk::Player
 {
 public:
 
@@ -28,7 +27,6 @@ public:
 
     mdk::State oldState = mdk::State::Stopped;
     mdk::MediaStatus oldStatus = mdk::MediaStatus::NoMedia;
-private:
 };
 
 static unordered_map<int64_t, shared_ptr<Player>> players;
@@ -116,7 +114,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
         }
         // wait. TODO: no wait if no return type
         p->cv[type].wait(lock, [&]{
-            return p->dataReady[type];
+            return p->dataReady[type] || !(p->callbackTypes & (1 << type));
         });
     });
 
@@ -167,7 +165,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             return true;
         }
         p->cv[type].wait(lock, [&]{
-            return p->dataReady[type];
+            return p->dataReady[type] || !(p->callbackTypes & (1 << type));
         });
         return p->data[type].mediaStatus.ret;
     });
@@ -180,7 +178,13 @@ FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle)
     if (it == players.cend()) {
         return;
     }
+
     auto sp = it->second;
+    for (int i = 0; i < (int)CallbackType::Count; ++i) {
+        unique_lock lock(sp->mtx[i]);
+        sp->cv[i].notify_one();
+    }
+
     sp->onEvent(nullptr);
     sp->onStateChanged(nullptr);
     sp->onMediaStatusChanged(nullptr);

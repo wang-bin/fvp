@@ -10,8 +10,8 @@ import 'fvp_platform_interface.dart';
 
 class MdkVideoPlayer extends VideoPlayerPlatform {
 
-  final _players = <int, mdk.Player>{};
-  final _streamCtl = <int, StreamController<VideoEvent>>{};
+  static final _players = <int, mdk.Player>{};
+  static final _streamCtl = <int, StreamController<VideoEvent>>{};
 
   /// Registers this class as the default instance of [VideoPlayerPlatform].
   static void registerWith() {
@@ -132,8 +132,11 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
 
   @override
   Future<Duration> getPosition(int textureId) async {
-    final player = _players[textureId]!;
-    return Duration(milliseconds: player.position);
+    final player = _players[textureId];
+    if (player != null) {
+      return Duration(milliseconds: player.position);
+    }
+    return Duration.zero;
   }
 
   @override
@@ -157,7 +160,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   StreamController<VideoEvent> _initEvents(mdk.Player player) {
     final sc = StreamController<VideoEvent>();
     player.onMediaStatusChanged((oldValue, newValue) {
-      print('${player.nativeHandle} onMediaStatusChanged: $oldValue => $newValue');
+      print('$hashCode player${player.nativeHandle} onMediaStatusChanged: $oldValue => $newValue');
       if (!oldValue.test(mdk.MediaStatus.loaded) && newValue.test(mdk.MediaStatus.loaded)) {
         final info = player.mediaInfo;
         var size = const Size(0, 0);
@@ -178,7 +181,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     // TODO: VideoEventType.bufferingUpdate via MediaEvent callback
 
     player.onStateChanged((oldValue, newValue) {
-      print('${player.nativeHandle} onStateChanged: $oldValue => $newValue');
+      print('$hashCode player${player.nativeHandle} onStateChanged: $oldValue => $newValue');
       sc.add(VideoEvent(eventType: VideoEventType.isPlayingStateUpdate
         , isPlaying: newValue == mdk.State.playing));
     });
