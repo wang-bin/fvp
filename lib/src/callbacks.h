@@ -29,23 +29,6 @@ enum CallbackType {
     Count,
 };
 
-// Callback param send to dart
-union CallbackParam
-{
-    struct {
-        int oldValue;
-        int newValue;
-    } state;
-    struct {
-        int oldValue;
-        int newValue;
-    } mediaStatus;
-    struct {
-        int64_t position;
-        bool boost;
-    } prepared;
-};
-
 // Callback data from dart if callback has return type or out parameters
 union CallbackReply {
     struct {

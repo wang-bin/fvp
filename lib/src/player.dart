@@ -24,6 +24,13 @@ class Player {
       final rep = calloc<_CallbackReply>();
       switch (type) {
         case 0: { // event
+          final error = message[1] as int;
+          final category = message[2] as String;
+          final detail = message[3] as String;
+          final ev = MediaEvent(error, category, detail);
+          if (_eventCb != null) {
+            _eventCb!(ev);
+          }
         }
         case 1: { // state
           final oldValue = message[1] as int;
@@ -49,11 +56,12 @@ class Player {
   }
 
   void dispose() {
-    print('Player.dispose()');
+    print('$nativeHandle Player.dispose()');
     if (_pp == nullptr) {
       return;
     }
     state = State.stopped;
+    onEvent(null);
     onStateChanged(null);
     onMediaStatusChanged(null);
 
@@ -283,7 +291,14 @@ class Player {
   double renderVideo({Object? vid}) => _player.ref.renderVideo.asFunction<double Function(Pointer<mdkPlayer>, Pointer<Void>)>()(_player.ref.object, Pointer.fromAddress(vid.hashCode));
 
   // callbacks
-  //void onEvent()
+  void onEvent(void Function(MediaEvent)? callback) {
+    _eventCb = callback;
+    if (callback == null) {
+      _unregisterType(nativeHandle, 0);
+    } else {
+      _registerType(nativeHandle, 0);
+    }
+  }
 
   void onStateChanged(void Function(State oldValue, State newValue)? callback) {
     _stateCb = callback;
@@ -341,6 +356,7 @@ class Player {
   final _unregisterType = _dso.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
   final _replyType = _dso.lookupFunction<Void Function(Int64, Int, Pointer<Void>), void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
 
+  void Function(MediaEvent)? _eventCb;
   void Function(State oldValue, State newValue)? _stateCb;
   bool Function(MediaStatus oldValue, MediaStatus newValue)? _statusCb;
 

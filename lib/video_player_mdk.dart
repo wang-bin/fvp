@@ -178,7 +178,16 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
       }
       return true;
     });
-    // TODO: VideoEventType.bufferingUpdate via MediaEvent callback
+
+    player.onEvent((ev) {
+      print('$hashCode player${player.nativeHandle} onEvent: ${ev.category} ${ev.error}');
+      if (ev.category == "reader.buffering") {
+        final pos = player.position;
+        final bufLen = player.buffered();
+        sc.add(VideoEvent(eventType: VideoEventType.bufferingUpdate
+          , buffered: [DurationRange(Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))]));
+      }
+    });
 
     player.onStateChanged((oldValue, newValue) {
       print('$hashCode player${player.nativeHandle} onStateChanged: $oldValue => $newValue');

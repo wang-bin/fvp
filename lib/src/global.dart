@@ -153,7 +153,7 @@ enum LogLevel {
 }
 
 class MediaEvent {
-  final int error;
+  final int error;      // progress value [0, 100] if category is "reader.buffering"
   final String category;
   final String detail;
 

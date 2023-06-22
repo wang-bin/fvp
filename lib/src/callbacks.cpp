@@ -54,7 +54,25 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
                 .as_int64 = CallbackType::Event,
             }
         };
-        Dart_CObject* arr[] = { &t };
+        Dart_CObject err{
+            .type = Dart_CObject_kInt64,
+            .value = {
+                .as_int64 = (int64_t)e.error,
+            }
+        };
+        Dart_CObject cat{
+            .type = Dart_CObject_kString,
+            .value = {
+                .as_string = e.category.data(),
+            }
+        };
+        Dart_CObject detail{
+            .type = Dart_CObject_kString,
+            .value = {
+                .as_string = e.detail.data(),
+            }
+        };
+        Dart_CObject* arr[] = { &t, &err, &cat, &detail };
         Dart_CObject msg {
             .type = Dart_CObject_kArray,
             .value = {
