@@ -7,6 +7,8 @@ cmake_minimum_required(VERSION 3.14)
 # Project-level configuration.
 set(PROJECT_NAME "fvp")
 project(${PROJECT_NAME} LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # This value is used when generating builds using this plugin, so it must
 # not be changed
@@ -23,6 +25,7 @@ list(APPEND PLUGIN_SOURCES
 add_library(${PLUGIN_NAME} SHARED
   "include/fvp/fvp_plugin_c_api.h"
   "fvp_plugin_c_api.cpp"
+  ../lib/src/callbacks.cpp
   ${PLUGIN_SOURCES}
 )
 

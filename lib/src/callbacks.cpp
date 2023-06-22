@@ -47,14 +47,18 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             return false;
         Dart_CObject t{
             .type = Dart_CObject_kInt64,
-            .value.as_int64 = CallbackType::Event,
+            .value = {
+                .as_int64 = CallbackType::Event,
+            }
         };
         Dart_CObject* arr[] = { &t };
         Dart_CObject msg {
             .type = Dart_CObject_kArray,
-            .value.as_array = {
-                .length = std::size(arr),
-                .values = arr,
+            .value = {
+                .as_array = {
+                    .length = std::size(arr),
+                    .values = arr,
+                },
             },
         };
         if (!postCObject(send_port, &msg)) {
@@ -76,23 +80,31 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
 
         Dart_CObject t{
             .type = Dart_CObject_kInt64,
-            .value.as_int64 = CallbackType::State,
+            .value = {
+                .as_int64 = CallbackType::State,
+            }
         };
         Dart_CObject v0{
             .type = Dart_CObject_kInt64,
-            .value.as_int64 = (int64_t)oldValue,
+            .value = {
+                .as_int64 = (int64_t)oldValue,
+            }
         };
         Dart_CObject v1{
             .type = Dart_CObject_kInt64,
-            .value.as_int64 = (int64_t)s,
+            .value = {
+                .as_int64 = (int64_t)s,
+            }
         };
         Dart_CObject* arr[] = { &t, &v0, &v1 };
         Dart_CObject msg {
             .type = Dart_CObject_kArray,
-            .value.as_array = {
-                .length = std::size(arr),
-                .values = arr,
-            },
+            .value = {
+                .as_array = {
+                    .length = std::size(arr),
+                    .values = arr,
+                },
+            }
         };
         if (!postCObject(send_port, &msg)) {
             clog << "postCObject error" << endl;
@@ -120,23 +132,31 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
 
         Dart_CObject t{
             .type = Dart_CObject_kInt64,
-            .value.as_int64 = CallbackType::MediaStatus,
+            .value = {
+                .as_int64 = CallbackType::MediaStatus,
+            }
         };
         Dart_CObject v0{
             .type = Dart_CObject_kInt64,
-            .value.as_int64 = (int64_t)oldValue,
+            .value = {
+                .as_int64 = (int64_t)oldValue,
+            }
         };
         Dart_CObject v1{
             .type = Dart_CObject_kInt64,
-            .value.as_int64 = (int64_t)s,
+            .value = {
+                .as_int64 = (int64_t)s,
+            }
         };
         Dart_CObject* arr[] = { &t, &v0, &v1 };
         Dart_CObject msg {
             .type = Dart_CObject_kArray,
-            .value.as_array = {
-                .length = std::size(arr),
-                .values = arr,
-            },
+            .value = {
+                .as_array = {
+                    .length = std::size(arr),
+                    .values = arr,
+                },
+            }
         };
         if (!postCObject(send_port, &msg)) {
             clog << "postCObject error" << endl;

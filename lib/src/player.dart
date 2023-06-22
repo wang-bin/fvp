@@ -316,11 +316,11 @@ class Player {
   static DynamicLibrary _loadCallbacks() {
     String name;
     if (Platform.isWindows) {
-      name = 'fvp.dll';
+      name = 'fvp_plugin.dll';
     } else if (Platform.isIOS || Platform.isMacOS) {
       name = 'fvp.framework/fvp';
     } else if (Platform.isAndroid || Platform.isLinux) {
-      name = 'libfvp.so';
+      name = 'libfvp_plugin.so';
     } else {
       throw Exception(
           'Unsupported operating system: ${Platform.operatingSystem}.',
