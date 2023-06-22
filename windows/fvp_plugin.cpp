@@ -145,6 +145,7 @@ void FvpPlugin::HandleMethodCall(
   } else if (method_call.method_name() == "ReleaseRT") {
     auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
     const auto texId = args[flutter::EncodableValue("texture")].LongValue();
+    texture_registrar_->UnregisterTexture(texId);
     if (auto it = players_.find(texId); it != players_.cend()) {
         players_.erase(it);
     }

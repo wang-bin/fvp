@@ -111,6 +111,7 @@ public class FvpPlugin: NSObject, FlutterPlugin {
     case "ReleaseRT":
         let args = call.arguments as! [String: Any]
         let tex = args["texture"] as! Int64
+        registry.unregisterTexture(tex)
         renderers.removeValue(forKey: tex)
         result(nil)
     default:
