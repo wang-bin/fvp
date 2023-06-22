@@ -6,15 +6,12 @@
 #include <flutter/texture_registrar.h>
 #include <wrl/client.h>
 #include <d3d11.h>
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3d11.lib")
-
-#include "mdk/MediaInfo.h"
 #include "mdk/RenderAPI.h"
 #include "mdk/Player.h"
-using namespace MDK_NS;
-
 #include <memory>
+#include <unordered_map>
+
+using namespace MDK_NS;
 using namespace Microsoft::WRL;
 
 namespace fvp {
@@ -37,19 +34,13 @@ class FvpPlugin : public flutter::Plugin {
       const flutter::MethodCall<flutter::EncodableValue> &method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
-  std::unique_ptr<FlutterDesktopGpuSurfaceDescriptor> surface_desc_;
-  std::unique_ptr<flutter::TextureVariant> fltex_;
-  int64_t texture_id_ = 0;
-
   flutter::TextureRegistrar* texture_registrar_ = nullptr;
 
   ComPtr<ID3D11Device> dev_;
   ComPtr<ID3D11DeviceContext> ctx_;
-  ComPtr<ID3D11Texture2D> tex_;
   ComPtr<IDXGIAdapter> adapter_;
-  HANDLE shared_handle_;
 
-  std::unique_ptr<Player> player_;
+  std::unordered_map<int64_t, std::shared_ptr<Player>> players_;
 };
 
 }  // namespace fvp
