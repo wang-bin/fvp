@@ -34,12 +34,17 @@ static unordered_map<int64_t, shared_ptr<Player>> players;
 
 FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, int64_t send_port)
 {
-    auto sp = make_shared<Player>(handle);
-    players[handle] = sp;
+    auto player = make_shared<Player>(handle);
+    players[handle] = player;
     const auto tid = this_thread::get_id();
     const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
 
-    sp->onEvent([=, p = sp.get()](const mdk::MediaEvent& e){
+    auto wp = weak_ptr<Player>(player);
+    player->onEvent([=](const mdk::MediaEvent& e){
+        auto sp = wp.lock();
+        if (!sp)
+            return false;
+        auto p = sp.get();
         const auto type = int(CallbackType::Event);
         if (!(p->callbackTypes & (1 << type)))
             return false;
@@ -66,7 +71,11 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
         return false;
     });
 
-    sp->onStateChanged([=, p = sp.get()](mdk::State s){
+    player->onStateChanged([=](mdk::State s){
+        auto sp = wp.lock();
+        if (!sp)
+            return;
+        auto p = sp.get();
         const auto type = int(CallbackType::State);
         const auto oldValue = p->oldState;
         p->oldState = s;
@@ -113,12 +122,16 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             return;
         }
         // wait. TODO: no wait if no return type
-        p->cv[type].wait(lock, [&]{
+        p->cv[type].wait(lock, [=]{
             return p->dataReady[type] || !(p->callbackTypes & (1 << type));
         });
     });
 
-    sp->onMediaStatusChanged([=, p = sp.get()](mdk::MediaStatus s){
+    player->onMediaStatusChanged([=](mdk::MediaStatus s){
+        auto sp = wp.lock();
+        if (!sp)
+            return false;
+        auto p = sp.get();
         const auto type = int(CallbackType::MediaStatus);
         const auto oldValue = p->oldStatus;
         p->oldStatus = s;
@@ -164,7 +177,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             clog << "main thread. won't wait callback" << endl;
             return true;
         }
-        p->cv[type].wait(lock, [&]{
+        p->cv[type].wait(lock, [=]{
             return p->dataReady[type] || !(p->callbackTypes & (1 << type));
         });
         return p->data[type].mediaStatus.ret;
