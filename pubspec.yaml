@@ -73,7 +73,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.example.fvp
+        package: com.mediadevkit.fvp
         pluginClass: FvpPlugin
       ios:
         pluginClass: FvpPlugin

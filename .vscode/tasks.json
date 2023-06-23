@@ -4,7 +4,7 @@
     "version": "2.0.0",
     //"runner": "terminal",
     "command": "flutter",
-    "isShellCommand": true,
+    "type": "shell",
     "options": {
         "env":{
             "NINJA_STATUS": "[%f/%t %e %r %s]"
@@ -14,34 +14,56 @@
         {
             "label": "Run Debug",
             //"type": "shell",
-            "args": [
-                "run",
-                //"-d",
-                //"macos",
-                //"--verbose",
-            ],
+            "windows":{
+                "args": ["run", "-d", "windows"]
+            },
+            "linux":{
+                "args": ["run", "-d", "linux"]
+            },
+            "osx":{
+                "args": ["run", "-d", "macos"]
+            },
             "options": {
                 "cwd": "${workspaceRoot}/example",
                 "env": {
                     //"MDK_CLOG": 1,
-                    "MDK_LOG_STATUS": 1,
+                    //"MDK_LOG_STATUS": 1,
                 }
             },
             "problemMatcher": []
         },
         {
             "label": "Build",
-            "args": [
-                "build",
-                "macos",
-                //"--verbose"
-            ],
+            "windows":{
+                "args": ["build", "windows"]
+            },
+            "linux":{
+                "args": ["build", "linux"]
+            },
+            "osx":{
+                "args": ["build", "macos"]
+            },
             "options": {
                 "cwd": "${workspaceRoot}/example"
             },
             "group": {
                 "kind": "build",
                 "isDefault": true
+            },
+            "problemMatcher": ["$gcc", "$msCompile"]
+        },
+        {
+            "label": "Run Debug Android",
+            "args": ["run", "-d",
+                "23013RK75C",
+                "--verbose",
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/example",
+                "env": {
+                    "MDK_CLOG": 1,
+                    "MDK_LOG_STATUS": 1,
+                }
             },
             "problemMatcher": []
         },
