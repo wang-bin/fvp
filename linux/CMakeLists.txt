@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.10)
 # Project-level configuration.
 set(PROJECT_NAME "fvp")
 project(${PROJECT_NAME} LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # This value is used when generating builds using this plugin, so it must
 # not be changed.
@@ -17,6 +19,7 @@ set(PLUGIN_NAME "fvp_plugin")
 # Any new source files that you add to the plugin should be added here.
 add_library(${PLUGIN_NAME} SHARED
   "fvp_plugin.cc"
+  ../lib/src/callbacks.cpp
 )
 
 # Apply a standard set of build settings that are configured in the
@@ -38,10 +41,33 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
+
+set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-linux.tar.xz")
+set(MDK_SDK_SAVE ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk-linux.tar.xz)
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
+  if(NOT EXISTS ${MDK_SDK_SAVE})
+    message("Downloading mdk-sdk from ${MDK_SDK_URL}")
+    file(DOWNLOAD ${MDK_SDK_URL} ${MDK_SDK_SAVE} SHOW_PROGRESS)
+  endif()
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E tar "Jxvf" ${MDK_SDK_SAVE}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE EXTRACT_RET
+  )
+  if(NOT EXTRACT_RET EQUAL 0)
+    message(FATAL_ERROR "Failed to extract mdk-sdk. You can download manually from ${MDK_SDK_URL} and extract to ${CMAKE_CURRENT_SOURCE_DIR}")
+  endif()
+endif()
+include(mdk-sdk/lib/cmake/FindMDK.cmake)
+target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
+
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
+get_filename_component(MDK_LIB_DIR ${MDK_LIBRARIES} DIRECTORY)
 set(fvp_bundled_libraries
-  ""
+    ${MDK_LIBRARIES}
+    ${MDK_LIB_DIR}/libffmpeg.so.6
   PARENT_SCOPE
 )
