@@ -24,6 +24,7 @@ G_DECLARE_FINAL_TYPE(PlayerTexture, player_texture, FL, PLAYER_TEXTURE, FlTextur
 struct _PlayerTexture {
   FlTextureGL parent_instance;
 
+  GdkGLContext* ctx;
   GLuint texture_id;
   GLuint fbo;
 
@@ -83,6 +84,7 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
   PlayerTexture *self = PLAYER_TEXTURE(texture);
 
   if (self->fbo == 0) {
+    self->ctx = gdk_gl_context_get_current(); // fbo can not be shared
     glGenFramebuffers(1, &self->fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, self->fbo);
   }
@@ -114,7 +116,13 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
 
 static void player_texture_dispose(GObject* obj) {
   G_OBJECT_CLASS(player_texture_parent_class)->dispose(obj);
-  //
+  auto self = PLAYER_TEXTURE(obj);
+  auto ctx = gdk_gl_context_get_current();
+  gdk_gl_context_make_current(self->ctx);
+  glDeleteTextures(1, &self->texture_id);
+  glDeleteFramebuffers(1, &self->fbo);
+  if (ctx)
+    gdk_gl_context_make_current(ctx);
 }
 
 static void player_texture_class_init(PlayerTextureClass* klass) {
@@ -127,6 +135,7 @@ static void player_texture_init(PlayerTexture* self) {
   self->texture_id = 0;
   self->fbo = 0;
   self->player = nullptr;
+  self->ctx = nullptr;
 }
 
 
