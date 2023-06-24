@@ -23,13 +23,13 @@ apply plugin: 'com.android.library'
 
 android {
     namespace 'com.mediadevkit.fvp'
-    compileSdk 33
+    compileSdk 33 // flutter.compileSdkVersion
     // Bumping the plugin compileSdkVersion requires all clients of this plugin
     // to bump the version in their app.
 
     // Bumping the plugin ndkVersion requires all clients of this plugin to bump
     // the version in their app and to download a newer version of the NDK.
-    ndkVersion "25.2.9519653"
+    ndkVersion "25.2.9519653" // flutter.ndkVersion
 
     // Invoke the shared CMake build with the Android Gradle Plugin.
     externalNativeBuild {
@@ -64,7 +64,7 @@ android {
         ndk {
             // Specifies the ABI configurations of your native
             // libraries Gradle should build and package with your APK.
-            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+            abiFilters 'arm64-v8a' //, 'armeabi-v7a', 'x86', 'x86_64'
         }
         ndkVersion "25.2.9519653"
     }

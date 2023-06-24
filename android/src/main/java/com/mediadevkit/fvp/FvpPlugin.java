@@ -1,12 +1,21 @@
 package com.mediadevkit.fvp;
 
+import android.graphics.SurfaceTexture;
+import android.util.Log;
+import android.view.Surface;
+
 import androidx.annotation.NonNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.view.TextureRegistry;
+import io.flutter.view.TextureRegistry.SurfaceTextureEntry;
 
 /** FvpPlugin */
 public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
@@ -15,17 +24,48 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
-
+  // https://api.flutter.dev/javadoc/io/flutter/view/TextureRegistry.html
+  private TextureRegistry texRegistry;
+  private Map<Long, SurfaceTextureEntry> textures;
+  private Map<Long, Surface> surfaces;
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "fvp");
     channel.setMethodCallHandler(this);
+    texRegistry = flutterPluginBinding.getTextureRegistry();
+    textures = new HashMap<>();
+    surfaces = new HashMap<>();
   }
 
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-    if (call.method.equals("getPlatformVersion")) {
-      result.success("Android " + android.os.Build.VERSION.RELEASE);
+    if (call.method.equals("CreateRT")) {
+      final long handle = call.argument("player");
+      SurfaceTextureEntry te = texRegistry.createSurfaceTexture();
+      SurfaceTexture tex = te.surfaceTexture();
+      tex.setDefaultBufferSize(1920, 1080); // TODO: size from player. rotate, fullscreen change?
+      Surface surface = new Surface(tex); // TODO: when to release
+      long texId = te.id();
+      nativeSetSurface(handle, texId, surface, 1920, 1080);
+      textures.put(texId, te);
+      surfaces.put(texId, surface);
+      result.success(texId);
+    } else if (call.method.equals("ReleaseRT")) {
+      final int texId = call.argument("texture"); // 32bit int, 0, 1, 2 .... but SurfaceTexture.id() is long
+      final long texId64 = texId; // MUST cast texId to long, otherwise remove() error
+      nativeSetSurface(0, texId, null, -1, -1);
+      SurfaceTextureEntry te = textures.get(texId64);
+      if (te == null) {
+        Log.w("FvpPlugin", "onMethodCall: ReleaseRT texId not found: " + texId);
+      } else {
+        te.release();
+      }
+      if (textures.remove(texId64) == null) {
+      }
+      if (surfaces.remove(texId64) == null) {
+      }
+      Log.w("FvpPlugin", "onMethodCall: ReleaseRT texId: " + texId + ", surfaces: " + surfaces.size() + " textures: " + textures.size());
+      result.success(null);
     } else {
       result.notImplemented();
     }
@@ -34,5 +74,19 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     channel.setMethodCallHandler(null);
+    Log.i("FvpPlugin", "onDetachedFromEngine: ");
+    for (long texId : textures.keySet()) { nativeSetSurface(0, texId, null, -1, -1);}
+    surfaces = null;
+    textures = null;
+  }
+
+  /*!
+    \param playerHandle null to destroy
+    \param texId
+   */
+  private native void nativeSetSurface(long playerHandle, long texId, Surface surface, int w, int h);
+
+  static {
+    System.loadLibrary("fvp_plugin");
   }
 }

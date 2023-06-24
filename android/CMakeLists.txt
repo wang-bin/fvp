@@ -65,7 +65,8 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
   endif()
 endif()
 include(mdk-sdk/lib/cmake/FindMDK.cmake)
-target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
+target_link_libraries(${PLUGIN_NAME} PRIVATE mdk
+        log)
 
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
