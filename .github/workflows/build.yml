@@ -1,0 +1,135 @@
+name: Build
+# 7z => cmake -E tar xvf/cvf --format=7zip
+on:
+  push:
+  schedule:
+    - cron: '0 6 * * 0'
+
+jobs:
+  macOS:
+    if: false
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: example
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+#    - run: flutter config --enable-macos-desktop
+    - run: flutter pub get --verbose
+    - run: flutter build macos --verbose
+    - run: mv build/macos/Build/Products/Release/fvp_example.app .
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: fvp-example-macOS
+        path: example/fvp_example.app
+
+  iOS:
+    if: false
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: example
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+    - run: flutter pub get --verbose
+    - run: flutter build ios --release --no-codesign
+
+
+  Windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: example
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+    - run: flutter pub get --verbose
+    - run: flutter build windows --verbose
+    - run: mv build/windows/runner/Release .
+    - run: cmake -E tar cvf fvp_example_windows.7z --format=7zip Release
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: fvp-example-windows
+        path: example/fvp_example_windows.7z
+
+  Linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: example
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+    - run: |
+       sudo apt-get update -y
+       sudo apt-get install -y cmake clang ninja-build libgtk-3-dev libpulse-dev
+#    - run: flutter config --enable-linux-desktop
+    - run: flutter pub get --verbose
+    - run: flutter build linux --verbose
+    - run: mv build/linux/x64/release/bundle .
+    - run: cmake -E tar Jcvf fvp_example_linux.tar.xz bundle
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: fvp-example-linux
+        path: example/fvp_example_linux.tar.xz
+
+  Android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: example
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+    - uses: actions/setup-java@v2
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+    - run: flutter pub get --verbose
+    - run: flutter build apk --verbose
+    - run: mv ./build/app/outputs/apk/release/app-release.apk fvp_example_android.apk
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: fvp-example-android
+        path: example/fvp_example_android.apk
