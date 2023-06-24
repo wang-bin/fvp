@@ -85,14 +85,16 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
     message(FATAL_ERROR "Failed to extract mdk-sdk. You can download manually from ${MDK_SDK_URL} and extract to ${CMAKE_CURRENT_SOURCE_DIR}")
   endif()
 endif()
+include(mdk-sdk/lib/cmake/FindMDK.cmake)
+target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
+
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
+get_filename_component(MDK_LIB_DIR ${MDK_LIBRARY} DIRECTORY)
+string(REPLACE "/lib/" "/bin/" MDK_BIN_DIR ${MDK_LIB_DIR})
 set(fvp_bundled_libraries
-    ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/bin/x64/mdk.dll
-    ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/bin/x64/ffmpeg-6.dll
+    ${MDK_BIN_DIR}/mdk.dll
+    ${MDK_BIN_DIR}/ffmpeg-6.dll
   PARENT_SCOPE
 )
-
-include(mdk-sdk/lib/cmake/FindMDK.cmake)
-target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)

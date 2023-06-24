@@ -41,6 +41,9 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
+# add runpath, shared libs of a release bundle is in lib dir, plugin must add $ORIGIN to runpath to find libmdk
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--enable-new-dtags -Wl,-z,origin -Wl,-rpath,\\$ORIGIN")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--enable-new-dtags -Wl,-z,origin -Wl,-rpath,\\$ORIGIN")
 
 set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-linux.tar.xz")
 set(MDK_SDK_SAVE ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk-linux.tar.xz)
@@ -65,9 +68,10 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
-get_filename_component(MDK_LIB_DIR ${MDK_LIBRARIES} DIRECTORY)
+get_filename_component(MDK_LIB_DIR ${MDK_LIBRARY} DIRECTORY)
 set(fvp_bundled_libraries
-    ${MDK_LIBRARIES}
+    ${MDK_LIBRARY}.0
     ${MDK_LIB_DIR}/libffmpeg.so.6
+    ${MDK_LIB_DIR}/libc++.so.1
   PARENT_SCOPE
 )
