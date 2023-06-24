@@ -7,8 +7,7 @@ on:
 
 jobs:
   macOS:
-    if: false
-    runs-on: macos-latest
+    runs-on: macos-13
     defaults:
       run:
         working-directory: example
@@ -18,23 +17,26 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
+    - name: Setup Xcode
+      run: sudo xcode-select -s /Applications/Xcode_14.3.1.app
     - uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
         cache: true
 #    - run: flutter config --enable-macos-desktop
-    - run: flutter pub get --verbose
+    - run: flutter pub get
     - run: flutter build macos --verbose
-    - run: mv build/macos/Build/Products/Release/fvp_example.app .
+    - run: |
+        mv build/macos/Build/Products/Release/fvp_example.app .
+        cmake -E tar cvf fvp_example_macos.7z --format=7zip fvp_example.app
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
         name: fvp-example-macOS
-        path: example/fvp_example.app
+        path: example/fvp_example_macos.7z
 
   iOS:
-    if: false
-    runs-on: macos-latest
+    runs-on: macos-13
     defaults:
       run:
         working-directory: example
@@ -44,12 +46,22 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
+    - name: Setup Xcode
+      run: sudo xcode-select -s /Applications/Xcode_14.3.1.app
     - uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
         cache: true
-    - run: flutter pub get --verbose
-    - run: flutter build ios --release --no-codesign
+    - run: flutter pub get
+    - run: flutter build ios --release --no-codesign --verbose
+    - run: |
+        mv build/ios/iphoneos/Runner.app .
+        cmake -E tar cvf fvp_example_ios.7z --format=7zip Runner.app
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: fvp-example-iOS
+        path: example/fvp_example_ios.7z
 
 
   Windows:
@@ -67,7 +79,7 @@ jobs:
       with:
         channel: 'stable'
         cache: true
-    - run: flutter pub get --verbose
+    - run: flutter pub get
     - run: flutter build windows --verbose
     - run: mv build/windows/runner/Release .
     - run: cmake -E tar cvf fvp_example_windows.7z --format=7zip Release
@@ -96,7 +108,7 @@ jobs:
        sudo apt-get update -y
        sudo apt-get install -y cmake clang ninja-build libgtk-3-dev libpulse-dev
 #    - run: flutter config --enable-linux-desktop
-    - run: flutter pub get --verbose
+    - run: flutter pub get
     - run: flutter build linux --verbose
     - run: mv build/linux/x64/release/bundle .
     - run: cmake -E tar Jcvf fvp_example_linux.tar.xz bundle
@@ -125,7 +137,7 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: '17'
-    - run: flutter pub get --verbose
+    - run: flutter pub get
     - run: flutter build apk --verbose
     - run: mv ./build/app/outputs/apk/release/app-release.apk fvp_example_android.apk
     - name: Upload
