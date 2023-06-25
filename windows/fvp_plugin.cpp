@@ -1,5 +1,4 @@
 #include "fvp_plugin.h"
-
 #include <flutter/standard_method_codec.h>
 
 #pragma comment(lib, "dxgi.lib")
@@ -108,6 +107,10 @@ void FvpPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name() == "CreateRT") {
+      auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
+      const auto width = (UINT)args[flutter::EncodableValue("width")].LongValue();
+      const auto height = (UINT)args[flutter::EncodableValue("height")].LongValue();
+
       MS_WARN(D3D11CreateDevice(adapter_.Get(), adapter_ ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &dev_, nullptr, &ctx_));
       if (!dev_) {
           result->Error("device", "create device failed");
@@ -117,8 +120,8 @@ void FvpPlugin::HandleMethodCall(
       if (SUCCEEDED(dev_.As(&mt)))
           mt->SetMultithreadProtected(TRUE);
       D3D11_TEXTURE2D_DESC desc{
-        .Width = 1920,
-        .Height = 1080,
+        .Width = width,
+        .Height = height,
         .MipLevels = 1,
         .ArraySize = 1,
         .Format = DXGI_FORMAT_B8G8R8A8_UNORM, // rgba eglbind error
@@ -137,7 +140,6 @@ void FvpPlugin::HandleMethodCall(
           return;
       }
 
-      auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
       const auto handle = args[flutter::EncodableValue("player")].LongValue();
       auto player = make_shared<TexturePlayer>(handle, tex, texture_registrar_);
       result->Success(flutter::EncodableValue(player->textureId));

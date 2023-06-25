@@ -37,8 +37,10 @@ G_DEFINE_TYPE(PlayerTexture, player_texture, fl_texture_gl_get_type())
 class TexturePlayer final : public mdk::Player
 {
 public:
-  TexturePlayer(int64_t handle, PlayerTexture* tex, FlTextureRegistrar* texRegistrar)
+  TexturePlayer(int64_t handle, PlayerTexture* tex, int w, int h, FlTextureRegistrar* texRegistrar)
     : mdk::Player(reinterpret_cast<mdkPlayerAPI*>(handle))
+    , width(w)
+    , height(h)
     , texReg(texRegistrar)
     , flTex(tex)
   {
@@ -69,8 +71,8 @@ public:
   }
 
   int64_t textureId;
-  int width = 1920; // TODO:
-  int height = 1080;
+  int width;
+  int height;
 private:
   FlTextureRegistrar* texReg;
   PlayerTexture* flTex; // hold ref
@@ -88,7 +90,7 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
     glGenFramebuffers(1, &self->fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, self->fbo);
   }
-  if (self->texture_id == 0) { // TODO: or resize
+  if (self->texture_id == 0) {
     glGenTextures(1, &self->texture_id);
     glBindTexture(GL_TEXTURE_2D, self->texture_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->player->width, self->player->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -162,8 +164,10 @@ static void fvp_plugin_handle_method_call(
   if (strcmp(method, "CreateRT") == 0) {
     const auto args = fl_method_call_get_args(method_call);
     const auto handle = fl_value_get_int(fl_value_lookup_string(args, "player"));
+    const auto width = (int)fl_value_get_int(fl_value_lookup_string(args, "width"));
+    const auto height = (int)fl_value_get_int(fl_value_lookup_string(args, "height"));
     auto tex = PLAYER_TEXTURE(g_object_new(player_texture_get_type(), nullptr));
-    auto player = make_shared<TexturePlayer>(handle, tex, self->tex_registrar);
+    auto player = make_shared<TexturePlayer>(handle, tex, width, height, self->tex_registrar);
     players[player->textureId] = player;
     g_autoptr(FlValue) result = fl_value_new_int(player->textureId);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));

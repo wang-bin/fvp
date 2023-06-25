@@ -41,12 +41,14 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     if (call.method.equals("CreateRT")) {
       final long handle = call.argument("player");
+      final int width = (int)call.argument("width");
+      final int height = (int)call.argument("height");
       SurfaceTextureEntry te = texRegistry.createSurfaceTexture();
       SurfaceTexture tex = te.surfaceTexture();
-      tex.setDefaultBufferSize(1920, 1080); // TODO: size from player. rotate, fullscreen change?
+      tex.setDefaultBufferSize(width, height); // TODO: size from player. rotate, fullscreen change?
       Surface surface = new Surface(tex); // TODO: when to release
       long texId = te.id();
-      nativeSetSurface(handle, texId, surface, 1920, 1080);
+      nativeSetSurface(handle, texId, surface, width, height);
       textures.put(texId, te);
       surfaces.put(texId, surface);
       result.success(texId);

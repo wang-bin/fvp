@@ -96,5 +96,6 @@ string(REPLACE "/lib/" "/bin/" MDK_BIN_DIR ${MDK_LIB_DIR})
 set(fvp_bundled_libraries
     ${MDK_BIN_DIR}/mdk.dll
     ${MDK_BIN_DIR}/ffmpeg-6.dll
+    ${MDK_BIN_DIR}/libass.dll
   PARENT_SCOPE
 )
