@@ -2,7 +2,6 @@
 
 [Flutter Video Player](https://pub.dev/packages/video_player) **Plugin** based on [libmdk](https://github.com/wang-bin/mdk-sdk) for all desktop and mobile platforms.
 
-
 ## Features
 - All platforms: Windows, Linux, macOS, iOS, Android
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android
@@ -27,11 +26,10 @@ pod install --verbose
 
 ## How to Use
 Add 2 lines in your video_player examples
-- `import 'package:fvp/video_player_mdk.dart';`
+- `import 'package:fvp/fvp.dart';`
 - `MdkVideoPlayer.registerWith();`
 ## TODO:
 - [ ] Assets
-- [ ] Texture size
 - [ ] Android vulkan rendering
 
 ## Known Issues

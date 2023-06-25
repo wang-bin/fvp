@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 WangBin <wbsecg1 at gmail.com>
+ */
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 #ifndef FLUTTER_PLUGIN_FVP_PLUGIN_H_
 #define FLUTTER_PLUGIN_FVP_PLUGIN_H_
 

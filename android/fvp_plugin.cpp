@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2023 WangBin <wbsecg1 at gmail.com>
  */
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 #include <jni.h>
 #include <android/native_window_jni.h>
 #include <android/log.h>

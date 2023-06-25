@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 WangBin <wbsecg1 at gmail.com>
+ */
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 #include "fvp_plugin.h"
 #include <flutter/standard_method_codec.h>
 

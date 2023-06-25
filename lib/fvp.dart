@@ -1,55 +1,5 @@
+// Copyright 2022 Wang Bin. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-
-import 'fvp_platform_interface.dart';
-import 'dart:io';
-import 'src/global.dart' as mdk;
-import 'src/player.dart' as mdk;
-
-class Fvp {
-  final player = mdk.Player();
-
-  Fvp() {
-    player.loop = -1;
-    switch (Platform.operatingSystem) {
-    case 'windows':
-        player.videoDecoders = ['MFT:d3d=11', 'CUDA', 'FFmpeg'];
-    case 'macos':
-        player.videoDecoders = ['VT', 'FFmpeg'];
-    case 'ios':
-        player.videoDecoders = ['VT', 'FFmpeg'];
-    case 'linux':
-        player.videoDecoders = ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'];
-    case 'android':
-        player.videoDecoders = ['AMediaCodec', 'FFmpeg'];
-    }
-
-    player.onStateChanged((oldValue, newValue) {
-      print('onStateChanged: $oldValue => $newValue');
-    });
-    player.onMediaStatusChanged((oldValue, newValue) {
-      print('onMediaStatusChanged: $oldValue => $newValue');
-      if (!oldValue.test(mdk.MediaStatus.loaded) && newValue.test(mdk.MediaStatus.loaded)) {
-        final info = player.mediaInfo;
-        print('$info');
-      }
-      return true;
-    });
-
-    player.media = "https://live.nodemedia.cn:8443/live/b480_265.flv";
-    player.state = mdk.State.playing;
-    //player.setAspectRatio(mdk.ignoreAspectRatio);
-    //player.rotate(90);
-  }
-
-  Future<String?> getPlatformVersion() {
-    return FvpPlatform.instance.getPlatformVersion();
-  }
-
-  Future<int> createTexture() {
-    return FvpPlatform.instance.createTexture(player.nativeHandle);
-  }
-
-  int getMdkVersion() {
-    return mdk.version();
-  }
-}
+export 'video_player_mdk.dart';

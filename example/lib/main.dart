@@ -10,7 +10,7 @@
 // #docregion basic-example
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:fvp/video_player_mdk.dart';
+import 'package:fvp/fvp.dart';
 
 void main() => runApp(const VideoApp());
 

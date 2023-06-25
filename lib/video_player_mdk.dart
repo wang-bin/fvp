@@ -1,3 +1,7 @@
+// Copyright 2022 Wang Bin. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/widgets.dart';
@@ -5,7 +9,7 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 
 import 'src/global.dart' as mdk;
 import 'src/player.dart' as mdk;
-import 'fvp_platform_interface.dart';
+import 'src/fvp_platform_interface.dart';
 
 class MdkVideoPlayer extends VideoPlayerPlatform {
 
