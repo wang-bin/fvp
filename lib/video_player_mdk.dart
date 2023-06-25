@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
@@ -25,8 +24,9 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   @override
   Future<void> dispose(int textureId) async {
     final p = _players[textureId];
-    if (p == null)
+    if (p == null) {
       return;
+    }
     // await: ensure player deleted when no use in fvp plugin
     await FvpPlatform.instance.releaseTexture(p.nativeHandle, textureId);
     _players.remove(textureId);
@@ -59,6 +59,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
         break;
     }
     final player = mdk.Player();
+    print('$hashCode player${player.nativeHandle} create($uri)');
 
     // TODO: how to set decoders by user?
     switch (Platform.operatingSystem) {
@@ -74,11 +75,18 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
         player.videoDecoders = ['AMediaCodec', 'FFmpeg'];
     }
 
-    final tex = await FvpPlatform.instance.createTexture(player.nativeHandle);
-    _players[tex] = player;
-    _streamCtl[tex] = _initEvents(player);
+    final c = Completer<Size?>();
+    final sc = _initEvents(player, c);
     player.media = uri!;
     player.prepare(); // required!
+    final size = await c.future;
+    if (size == null) {
+      player.dispose();
+      return null;
+    }
+    final tex = await FvpPlatform.instance.createTexture(player.nativeHandle, size.width.toInt(), size.height.toInt());
+    _players[tex] = player;
+    _streamCtl[tex] = sc;
     return tex;
   }
 
@@ -157,7 +165,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   Future<void> setMixWithOthers(bool mixWithOthers) async {
   }
 
-  StreamController<VideoEvent> _initEvents(mdk.Player player) {
+  StreamController<VideoEvent> _initEvents(mdk.Player player, Completer<Size?> completer) {
     final sc = StreamController<VideoEvent>();
     player.onMediaStatusChanged((oldValue, newValue) {
       print('$hashCode player${player.nativeHandle} onMediaStatusChanged: $oldValue => $newValue');
@@ -168,6 +176,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
           final vc = info.video![0].codec;
           size = Size(vc.width.toDouble(), vc.height.toDouble());
         }
+        completer.complete(size);
         sc.add(VideoEvent(eventType: VideoEventType.initialized
           , duration: Duration(milliseconds: info.duration == 0 ? double.maxFinite.toInt() : info.duration) // FIXME: live stream info.duraiton == 0 and result a seekTo(0) in play()
           , size: size));
@@ -175,6 +184,9 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
         sc.add(VideoEvent(eventType: VideoEventType.bufferingStart));
       } else if (!oldValue.test(mdk.MediaStatus.buffered) && newValue.test(mdk.MediaStatus.buffered)) {
         sc.add(VideoEvent(eventType: VideoEventType.bufferingEnd));
+      }
+      if (oldValue.test(mdk.MediaStatus.loading) && newValue.test(mdk.MediaStatus.invalid|mdk.MediaStatus.stalled)) {
+        completer.complete(null);
       }
       return true;
     });

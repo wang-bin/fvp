@@ -17,7 +17,7 @@ fileprivate class FvpRenderer: NSObject, FlutterTexture {
     private var registry: FlutterTextureRegistry
     var textureId: Int64 = 0
 
-    init(player: Player, textureRegistry: FlutterTextureRegistry) {
+    init(player: Player, width: Int, height: Int, textureRegistry: FlutterTextureRegistry) {
         registry = textureRegistry
         super.init()
         self.player = player
@@ -32,7 +32,7 @@ fileprivate class FvpRenderer: NSObject, FlutterTexture {
         device = MTLCreateSystemDefaultDevice()
         cmdQueue = device.makeCommandQueue()
         CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device!, nil, &texCache)
-        createTexture(width:1920, height:1080)
+        createTexture(width:width, height:height)
     }
 
     deinit {
@@ -104,8 +104,10 @@ public class FvpPlugin: NSObject, FlutterPlugin {
     case "CreateRT":
         let args = call.arguments as! [String: Any]
         let handle = args["player"] as! Int64
+        let width = Int(args["width"] as! Int64)
+        let height = Int(args["height"] as! Int64)
         let player = Player(UnsafePointer<mdkPlayerAPI>(OpaquePointer(bitPattern: Int(handle))))
-        let render = FvpRenderer(player: player, textureRegistry: registry)
+        let render = FvpRenderer(player: player, width: width, height: height, textureRegistry: registry)
         renderers[render.textureId] = render
         result(render.textureId)
     case "ReleaseRT":

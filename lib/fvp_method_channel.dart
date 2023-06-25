@@ -16,9 +16,11 @@ class MethodChannelFvp extends FvpPlatform {
   }
 
   @override
-  Future<int> createTexture(int playerHandle) async {
+  Future<int> createTexture(int playerHandle, int width, int height) async {
     final tex = await methodChannel.invokeMethod('CreateRT', {
-      "player": playerHandle
+      "player": playerHandle,
+      "width": width,
+      "height": height,
     });
     return tex;
   }
