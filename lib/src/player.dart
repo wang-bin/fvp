@@ -296,25 +296,28 @@ class Player {
     if (callback == null) {
       _unregisterType(nativeHandle, 0);
     } else {
-      _registerType(nativeHandle, 0);
+      _registerType(nativeHandle, 0, false);
     }
   }
 
-  void onStateChanged(void Function(State oldValue, State newValue)? callback) {
+// reply: true to let native code wait for dart callback result
+  void onStateChanged(void Function(State oldValue, State newValue)? callback, {bool reply = false}) {
     _stateCb = callback;
     if (callback == null) {
       _unregisterType(nativeHandle, 1);
     } else {
-      _registerType(nativeHandle, 1);
+      _registerType(nativeHandle, 1, reply);
     }
   }
 
-  void onMediaStatusChanged(bool Function(MediaStatus oldValue, MediaStatus newValue)? callback) {
+// reply: true to let native code wait for dart callback result, may result in dead lock because when native waiting main isolate reply, main isolate may execute another task(e.g. frequent seekTo) which also acquire the same lock in native
+// TODO: can add multiple callbacks, the last 1 reply parameter works
+  void onMediaStatusChanged(bool Function(MediaStatus oldValue, MediaStatus newValue)? callback, {bool reply = false}) {
     _statusCb = callback;
     if (callback == null) {
       _unregisterType(nativeHandle, 2);
     } else {
-      _registerType(nativeHandle, 2);
+      _registerType(nativeHandle, 2, reply);
     }
   }
 
@@ -352,7 +355,7 @@ class Player {
   final _receivePort = ReceivePort();
   final _registerPort = _dso.lookupFunction<Void Function(Int64, Pointer<Void>, Int64), void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
   final _unregisterPort = _dso.lookupFunction<Void Function(Int64), void Function(int)>('MdkCallbacksUnregisterPort');
-  final _registerType = _dso.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksRegisterType');
+  final _registerType = _dso.lookupFunction<Void Function(Int64, Int, Bool), void Function(int, int, bool)>('MdkCallbacksRegisterType');
   final _unregisterType = _dso.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
   final _replyType = _dso.lookupFunction<Void Function(Int64, Int, Pointer<Void>), void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
 

@@ -20,6 +20,7 @@ public:
     }
 
     int callbackTypes = 0;
+    bool reply[int(CallbackType::Count)] = {};
     bool dataReady[int(CallbackType::Count)] = {};
     CallbackReply data[int(CallbackType::Count)];
     mutex mtx[int(CallbackType::Count)];
@@ -135,11 +136,12 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             clog << "postCObject error" << endl;
             return;
         }
+        if (!p->reply[type])
+            return;
         if (tid == this_thread::get_id()) {// FIXME: can not convert dart non-static function to native function, and dart object has no address, so func(context, args) is impossible too
             clog << "main thread. won't wait callback" << endl;
             return;
         }
-        // wait. TODO: no wait if no return type
         p->cv[type].wait(lock, [=]{
             return p->dataReady[type] || !(p->callbackTypes & (1 << type));
         });
@@ -191,6 +193,8 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             clog << "postCObject error" << endl;
             return true;
         }
+        if (!p->reply[type])
+            return true;
         if (tid == this_thread::get_id()) {// FIXME: can not convert dart non-static function to native function, and dart object has no address, so func(context, args) is impossible too
             clog << "main thread. won't wait callback" << endl;
             return true;
@@ -222,7 +226,7 @@ FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle)
     players.erase(it);
 }
 
-FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type)
+FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type, bool reply)
 {
     const auto it = players.find(handle);
     if (it == players.cend()) {
@@ -231,6 +235,7 @@ FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type)
 
     auto sp = it->second;
     sp->callbackTypes |= (1 << type);
+    sp->reply[type] = reply;
 }
 
 FVP_EXPORT void MdkCallbacksUnregisterType(int64_t handle, int type)
