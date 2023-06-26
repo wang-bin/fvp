@@ -20,40 +20,6 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   ffigen: ^8.0.2
 
-ffigen:
-  name: NativeLibrary
-  description: Bindings to libmdk
-  output: lib/src/generated_bindings.dart
-  headers:
-    entry-points:
-      - mdk-sdk/include/mdk/c/module.h
-  functions:
-    include:
-      - MDK.*
-      - mdk.*
-  structs:
-    include:
-      - MDK.*
-      - mdk.*
-    exclude:
-      - mdk.+RenderAPI
-  unions:
-    include:
-      - MDK.*
-      - mdk.*
-  enums:
-    include:
-      - MDK.*
-      - mdk.*
-  macros:
-    include:
-      - MDK.*
-      - mdk.*
-  globals:
-    include:
-      - MDK.*
-      - mdk.*
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

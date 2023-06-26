@@ -21,12 +21,12 @@
                 "args": ["run", "-d", "linux"]
             },
             "osx":{
-                "args": ["run", "-d", "macos"]
+                "args": ["run", "-d", "macos", "--verbose"]
             },
             "options": {
                 "cwd": "${workspaceRoot}/example",
                 "env": {
-                    //"MDK_CLOG": 1,
+                    //"MDK_CLOG": "1",
                     //"MDK_LOG_STATUS": 1,
                 }
             },
@@ -53,6 +53,20 @@
             "problemMatcher": ["$gcc", "$msCompile"]
         },
         {
+            "label": "Build iOS",
+            "args": ["build", "ios", "--release", "--no-codesign",
+                "--verbose",
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/example",
+                "env": {
+                    "MDK_CLOG": 1,
+                    "MDK_LOG_STATUS": 1,
+                }
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Run Debug Android",
             "args": ["run", "-d",
                 "23013RK75C",
@@ -68,11 +82,23 @@
             "problemMatcher": []
         },
         {
+            "label": "Build APK",
+            "args": ["build", "apk",
+                "--verbose",
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/example",
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "FFIGen",
             "command": "dart",
             "args": [
                 "run",
-                "ffigen"
+                "ffigen",
+                "--config",
+                "config.yaml",
             ],
             "problemMatcher": []
         }
