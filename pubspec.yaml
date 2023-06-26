@@ -1,6 +1,6 @@
 name: fvp
 description: Flutter video player plugin for all platforms
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/wang-bin/fvp
 
 environment:

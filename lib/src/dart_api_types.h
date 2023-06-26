@@ -1,7 +1,7 @@
 #ifndef DART_API_TYPES_H_
 #define DART_API_TYPES_H_
 
-#include <cstdint>
+#include <stdint.h>
 
 // Dart API type declarations.
 
