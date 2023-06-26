@@ -1,3 +1,4 @@
 ## 0.0.1
 
-* TODO: Describe initial release.
+* video playback for windows, linux, macos, ios, android
+* hardware decoding, optimal gpu rendering

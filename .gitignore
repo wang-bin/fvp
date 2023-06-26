@@ -1,5 +1,13 @@
 # Miscellaneous
+.vscode/settings.json
 mdk-sdk/
+*.dll
+*.so
+*.7z
+*.apk
+*.aab
+*.xz
+*.lock
 *.class
 *.log
 *.pyc
