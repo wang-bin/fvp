@@ -156,7 +156,7 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
   void initState() {
     super.initState();
     MdkVideoPlayer.registerWith();
-    _controller = VideoPlayerController.network('https://ks3-cn-beijing.ksyun.com/ksplayer/h265/mp4_resource/jinjie_265.mp4');
+    _controller = VideoPlayerController.network('https://cdn.theoplayer.com/video/big_buck_bunny/stream-3-3000000/index.m3u8');
 
     _controller.addListener(() {
       setState(() {});
@@ -392,18 +392,20 @@ class _PlayerVideoAndPopPageState extends State<_PlayerVideoAndPopPage> {
   late VideoPlayerController _videoPlayerController;
   bool startedPlaying = false;
 
+  void _onVideoControllerValueUpdated() {
+    if (startedPlaying && !_videoPlayerController.value.isPlaying) {
+      _videoPlayerController.removeListener(_onVideoControllerValueUpdated); // https://github.com/flutter/flutter/issues/122690
+      Navigator.pop(context);
+    }
+  }
   @override
   void initState() {
     super.initState();
     MdkVideoPlayer.registerWith();
 
     _videoPlayerController =
-        VideoPlayerController.asset('assets/Butterfly-209.mp4');
-    _videoPlayerController.addListener(() {
-      if (startedPlaying && !_videoPlayerController.value.isPlaying) {
-        Navigator.pop(context);
-      }
-    });
+        VideoPlayerController.network('https://ks3-cn-beijing.ksyun.com/ksplayer/h265/mp4_resource/jinjie_265.mp4');
+    _videoPlayerController.addListener(_onVideoControllerValueUpdated);
   }
 
   @override
