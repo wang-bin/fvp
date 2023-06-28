@@ -16,9 +16,22 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
 
   static final _players = <int, mdk.Player>{};
   static final _streamCtl = <int, StreamController<VideoEvent>>{};
+  static dynamic _options;
 
   /// Registers this class as the default instance of [VideoPlayerPlatform].
-  static void registerWith() {
+  static void registerWith({dynamic options}) {
+    _options = options;
+    _options ??= <String, dynamic>{};
+    const vd = {
+      'windows': ['MFT:d3d=11', 'CUDA', 'FFmpeg'],
+      'macos': ['VT', 'FFmpeg'],
+      'ios': ['VT', 'FFmpeg'],
+      'linux': ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'],
+      'android': ['AMediaCodec', 'FFmpeg'],
+    };
+    if (_options is Map<String, dynamic>) {
+      _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]);
+    }
     VideoPlayerPlatform.instance = MdkVideoPlayer();
   }
 
@@ -60,19 +73,8 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     }
     final player = mdk.Player();
     print('$hashCode player${player.nativeHandle} create($uri)');
-
-    // TODO: how to set decoders by user?
-    switch (Platform.operatingSystem) {
-    case 'windows':
-        player.videoDecoders = ['MFT:d3d=11', 'CUDA', 'FFmpeg'];
-    case 'macos':
-        player.videoDecoders = ['VT', 'FFmpeg'];
-    case 'ios':
-        player.videoDecoders = ['VT', 'FFmpeg'];
-    case 'linux':
-        player.videoDecoders = ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'];
-    case 'android':
-        player.videoDecoders = ['AMediaCodec', 'FFmpeg'];
+    if (_options is Map<String, dynamic>) {
+      player.videoDecoders = _options['video.decoders'];
     }
 
     final c = Completer<Size?>();
