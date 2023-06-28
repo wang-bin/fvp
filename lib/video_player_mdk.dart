@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+import 'package:logging/logging.dart';
 
 import 'src/global.dart' as mdk;
 import 'src/player.dart' as mdk;
@@ -17,6 +18,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   static final _players = <int, mdk.Player>{};
   static final _streamCtl = <int, StreamController<VideoEvent>>{};
   static dynamic _options;
+  final log = Logger('FVP');
 
   /// Registers this class as the default instance of [VideoPlayerPlatform].
   static void registerWith({dynamic options}) {
@@ -72,7 +74,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
         break;
     }
     final player = mdk.Player();
-    print('$hashCode player${player.nativeHandle} create($uri)');
+    log.fine('$hashCode player${player.nativeHandle} create($uri)');
     if (_options is Map<String, dynamic>) {
       player.videoDecoders = _options['video.decoders'];
     }
@@ -176,7 +178,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   StreamController<VideoEvent> _initEvents(mdk.Player player, Completer<Size?> completer) {
     final sc = StreamController<VideoEvent>();
     player.onMediaStatusChanged((oldValue, newValue) {
-      print('$hashCode player${player.nativeHandle} onMediaStatusChanged: $oldValue => $newValue');
+      log.fine('$hashCode player${player.nativeHandle} onMediaStatusChanged: $oldValue => $newValue');
       if (!oldValue.test(mdk.MediaStatus.loaded) && newValue.test(mdk.MediaStatus.loaded)) {
         final info = player.mediaInfo;
         var size = const Size(0, 0);
@@ -204,7 +206,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     });
 
     player.onEvent((ev) {
-      print('$hashCode player${player.nativeHandle} onEvent: ${ev.category} ${ev.error}');
+      log.fine('$hashCode player${player.nativeHandle} onEvent: ${ev.category} ${ev.error}');
       if (ev.category == "reader.buffering") {
         final pos = player.position;
         final bufLen = player.buffered();
@@ -214,7 +216,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     });
 
     player.onStateChanged((oldValue, newValue) {
-      print('$hashCode player${player.nativeHandle} onStateChanged: $oldValue => $newValue');
+      log.fine('$hashCode player${player.nativeHandle} onStateChanged: $oldValue => $newValue');
       sc.add(VideoEvent(eventType: VideoEventType.isPlayingStateUpdate
         , isPlaying: newValue == mdk.State.playing));
     });
