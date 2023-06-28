@@ -11,6 +11,7 @@ dependencies:
   ffi: ^2.0.2
   flutter:
     sdk: flutter
+  path: ^1.8.3
   plugin_platform_interface: ^2.0.2
   video_player_platform_interface: ^6.1.0
 

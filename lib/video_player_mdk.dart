@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/widgets.dart';
+import 'package:path/path.dart' as path;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
 import 'src/global.dart' as mdk;
@@ -40,20 +41,15 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
 
   @override
   Future<int?> create(DataSource dataSource) async {
-    String? asset;
-    String? packageName;
     String? uri;
-    String? formatHint;
-    Map<String, String> httpHeaders = <String, String>{};
+    //Map<String, String> httpHeaders = <String, String>{};
     switch (dataSource.sourceType) {
       case DataSourceType.asset:
-        asset = dataSource.asset;
-        packageName = dataSource.package;
+        uri = _assetUri(dataSource.asset!, dataSource.package);
         break;
       case DataSourceType.network:
         uri = dataSource.uri;
-        //formatHint = _videoFormatStringMap[dataSource.formatHint];
-        httpHeaders = dataSource.httpHeaders;
+        //httpHeaders = dataSource.httpHeaders;
         break;
       case DataSourceType.file:
         uri = dataSource.uri;
@@ -221,5 +217,22 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
         , isPlaying: newValue == mdk.State.playing));
     });
     return sc;
+  }
+
+  static String _assetUri(String asset, String? package) {
+    final key = asset;
+    switch (Platform.operatingSystem) {
+    case 'windows':
+        return path.join(path.dirname(Platform.resolvedExecutable), 'data', 'flutter_assets', key);
+    case 'linux':
+        return path.join(path.dirname(Platform.resolvedExecutable), 'data', 'flutter_assets', key);
+    case 'macos':
+        return path.join(path.dirname(Platform.resolvedExecutable), '..', 'Frameworks', 'App.framework', 'Resources', 'flutter_assets', key);
+    case 'ios':
+        return path.join(path.dirname(Platform.resolvedExecutable), 'Frameworks', 'App.framework', 'flutter_assets', key);
+    case 'android':
+        return 'assets://flutter_assets/$key';
+    }
+    return asset;
   }
 }

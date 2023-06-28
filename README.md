@@ -40,10 +40,6 @@ pod cache clean mdk
 pod install --verbose
 ```
 
-## TODO:
-- [ ] Assets
-- [ ] Android vulkan rendering
-
 ## Known Issues
 - Memory leak on linux if a player is disposed
 
