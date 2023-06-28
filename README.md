@@ -2,6 +2,8 @@
 
 [Flutter Video Player](https://pub.dev/packages/video_player) **Plugin** based on [libmdk](https://github.com/wang-bin/mdk-sdk) for all desktop and mobile platforms.
 
+Prebuilt example can be download from artifacts of [github actions](https://github.com/wang-bin/fvp/actions).
+
 ## Features
 - All platforms: Windows, Linux, macOS, iOS, Android
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android
@@ -10,7 +12,8 @@
 
 
 ## How to Use
-Add 2 lines in your video_player examples
+
+`flutter pub add fvp` then add 2 lines in your video_player examples
 
 ```dart
 import 'package:fvp/fvp.dart';
@@ -18,7 +21,9 @@ import 'package:fvp/fvp.dart';
 MdkVideoPlayer.registerWith();
 ```
 
-## Build
+## Build this Git Repo
+
+If you are developing this project
 
 ```bash
 git submodule update --init

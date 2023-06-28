@@ -145,10 +145,16 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   @override
   Future<Duration> getPosition(int textureId) async {
     final player = _players[textureId];
-    if (player != null) {
-      return Duration(milliseconds: player.position);
+    if (player == null) {
+      return Duration.zero;
     }
-    return Duration.zero;
+    final sc = _streamCtl[textureId];
+    final pos = player.position;
+    final bufLen = player.buffered();
+    sc?.add(VideoEvent(eventType: VideoEventType.bufferingUpdate
+      , buffered: [DurationRange(Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))]));
+    return Duration(milliseconds: pos);
+
   }
 
   @override
@@ -180,7 +186,9 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
           final vc = info.video![0].codec;
           size = Size(vc.width.toDouble(), vc.height.toDouble());
         }
-        completer.complete(size);
+        if (!completer.isCompleted) {
+          completer.complete(size);
+        }
         sc.add(VideoEvent(eventType: VideoEventType.initialized
           , duration: Duration(milliseconds: info.duration == 0 ? double.maxFinite.toInt() : info.duration) // FIXME: live stream info.duraiton == 0 and result a seekTo(0) in play()
           , size: size));
@@ -190,7 +198,9 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
         sc.add(VideoEvent(eventType: VideoEventType.bufferingEnd));
       }
       if (oldValue.test(mdk.MediaStatus.loading) && newValue.test(mdk.MediaStatus.invalid|mdk.MediaStatus.stalled)) {
-        completer.complete(null);
+        if (!completer.isCompleted) {
+          completer.complete(null);
+        }
       }
       return true;
     });
