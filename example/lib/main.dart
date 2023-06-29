@@ -12,6 +12,7 @@ import 'package:video_player/video_player.dart';
 import 'package:fvp/fvp.dart';
 
 void main() {
+  MdkVideoPlayer.registerWith();
   runApp(
     MaterialApp(
       home: _App(),
@@ -155,7 +156,6 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
   @override
   void initState() {
     super.initState();
-    MdkVideoPlayer.registerWith();
     _controller = VideoPlayerController.network('https://cdn.theoplayer.com/video/big_buck_bunny/stream-3-3000000/index.m3u8');
 
     _controller.addListener(() {
@@ -219,7 +219,6 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   @override
   void initState() {
     super.initState();
-    MdkVideoPlayer.registerWith();
     _controller = VideoPlayerController.network(
       'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
       closedCaptionFile: _loadCaptions(),
@@ -401,7 +400,6 @@ class _PlayerVideoAndPopPageState extends State<_PlayerVideoAndPopPage> {
   @override
   void initState() {
     super.initState();
-    MdkVideoPlayer.registerWith();
 
     _videoPlayerController =
         VideoPlayerController.network('https://ks3-cn-beijing.ksyun.com/ksplayer/h265/mp4_resource/jinjie_265.mp4');

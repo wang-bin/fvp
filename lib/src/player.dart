@@ -20,7 +20,7 @@ class Player {
   Player() {
     _pp.value = _player;
     _fi.attach(this, this);
-    _registerPort(nativeHandle, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
+    Libfvp.registerPort(nativeHandle, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
     _receivePort.listen((message) {
       final type = message[0] as int;
       final rep = calloc<_CallbackReply>();
@@ -40,7 +40,7 @@ class Player {
           if (_stateCb != null) {
             _stateCb!(State.from(oldValue), State.from(newValue));
           }
-          _replyType(nativeHandle, type, nullptr);
+          Libfvp.replyType(nativeHandle, type, nullptr);
         }
         case 2: { // media status
           final oldValue = message[1] as int;
@@ -50,7 +50,7 @@ class Player {
             ret = _statusCb!(MediaStatus(oldValue), MediaStatus(newValue));
           }
           rep.ref.mediaStatus.ret = ret;
-          _replyType(nativeHandle, type, rep.cast());
+          Libfvp.replyType(nativeHandle, type, rep.cast());
         }
       }
       calloc.free(rep);
@@ -66,7 +66,7 @@ class Player {
     onStateChanged(null);
     onMediaStatusChanged(null);
 
-    _unregisterPort(nativeHandle);
+    Libfvp.unregisterPort(nativeHandle);
 
     _receivePort.close();
 
@@ -295,9 +295,9 @@ class Player {
   void onEvent(void Function(MediaEvent)? callback) {
     _eventCb = callback;
     if (callback == null) {
-      _unregisterType(nativeHandle, 0);
+      Libfvp.unregisterType(nativeHandle, 0);
     } else {
-      _registerType(nativeHandle, 0, false);
+      Libfvp.registerType(nativeHandle, 0, false);
     }
   }
 
@@ -305,9 +305,9 @@ class Player {
   void onStateChanged(void Function(State oldValue, State newValue)? callback, {bool reply = false}) {
     _stateCb = callback;
     if (callback == null) {
-      _unregisterType(nativeHandle, 1);
+      Libfvp.unregisterType(nativeHandle, 1);
     } else {
-      _registerType(nativeHandle, 1, reply);
+      Libfvp.registerType(nativeHandle, 1, reply);
     }
   }
 
@@ -316,9 +316,9 @@ class Player {
   void onMediaStatusChanged(bool Function(MediaStatus oldValue, MediaStatus newValue)? callback, {bool reply = false}) {
     _statusCb = callback;
     if (callback == null) {
-      _unregisterType(nativeHandle, 2);
+      Libfvp.unregisterType(nativeHandle, 2);
     } else {
-      _registerType(nativeHandle, 2, reply);
+      Libfvp.registerType(nativeHandle, 2, reply);
     }
   }
 
@@ -333,11 +333,6 @@ class Player {
 
 
   final _receivePort = ReceivePort();
-  final _registerPort = Libfvp.instance.lookupFunction<Void Function(Int64, Pointer<Void>, Int64), void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
-  final _unregisterPort = Libfvp.instance.lookupFunction<Void Function(Int64), void Function(int)>('MdkCallbacksUnregisterPort');
-  final _registerType = Libfvp.instance.lookupFunction<Void Function(Int64, Int, Bool), void Function(int, int, bool)>('MdkCallbacksRegisterType');
-  final _unregisterType = Libfvp.instance.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
-  final _replyType = Libfvp.instance.lookupFunction<Void Function(Int64, Int, Pointer<Void>), void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
 
   void Function(MediaEvent)? _eventCb;
   void Function(State oldValue, State newValue)? _stateCb;

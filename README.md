@@ -21,11 +21,11 @@ import 'package:fvp/fvp.dart';
 MdkVideoPlayer.registerWith();
 ```
 
-To select other decoders, pass options like this
+To select [other decoders](https://github.com/wang-bin/mdk-sdk/wiki/Decoders), pass options like this
 ```dart
 MdkVideoPlayer.registerWith({'video.decoders': ['D3D11', 'NVDEC', 'FFmpeg']}); // windows
-
 ```
+
 ## Build this Git Repo
 
 If you are developing this project

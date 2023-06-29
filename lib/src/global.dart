@@ -210,17 +210,13 @@ void setLogHandler(void Function(LogLevel, String)? cb) {
 
 class _GlobalCallbacks {
   static final _receivePort = ReceivePort();
-  final _registerPort = Libfvp.instance.lookupFunction<Void Function(Int64, Pointer<Void>, Int64), void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
-  //final _unregisterPort = Libfvp.instance.lookupFunction<Void Function(Int64), void Function(int)>('MdkCallbacksUnregisterPort');
-  final _registerType = Libfvp.instance.lookupFunction<Void Function(Int64, Int, Bool), void Function(int, int, bool)>('MdkCallbacksRegisterType');
-  final _unregisterType = Libfvp.instance.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
 
   void Function(LogLevel, String)? _logCb;
 
   static _GlobalCallbacks instance = _GlobalCallbacks();
 
   _GlobalCallbacks() {
-    _registerPort(0, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
+    Libfvp.registerPort(0, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
     _receivePort.listen((message) {
       final type = message[0] as int;
       switch (type) {
@@ -238,9 +234,9 @@ class _GlobalCallbacks {
   void setLogHandler(void Function(LogLevel, String)? cb) {
     _logCb = cb;
     if (cb == null) {
-      _unregisterType(0, 5);
+      Libfvp.unregisterType(0, 5);
       return;
     }
-    _registerType(0, 5, false);
+    Libfvp.registerType(0, 5, false);
   }
 }
