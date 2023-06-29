@@ -1,7 +1,5 @@
 name: fvp
-description: |
-  A plugin for official video_player to support all desktop and mobile platforms, with hardware accelerated decoding and optimal rendering.
-  Video renderer is D3D11 on windows, Metal on macOS and iOS, OpenGL on Android and Linux. Supports most formats via FFmpeg.
+description: A plugin for video_player to support all desktop and mobile platforms, with hardware accelerated decoding and optimal rendering. Supports most formats via FFmpeg
 version: 0.0.4
 homepage: https://github.com/wang-bin/fvp
 
@@ -23,6 +21,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^2.0.0
   ffigen: ^8.0.2
+  lints: ^2.1.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
