@@ -66,6 +66,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     await FvpPlatform.instance.releaseTexture(p.nativeHandle, textureId);
     _players.remove(textureId);
     p.dispose();
+    _streamCtl[textureId]?.close();
     _streamCtl.remove(textureId);
   }
 
