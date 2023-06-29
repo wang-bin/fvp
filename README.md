@@ -1,6 +1,6 @@
 # FVP
 
-[Flutter Video Player](https://pub.dev/packages/video_player) **Plugin** based on [libmdk](https://github.com/wang-bin/mdk-sdk) for all desktop and mobile platforms.
+A plugin for [Flutter Video Player](https://pub.dev/packages/video_player) to support all desktop and mobile platforms, with hardware accelerated decoding and optimal rendering. Based on [libmdk](https://github.com/wang-bin/mdk-sdk).
 
 Prebuilt example can be download from artifacts of [github actions](https://github.com/wang-bin/fvp/actions).
 
@@ -9,7 +9,7 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android
 - Hardware decoders are enabled by default
 - Minimal code change for existing [Video Player](https://pub.dev/packages/video_player) apps
-
+- Support most formats via FFmpeg demuxer and software decoders if not supported by gpu.
 
 ## How to Use
 
@@ -21,6 +21,11 @@ import 'package:fvp/fvp.dart';
 MdkVideoPlayer.registerWith();
 ```
 
+To select other decoders, pass options like this
+```dart
+MdkVideoPlayer.registerWith({'video.decoders': ['D3D11', 'NVDEC', 'FFmpeg']}); // windows
+
+```
 ## Build this Git Repo
 
 If you are developing this project

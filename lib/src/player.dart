@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
@@ -59,7 +58,6 @@ class Player {
   }
 
   void dispose() {
-    print('$nativeHandle Player.dispose()');
     if (_pp == nullptr) {
       return;
     }
@@ -329,38 +327,17 @@ class Player {
 
   static final _fi = Finalizer((p0) {
     final p = p0 as Player;
-    print('finalizing $p');
     p.dispose();
   });
 
 
-  static DynamicLibrary _loadCallbacks() {
-    String name;
-    if (Platform.isWindows) {
-      name = 'fvp_plugin.dll';
-    } else if (Platform.isIOS || Platform.isMacOS) {
-      name = 'fvp.framework/fvp';
-    } else if (Platform.isAndroid || Platform.isLinux) {
-      name = 'libfvp_plugin.so';
-    } else {
-      throw Exception(
-          'Unsupported operating system: ${Platform.operatingSystem}.',
-        );
-    }
-    try {
-      return DynamicLibrary.open(name);
-    } catch(e) {
-      rethrow;
-    }
-  }
 
-  static final _dso = _loadCallbacks();
   final _receivePort = ReceivePort();
-  final _registerPort = _dso.lookupFunction<Void Function(Int64, Pointer<Void>, Int64), void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
-  final _unregisterPort = _dso.lookupFunction<Void Function(Int64), void Function(int)>('MdkCallbacksUnregisterPort');
-  final _registerType = _dso.lookupFunction<Void Function(Int64, Int, Bool), void Function(int, int, bool)>('MdkCallbacksRegisterType');
-  final _unregisterType = _dso.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
-  final _replyType = _dso.lookupFunction<Void Function(Int64, Int, Pointer<Void>), void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
+  final _registerPort = Libfvp.instance.lookupFunction<Void Function(Int64, Pointer<Void>, Int64), void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
+  final _unregisterPort = Libfvp.instance.lookupFunction<Void Function(Int64), void Function(int)>('MdkCallbacksUnregisterPort');
+  final _registerType = Libfvp.instance.lookupFunction<Void Function(Int64, Int, Bool), void Function(int, int, bool)>('MdkCallbacksRegisterType');
+  final _unregisterType = Libfvp.instance.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
+  final _replyType = Libfvp.instance.lookupFunction<Void Function(Int64, Int, Pointer<Void>), void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
 
   void Function(MediaEvent)? _eventCb;
   void Function(State oldValue, State newValue)? _stateCb;

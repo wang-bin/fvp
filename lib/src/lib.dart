@@ -28,3 +28,28 @@ abstract class Libmdk {
 
   static final instance = NativeLibrary(_load());
 }
+
+
+abstract class Libfvp {
+  static DynamicLibrary _load() {
+    String name;
+    if (Platform.isWindows) {
+      name = 'fvp_plugin.dll';
+    } else if (Platform.isIOS || Platform.isMacOS) {
+      name = 'fvp.framework/fvp';
+    } else if (Platform.isAndroid || Platform.isLinux) {
+      name = 'libfvp_plugin.so';
+    } else {
+      throw Exception(
+          'Unsupported operating system: ${Platform.operatingSystem}.',
+        );
+    }
+    try {
+      return DynamicLibrary.open(name);
+    } catch(e) {
+      rethrow;
+    }
+  }
+
+  static final instance = _load();
+}

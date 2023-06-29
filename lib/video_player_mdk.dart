@@ -18,7 +18,8 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   static final _players = <int, mdk.Player>{};
   static final _streamCtl = <int, StreamController<VideoEvent>>{};
   static dynamic _options;
-  final log = Logger('FVP');
+  final _log = Logger('fvp');
+  static final _mdkLog = Logger('mdk');
 
   /// Registers this class as the default instance of [VideoPlayerPlatform].
   static void registerWith({dynamic options}) {
@@ -35,6 +36,20 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
       _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]);
     }
     VideoPlayerPlatform.instance = MdkVideoPlayer();
+
+    mdk.setLogHandler((level, msg) {
+      if (msg.endsWith('\n')) {
+        msg = msg.substring(0, msg.length - 1);
+      }
+      switch (level) {
+      case mdk.LogLevel.error: _mdkLog.severe(msg);
+      case mdk.LogLevel.warning: _mdkLog.warning(msg);
+      case mdk.LogLevel.info: _mdkLog.info(msg);
+      case mdk.LogLevel.debug: _mdkLog.fine(msg);
+      case mdk.LogLevel.all: _mdkLog.finest(msg);
+      default: return;
+      }
+    });
   }
 
   @override
@@ -74,7 +89,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
         break;
     }
     final player = mdk.Player();
-    log.fine('$hashCode player${player.nativeHandle} create($uri)');
+    _log.fine('$hashCode player${player.nativeHandle} create($uri)');
     if (_options is Map<String, dynamic>) {
       player.videoDecoders = _options['video.decoders'];
     }
@@ -178,7 +193,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   StreamController<VideoEvent> _initEvents(mdk.Player player, Completer<Size?> completer) {
     final sc = StreamController<VideoEvent>();
     player.onMediaStatusChanged((oldValue, newValue) {
-      log.fine('$hashCode player${player.nativeHandle} onMediaStatusChanged: $oldValue => $newValue');
+      _log.fine('$hashCode player${player.nativeHandle} onMediaStatusChanged: $oldValue => $newValue');
       if (!oldValue.test(mdk.MediaStatus.loaded) && newValue.test(mdk.MediaStatus.loaded)) {
         final info = player.mediaInfo;
         var size = const Size(0, 0);
@@ -206,7 +221,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     });
 
     player.onEvent((ev) {
-      log.fine('$hashCode player${player.nativeHandle} onEvent: ${ev.category} ${ev.error}');
+      _log.fine('$hashCode player${player.nativeHandle} onEvent: ${ev.category} ${ev.error}');
       if (ev.category == "reader.buffering") {
         final pos = player.position;
         final bufLen = player.buffered();
@@ -216,7 +231,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     });
 
     player.onStateChanged((oldValue, newValue) {
-      log.fine('$hashCode player${player.nativeHandle} onStateChanged: $oldValue => $newValue');
+      _log.fine('$hashCode player${player.nativeHandle} onStateChanged: $oldValue => $newValue');
       sc.add(VideoEvent(eventType: VideoEventType.isPlayingStateUpdate
         , isPlaying: newValue == mdk.State.playing));
     });

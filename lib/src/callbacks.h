@@ -30,6 +30,7 @@ enum CallbackType {
     MediaStatus,
     Prepared,
     Sync,
+    Log,
     Count,
 };
 

@@ -36,13 +36,55 @@ public:
 
 static unordered_map<int64_t, shared_ptr<Player>> players;
 
+// global callbacks
+static int gCallbackTypes = 0;
 
 FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, int64_t send_port)
 {
+    const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
+    if (!handle) { // global callbacks
+        mdk::setLogHandler([=](mdk::LogLevel level, const char* logMsg){
+            const auto type = int(CallbackType::Log);
+            if (!(gCallbackTypes & (1 << type)))
+                return;
+            Dart_CObject t{
+                .type = Dart_CObject_kInt64,
+                .value = {
+                    .as_int64 = CallbackType::Log,
+                }
+            };
+            Dart_CObject lv{
+                .type = Dart_CObject_kInt64,
+                .value = {
+                    .as_int64 = (int64_t)level,
+                }
+            };
+            Dart_CObject txt{
+                .type = Dart_CObject_kString,
+                .value = {
+                    .as_string = logMsg,
+                }
+            };
+            Dart_CObject* arr[] = { &t, &lv, &txt };
+            Dart_CObject msg {
+                .type = Dart_CObject_kArray,
+                .value = {
+                    .as_array = {
+                        .length = std::size(arr),
+                        .values = arr,
+                    },
+                },
+            };
+            if (!postCObject(send_port, &msg)) {
+                cout << "postCObject error" << endl; // clog: dead log. why post error?
+                return;
+            }
+        });
+        return;
+    }
     auto player = make_shared<Player>(handle);
     players[handle] = player;
     const auto tid = this_thread::get_id();
-    const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
 
     auto wp = weak_ptr<Player>(player);
     player->onEvent([=](const mdk::MediaEvent& e){
@@ -213,6 +255,11 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
 
 FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle)
 {
+    if (!handle) {
+        mdk::setLogHandler(nullptr);
+        return;
+    }
+
     const auto it = players.find(handle);
     if (it == players.cend()) {
         return;
@@ -232,6 +279,11 @@ FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle)
 
 FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type, bool reply)
 {
+    if (!handle) {
+        gCallbackTypes |= (1 << type);
+        return;
+    }
+
     const auto it = players.find(handle);
     if (it == players.cend()) {
         return;
@@ -244,6 +296,11 @@ FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type, bool reply)
 
 FVP_EXPORT void MdkCallbacksUnregisterType(int64_t handle, int type)
 {
+    if (!handle) {
+        gCallbackTypes &= ~(1 << type);
+        return;
+    }
+
     const auto it = players.find(handle);
     if (it == players.cend()) {
         return;

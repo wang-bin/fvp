@@ -1,7 +1,8 @@
 // Copyright 2022 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
+import 'dart:ffi';
+import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 
 import 'generated_bindings.dart';
@@ -150,6 +151,17 @@ enum LogLevel {
 
   final int rawValue;
   const LogLevel(this.rawValue);
+
+  factory LogLevel.from(int rawValue) {
+    switch (rawValue) {
+    case MDK_LogLevel.MDK_LogLevel_Off: return off;
+    case MDK_LogLevel.MDK_LogLevel_Error: return error;
+    case MDK_LogLevel.MDK_LogLevel_Warning: return warning;
+    case MDK_LogLevel.MDK_LogLevel_Info: return info;
+    case MDK_LogLevel.MDK_LogLevel_All: return all;
+    default: return info;
+    }
+  }
 }
 
 class MediaEvent {
@@ -161,10 +173,6 @@ class MediaEvent {
 }
 
 int version() => Libmdk.instance.MDK_version();
-
-void setLogHandler(void Function(LogLevel, String) cb) {
-// TODO: global log isolate, in Libmdk.instance?
-}
 
 void setGlobalOption<T>(String name, T value) {
   final k = name.toNativeUtf8();
@@ -195,3 +203,44 @@ T? getGlobalOption<T>(String name) {
   }
 }
 */
+
+void setLogHandler(void Function(LogLevel, String)? cb) {
+  _GlobalCallbacks.instance.setLogHandler(cb);
+}
+
+class _GlobalCallbacks {
+  static final _receivePort = ReceivePort();
+  final _registerPort = Libfvp.instance.lookupFunction<Void Function(Int64, Pointer<Void>, Int64), void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
+  //final _unregisterPort = Libfvp.instance.lookupFunction<Void Function(Int64), void Function(int)>('MdkCallbacksUnregisterPort');
+  final _registerType = Libfvp.instance.lookupFunction<Void Function(Int64, Int, Bool), void Function(int, int, bool)>('MdkCallbacksRegisterType');
+  final _unregisterType = Libfvp.instance.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
+
+  void Function(LogLevel, String)? _logCb;
+
+  static _GlobalCallbacks instance = _GlobalCallbacks();
+
+  _GlobalCallbacks() {
+    _registerPort(0, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
+    _receivePort.listen((message) {
+      final type = message[0] as int;
+      switch (type) {
+        case 5: { // log
+          final level = message[1] as int;
+          final msg = message[2] as String;
+          if (_logCb != null) {
+            _logCb!(LogLevel.from(level), msg);
+          }
+        }
+      }
+    });
+  }
+
+  void setLogHandler(void Function(LogLevel, String)? cb) {
+    _logCb = cb;
+    if (cb == null) {
+      _unregisterType(0, 5);
+      return;
+    }
+    _registerType(0, 5, false);
+  }
+}

@@ -37,12 +37,6 @@ static unordered_map<int64_t, shared_ptr<TexturePlayer>> players;
 extern "C" {
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-    /*mdk::setLogHandler([](mdk::LogLevel v, const char *msg) {
-        if (v < mdk::LogLevel::Info)
-            __android_log_print(ANDROID_LOG_WARN, "MDK", "%s", msg);
-        else
-            __android_log_print(ANDROID_LOG_DEBUG, "MDK", "%s", msg);
-    });*/
 
     mdk::SetGlobalOption("profiler.gpu", 1);
 

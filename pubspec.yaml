@@ -1,5 +1,7 @@
 name: fvp
-description: Flutter video player plugin for all platforms
+description: |
+  A plugin for official video_player to support all desktop and mobile platforms, with hardware accelerated decoding and optimal rendering.
+  Video renderer is D3D11 on windows, Metal on macOS and iOS, OpenGL on Android and Linux. Supports most formats via FFmpeg.
 version: 0.0.3
 homepage: https://github.com/wang-bin/fvp
 
