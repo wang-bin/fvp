@@ -1,3 +1,8 @@
+## 0.0.5
+
+* fix macos, ios build for flutter without sharedDarwinSource support
+* fix StreamController close
+
 ## 0.0.4
 
 * supports assets
