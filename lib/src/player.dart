@@ -1,12 +1,14 @@
 // Copyright 2022 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart';
 
+import 'fvp_platform_interface.dart';
 import 'generated_bindings.dart';
 import 'global.dart';
 import 'media_info.dart';
@@ -55,24 +57,67 @@ class Player {
       }
       calloc.free(rep);
     });
+    onMediaStatusChanged((oldValue, newValue) {
+      if (!oldValue.test(MediaStatus.loaded) && newValue.test(MediaStatus.loaded)) {
+        final video = mediaInfo.video;
+        var size = const ui.Size(0, 0);
+        if (video != null) {
+          final vc = video[0].codec;
+          size = ui.Size(vc.width.toDouble(), vc.height.toDouble());
+        }
+        if (!_videoSize.isCompleted) {
+          _videoSize.complete(size);
+        }
+      }
+      if (oldValue.test(MediaStatus.loading) && newValue.test(MediaStatus.invalid|MediaStatus.stalled)) {
+        if (!_videoSize.isCompleted) {
+          _videoSize.complete(null);
+        }
+      }
+      return true;
+    });
   }
 
-  void dispose() {
+  void dispose() async {
     if (_pp == nullptr) {
       return;
     }
+    // await: ensure no player ref in fvp plugin before mdkPlayerAPI_delete() in dart
+    await updateTexture(width: -1);
     state = State.stopped;
+    Libfvp.unregisterPort(nativeHandle);
     onEvent(null);
     onStateChanged(null);
     onMediaStatusChanged(null);
 
-    Libfvp.unregisterPort(nativeHandle);
 
     _receivePort.close();
 
     Libmdk.instance.mdkPlayerAPI_delete(_pp);
     calloc.free(_pp);
     _pp = nullptr;
+  }
+
+  Future<int> updateTexture({int? width, int? height, bool? fit}) async {
+    if (_texId >= 0) {
+      await FvpPlatform.instance.releaseTexture(nativeHandle, _texId);
+      _texId = -1;
+    }
+    if (width == null && height == null) {
+      // original size
+      final size = await _videoSize.future;
+      if (size == null) {
+        return -1;
+      }
+      _texId = await FvpPlatform.instance.createTexture(nativeHandle, size.width.toInt(), size.height.toInt());
+      return _texId;
+    }
+    if (width != null && height != null && width > 0 && height > 0) {
+      _texId = await FvpPlatform.instance.createTexture(nativeHandle, width, height);
+      return _texId;
+    }
+  // release texture if width or height <= 0
+    return _texId;
   }
 
   set mute(bool value) {
@@ -118,6 +163,9 @@ class Player {
   set state(State value) {
     _state = value;
     _player.ref.setState.asFunction<void Function(Pointer<mdkPlayer>, int)>()(_player.ref.object, value.rawValue);
+    if (_state == State.stopped) {
+      _videoSize = Completer<ui.Size?>();
+    }
   }
 
   State get state => _state;
@@ -276,7 +324,7 @@ class Player {
 
   void setBackgroundColor(double r, double g, double b, double a, {Object? vid}) => _player.ref.setBackgroundColor.asFunction<void Function(Pointer<mdkPlayer>, double, double, double, double, Pointer<Void>)>()(_player.ref.object, r, g, b, a, Pointer.fromAddress(vid.hashCode));
 
-  void setBackground(Color c, {Object? vid}) => _player.ref.setBackgroundColor.asFunction<void Function(Pointer<mdkPlayer>, double, double, double, double, Pointer<Void>)>()(_player.ref.object, c.red/255, c.green/255, c.blue/255, c.alpha/255, Pointer.fromAddress(vid.hashCode));
+  void setBackground(ui.Color c, {Object? vid}) => _player.ref.setBackgroundColor.asFunction<void Function(Pointer<mdkPlayer>, double, double, double, double, Pointer<Void>)>()(_player.ref.object, c.red/255, c.green/255, c.blue/255, c.alpha/255, Pointer.fromAddress(vid.hashCode));
 
   void setVideoEffect(VideoEffect effect, List<double> value, {Object? vid}) {
     final cv = calloc<Float>(value.length);
@@ -332,7 +380,8 @@ class Player {
   });
 
 
-
+  int _texId = -1;
+  var _videoSize = Completer<ui.Size?>();
   final _receivePort = ReceivePort();
 
   void Function(MediaEvent)? _eventCb;
