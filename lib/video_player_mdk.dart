@@ -66,7 +66,6 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     await FvpPlatform.instance.releaseTexture(p.nativeHandle, textureId);
     _players.remove(textureId);
     p.dispose();
-    _streamCtl[textureId]?.close();
     _streamCtl.remove(textureId);
   }
 
@@ -83,7 +82,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
         //httpHeaders = dataSource.httpHeaders;
         break;
       case DataSourceType.file:
-        uri = dataSource.uri;
+        uri = Uri.decodeComponent(dataSource.uri!);
         break;
       case DataSourceType.contentUri:
         uri = dataSource.uri;
