@@ -46,8 +46,8 @@ class Player {
           final oldValue = message[1] as int;
           final newValue = message[2] as int;
           bool ret = true;
-          if (_statusCb != null) {
-            ret = _statusCb!(MediaStatus(oldValue), MediaStatus(newValue));
+          for (var cb in _statusCb) {
+            ret = cb(MediaStatus(oldValue), MediaStatus(newValue)) && ret;
           }
           rep.ref.mediaStatus.ret = ret;
           Libfvp.replyType(nativeHandle, type, rep.cast());
@@ -312,12 +312,13 @@ class Player {
   }
 
 // reply: true to let native code wait for dart callback result, may result in dead lock because when native waiting main isolate reply, main isolate may execute another task(e.g. frequent seekTo) which also acquire the same lock in native
-// TODO: can add multiple callbacks, the last 1 reply parameter works
+// only the last callback reply parameter works
   void onMediaStatusChanged(bool Function(MediaStatus oldValue, MediaStatus newValue)? callback, {bool reply = false}) {
-    _statusCb = callback;
     if (callback == null) {
+      _statusCb.clear();
       Libfvp.unregisterType(nativeHandle, 2);
     } else {
+      _statusCb.add(callback);
       Libfvp.registerType(nativeHandle, 2, reply);
     }
   }
@@ -336,7 +337,7 @@ class Player {
 
   void Function(MediaEvent)? _eventCb;
   void Function(State oldValue, State newValue)? _stateCb;
-  bool Function(MediaStatus oldValue, MediaStatus newValue)? _statusCb;
+  final _statusCb = <bool Function(MediaStatus oldValue, MediaStatus newValue)>[];
 
   bool _mute = false;
   double _volume = 1.0;
