@@ -45,9 +45,6 @@ pod cache clean mdk
 pod install --verbose
 ```
 
-## Known Issues
-- Memory leak on linux if a player is disposed
-
 # Design
 - Playback control api in dart via ffi
 - Manage video renderers in platform specific manners. Receive player ptr via `MethodChannel` to construct player instance and set a renderer target.

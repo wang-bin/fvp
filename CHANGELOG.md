@@ -1,3 +1,8 @@
+## 0.0.6
+
+* fix local file path encoding
+* use objc instead of swift. simpler code, smaller binary size, less dependencies.
+
 ## 0.0.5
 
 * fix macos, ios build for flutter without sharedDarwinSource support
