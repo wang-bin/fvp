@@ -17,10 +17,20 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   static final _players = <int, mdk.Player>{};
   static final _streamCtl = <int, StreamController<VideoEvent>>{};
   static dynamic _options;
+  static int? _maxWidth;
+  static int? _maxHeight;
+  static bool? _fitMaxSize;
   final _log = Logger('fvp');
   static final _mdkLog = Logger('mdk');
 
-  /// Registers this class as the default instance of [VideoPlayerPlatform].
+/*
+  Registers this class as the default instance of [VideoPlayerPlatform].
+
+  [options] can be
+  "video.decoders": a list of decoder names. supported decoders: https://github.com/wang-bin/mdk-sdk/wiki/Decoders
+  "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
+ */
+
   static void registerWith({dynamic options}) {
     _options = options;
     _options ??= <String, dynamic>{};
@@ -33,7 +43,11 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     };
     if (_options is Map<String, dynamic>) {
       _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]);
+      _maxWidth = _options["maxWidth"];
+      _maxHeight = _options["maxHeight"];
+      _fitMaxSize = _options["fitMaxSize"];
     }
+
     VideoPlayerPlatform.instance = MdkVideoPlayer();
 
     mdk.setLogHandler((level, msg) {
@@ -96,7 +110,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     player.media = uri!;
     player.prepare(); // required!
 // FIXME: pending events will be processed after texture returned, but no events before prepared
-    final tex = await player.updateTexture();
+    final tex = await player.updateTexture(width: _maxWidth, height: _maxHeight, fit: _fitMaxSize);
     if (tex < 0) {
       sc.close();
       player.dispose();
