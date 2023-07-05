@@ -306,7 +306,7 @@ class MediaInfo {
     }
     if (ci.nb_subtitle > 0) {
       subtitle = <SubtitleStreamInfo>[];
-      for (int i = 0; i < ci.nb_video; ++i) {
+      for (int i = 0; i < ci.nb_subtitle; ++i) {
         final cci = ci.subtitle.elementAt(i);
         subtitle!.add(SubtitleStreamInfo._from(cci));
       }
