@@ -1,3 +1,8 @@
+## 0.0.7
+
+* texture size can be set by user via `MdkVideoPlayer.registerWith({'maxWidth': width, 'maxHeight': height});`
+* fix crash for some streams containing subtitle
+
 ## 0.0.6
 
 * fix local file path encoding
