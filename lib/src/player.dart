@@ -405,22 +405,22 @@ class Player {
 
 
 final class _CallbackReply extends Union {
-  external UnnamedStruct5 mediaStatus;
-  external UnnamedStruct6 sync1;
-  external UnnamedStruct7 prepared;
+  external _UnnamedStruct5 mediaStatus;
+  external _UnnamedStruct6 sync1;
+  external _UnnamedStruct7 prepared;
 }
 
-final class UnnamedStruct5 extends Struct {
+final class _UnnamedStruct5 extends Struct {
   @Bool()
   external bool ret;
 }
 
-final class UnnamedStruct6 extends Struct {
+final class _UnnamedStruct6 extends Struct {
   @Double()
   external double ret;
 }
 
-final class UnnamedStruct7 extends Struct {
+final class _UnnamedStruct7 extends Struct {
   @Bool()
   external bool ret;
   @Bool()

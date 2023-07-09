@@ -9,8 +9,7 @@ import 'package:path/path.dart' as path;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:logging/logging.dart';
 
-import 'src/global.dart' as mdk;
-import 'src/player.dart' as mdk;
+import 'mdk.dart' as mdk;
 
 class MdkVideoPlayer extends VideoPlayerPlatform {
 
