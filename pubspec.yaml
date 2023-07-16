@@ -1,6 +1,6 @@
 name: fvp
-description: A plugin for video_player to support all desktop and mobile platforms, with hardware accelerated decoding and optimal rendering. Supports most formats via FFmpeg
-version: 0.0.7
+description: A plugin for video_player and APIs for your own players. Support all desktop/mobile platforms. Hardware accelerated decoding, optimal rendering. Supports most formats via FFmpeg
+version: 0.0.8
 homepage: https://github.com/wang-bin/fvp
 
 environment:

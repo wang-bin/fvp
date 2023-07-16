@@ -1,3 +1,8 @@
+## 0.0.8
+
+* support httpHeaders
+* export backend apis for creating your own players
+
 ## 0.0.7
 
 * texture size can be set by user via `MdkVideoPlayer.registerWith({'maxWidth': width, 'maxHeight': height});`
