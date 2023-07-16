@@ -83,14 +83,12 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   @override
   Future<int?> create(DataSource dataSource) async {
     String? uri;
-    //Map<String, String> httpHeaders = <String, String>{};
     switch (dataSource.sourceType) {
       case DataSourceType.asset:
         uri = _assetUri(dataSource.asset!, dataSource.package);
         break;
       case DataSourceType.network:
         uri = dataSource.uri;
-        //httpHeaders = dataSource.httpHeaders;
         break;
       case DataSourceType.file:
         uri = Uri.decodeComponent(dataSource.uri!);
@@ -104,7 +102,13 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     if (_options is Map<String, dynamic>) {
       player.videoDecoders = _options['video.decoders'];
     }
-
+    if (dataSource.httpHeaders.isNotEmpty) {
+      String headers = '';
+      dataSource.httpHeaders.forEach((key, value) {
+        headers += '$key: $value\r\n';
+      });
+      player.setProperty('avio.headers', headers);
+    }
     final sc = _initEvents(player);
     player.media = uri!;
     player.prepare(); // required!
