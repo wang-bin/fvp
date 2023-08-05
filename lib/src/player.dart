@@ -7,6 +7,7 @@ import 'dart:isolate';
 import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart';
 
 import 'fvp_platform_interface.dart';
 import 'generated_bindings.dart';
@@ -18,6 +19,9 @@ import 'extensions.dart';
 class Player {
 
   int get nativeHandle => _player.address;
+
+  /// for builder
+  final ValueNotifier<int?> textureId = ValueNotifier<int?>(null);
 
   Player() {
     _pp.value = _player;
@@ -100,6 +104,7 @@ class Player {
 
   Future<int> updateTexture({int? width, int? height, bool? fit}) async {
     if (_texId >= 0) {
+      textureId.value = null;
       await FvpPlatform.instance.releaseTexture(nativeHandle, _texId);
       _texId = -1;
     }
@@ -110,10 +115,12 @@ class Player {
         return -1;
       }
       _texId = await FvpPlatform.instance.createTexture(nativeHandle, size.width.toInt(), size.height.toInt());
+      textureId.value = _texId;
       return _texId;
     }
     if (width != null && height != null && width > 0 && height > 0) {
       _texId = await FvpPlatform.instance.createTexture(nativeHandle, width, height);
+      textureId.value = _texId;
       return _texId;
     }
   // release texture if width or height <= 0
