@@ -13,14 +13,16 @@ const double timestampEOS = 1.7976931348623157e+308;
 
 const double timeScaleForInt = 1000.0;
 
+/// Stretch video content to fill renderer viewport.
 const double ignoreAspectRatio = 0.0;
-
+/// Keep video frame aspect ratio and scale as large as possible inside video renderer viewport.
 const double keepAspectRatio = 1.1920928955078125e-7;
-
+/// Keep frame aspect ratio and scale as small as possible to cover renderer viewport.
 const double keepAspectRatioCrop = -1.1920928955078125e-7;
 
 typedef CallbackToken = MDK_CallbackToken;
 
+/// https://github.com/wang-bin/mdk-sdk/wiki/Types#enum-mediatype
 enum MediaType {
   unknown(MDK_MediaType.MDK_MediaType_Unknown),
   video(MDK_MediaType.MDK_MediaType_Video),
@@ -31,6 +33,7 @@ enum MediaType {
   const MediaType(this.rawValue);
 }
 
+/// https://github.com/wang-bin/mdk-sdk/wiki/Types#enum-mediastatus-flags
 class MediaStatus {
   static const noMedia =    MDK_MediaStatus.MDK_MediaStatus_NoMedia;
   static const unloaded =   MDK_MediaStatus.MDK_MediaStatus_Unloaded;
@@ -89,6 +92,7 @@ enum State {
   }
 }
 
+/// https://github.com/wang-bin/mdk-sdk/wiki/Types#enum-seekflag-flags
 class SeekFlag {
   static const from0      = MDKSeekFlag.MDK_SeekFlag_From0;
   static const fromStart  = MDKSeekFlag.MDK_SeekFlag_FromStart;
@@ -119,6 +123,7 @@ class SeekFlag {
   }
 }
 
+/// https://github.com/wang-bin/mdk-sdk/wiki/Types#enum-videoeffect
 enum VideoEffect {
   brightness(MDK_VideoEffect.MDK_VideoEffect_Brightness),
   contrast(MDK_VideoEffect.MDK_VideoEffect_Contrast),
@@ -130,6 +135,7 @@ enum VideoEffect {
   const VideoEffect(this.rawValue);
 }
 
+/// https://github.com/wang-bin/mdk-sdk/wiki/Types#enum-colorspace
 enum ColorSpace {
   unknown(MDK_ColorSpace.MDK_ColorSpace_Unknown),
   bt709(MDK_ColorSpace.MDK_ColorSpace_BT709),
@@ -164,6 +170,7 @@ enum LogLevel {
   }
 }
 
+/// https://github.com/wang-bin/mdk-sdk/wiki/Types#class-mediaevent
 class MediaEvent {
   final int error;      // progress value [0, 100] if category is "reader.buffering"
   final String category;
@@ -172,8 +179,10 @@ class MediaEvent {
   const MediaEvent(this.error, this.category, this.detail);
 }
 
+/// libmdk version.
 int version() => Libmdk.instance.MDK_version();
 
+/// Global options: https://github.com/wang-bin/mdk-sdk/wiki/Global-Options
 void setGlobalOption<T>(String name, T value) {
   final k = name.toNativeUtf8();
   if (value is String) { // T == String
@@ -204,6 +213,7 @@ T? getGlobalOption<T>(String name) {
 }
 */
 
+/// Set log handler for mdk internal logs
 void setLogHandler(void Function(LogLevel, String)? cb) {
   _GlobalCallbacks.instance.setLogHandler(cb);
 }

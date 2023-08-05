@@ -4,6 +4,8 @@ A plugin for official [Flutter Video Player](https://pub.dev/packages/video_play
 
 Prebuilt example can be download from artifacts of [github actions](https://github.com/wang-bin/fvp/actions).
 
+[More examples are here](https://github.com/wang-bin/mdk-examples/tree/master/flutter)
+
 ## Features
 - All platforms: Windows, Linux, macOS, iOS, Android
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android

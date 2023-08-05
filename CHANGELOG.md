@@ -1,3 +1,8 @@
+## 0.0.9
+
+* add textureId notifier for Player
+* improve documentation
+
 ## 0.0.8
 
 * support httpHeaders
