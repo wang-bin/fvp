@@ -78,7 +78,11 @@ class AudioStreamInfo extends StreamInfo {
     calloc.free(pcc);
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_AudioStreamMetadata(pcsi, entry)) {
-      metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      try {
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      // ignore: empty_catches
+      } catch (e) {
+      }
     }
     calloc.free(entry);
   }
@@ -143,7 +147,11 @@ class VideoStreamInfo extends StreamInfo {
     calloc.free(pcc);
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_VideoStreamMetadata(pcsi, entry)) {
-      metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      try {
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      // ignore: empty_catches
+      } catch (e) {
+      }
     }
     calloc.free(entry);
   }
@@ -189,7 +197,11 @@ class SubtitleStreamInfo extends StreamInfo {
     calloc.free(pcc);
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_SubtitleStreamMetadata(pcsi, entry)) {
-      metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      try {
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      // ignore: empty_catches
+      } catch (e) {
+      }
     }
     calloc.free(entry);
   }
@@ -236,7 +248,11 @@ class ProgramInfo {
     }
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_ProgramMetadata(ppi, entry)) {
-      metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      try {
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      // ignore: empty_catches
+      } catch (e) {
+      }
     }
     calloc.free(entry);
   }
@@ -286,7 +302,11 @@ class MediaInfo {
 
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_MediaMetadata(pci, entry)) {
-      metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      try {
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
+      // ignore: empty_catches
+      } catch (e) {
+      }
     }
     calloc.free(entry);
 
