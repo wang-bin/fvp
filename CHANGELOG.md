@@ -1,3 +1,8 @@
+## 0.1.0
+
+* fix fail to convert metadata to dart string
+* rename `State` to `PlaybackState`
+
 ## 0.0.9
 
 * add textureId notifier for Player

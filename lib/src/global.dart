@@ -71,7 +71,7 @@ class MediaStatus {
   }
 }
 
-enum State {
+enum PlaybackState {
   notRunning(MDK_State.MDK_State_NotRunning),
   stopped(MDK_State.MDK_State_Stopped),
   running(MDK_State.MDK_State_Running),
@@ -80,13 +80,13 @@ enum State {
   ;
 
   final int rawValue;
-  const State(this.rawValue);
+  const PlaybackState(this.rawValue);
 
-  factory State.from(int i) {
+  factory PlaybackState.from(int i) {
     const states = [
-            State.stopped,
-            State.playing,
-            State.paused,
+            PlaybackState.stopped,
+            PlaybackState.playing,
+            PlaybackState.paused,
           ];
     return states[i];
   }

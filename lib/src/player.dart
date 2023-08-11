@@ -44,7 +44,7 @@ class Player {
           final oldValue = message[1] as int;
           final newValue = message[2] as int;
           if (_stateCb != null) {
-            _stateCb!(State.from(oldValue), State.from(newValue));
+            _stateCb!(PlaybackState.from(oldValue), PlaybackState.from(newValue));
           }
           Libfvp.replyType(nativeHandle, type, nullptr);
         }
@@ -89,7 +89,7 @@ class Player {
     }
     // await: ensure no player ref in fvp plugin before mdkPlayerAPI_delete() in dart
     await updateTexture(width: -1);
-    state = State.stopped;
+    state = PlaybackState.stopped;
     Libfvp.unregisterPort(nativeHandle);
     onEvent(null);
     onStateChanged(null);
@@ -193,16 +193,16 @@ class Player {
 
   /// Set playback state to start, pause and stop the media.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setstateplaybackstate-value
-  set state(State value) {
+  set state(PlaybackState value) {
     _state = value;
     _player.ref.setState.asFunction<void Function(Pointer<mdkPlayer>, int)>()(_player.ref.object, value.rawValue);
-    if (_state == State.stopped) {
+    if (_state == PlaybackState.stopped) {
       _videoSize = Completer<ui.Size?>();
     }
   }
 
   /// Current playback state.
-  State get state => _state;
+  PlaybackState get state => _state;
 
   /// Current [MediaStatus] value
   MediaStatus get mediaStatus => MediaStatus(_player.ref.mediaStatus.asFunction<int Function(Pointer<mdkPlayer>)>()(_player.ref.object));
@@ -243,8 +243,8 @@ class Player {
     return MediaInfo.from(_mediaInfoC);
   }
 
-  /// Load the [media] from [position] in milliseconds and decode the first frame, then [state] will be [State.paused].
-  /// If error occurs, will be [State.stopped].
+  /// Load the [media] from [position] in milliseconds and decode the first frame, then [state] will be [PlaybackState.paused].
+  /// If error occurs, will be [PlaybackState.stopped].
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-prepareint64_t-startposition--0-functionboolint64_t-position-bool-boost-cb--nullptr-seekflag-flags--seekflagfromstart
   void prepare({int position = 0, SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags)}) {
     final cb = calloc<mdkPrepareCallback>();
@@ -306,7 +306,7 @@ class Player {
   }
 
   /// Wait for [state] in current thread
-  bool waitFor(State state, {int timeout = -1}) => _player.ref.waitFor.asFunction<bool Function(Pointer<mdkPlayer>, int, int)>()(_player.ref.object, state.rawValue, timeout);
+  bool waitFor(PlaybackState state, {int timeout = -1}) => _player.ref.waitFor.asFunction<bool Function(Pointer<mdkPlayer>, int, int)>()(_player.ref.object, state.rawValue, timeout);
 
   /// Seek to [position] in milliseconds
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#bool-seekint64_t-pos-seekflag-flags-stdfunctionvoidint64_t-ret-cb--nullptr
@@ -447,10 +447,10 @@ class Player {
     }
   }
 
-  /// Set a [State] change callback.
+  /// Set a [PlaybackState] change callback.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#player-onstatechangedstdfunctionvoidstate-cb
 // reply: true to let native code wait for dart callback result
-  void onStateChanged(void Function(State oldValue, State newValue)? callback, {bool reply = false}) {
+  void onStateChanged(void Function(PlaybackState oldValue, PlaybackState newValue)? callback, {bool reply = false}) {
     _stateCb = callback;
     if (callback == null) {
       Libfvp.unregisterType(nativeHandle, 1);
@@ -487,7 +487,7 @@ class Player {
   final _receivePort = ReceivePort();
 
   void Function(MediaEvent)? _eventCb;
-  void Function(State oldValue, State newValue)? _stateCb;
+  void Function(PlaybackState oldValue, PlaybackState newValue)? _stateCb;
   final _statusCb = <bool Function(MediaStatus oldValue, MediaStatus newValue)>[];
 
   bool _mute = false;
@@ -498,7 +498,7 @@ class Player {
   List<int> _activeAT = [0];
   List<int> _activeVT = [0];
   List<int> _activeST = [0];
-  State _state = State.stopped;
+  PlaybackState _state = PlaybackState.stopped;
   int _loop = 0;
   bool _preloadImmediately = true;
   double _playbackRate = 1.0;

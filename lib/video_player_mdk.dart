@@ -136,7 +136,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   Future<void> play(int textureId) async {
     final player = _players[textureId];
     if (player != null) {
-      player.state = mdk.State.playing;
+      player.state = mdk.PlaybackState.playing;
     }
   }
 
@@ -144,7 +144,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   Future<void> pause(int textureId) async {
     final player = _players[textureId];
     if (player != null) {
-      player.state = mdk.State.paused;
+      player.state = mdk.PlaybackState.paused;
     }
   }
 
@@ -238,9 +238,9 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     });
 
     player.onStateChanged((oldValue, newValue) {
-      _log.fine('$hashCode player${player.nativeHandle} onStateChanged: $oldValue => $newValue');
+      _log.fine('$hashCode player${player.nativeHandle} onPlaybackStateChanged: $oldValue => $newValue');
       sc.add(VideoEvent(eventType: VideoEventType.isPlayingStateUpdate
-        , isPlaying: newValue == mdk.State.playing));
+        , isPlaying: newValue == mdk.PlaybackState.playing));
     });
     return sc;
   }
