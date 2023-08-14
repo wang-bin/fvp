@@ -9,7 +9,7 @@ import 'package:path/path.dart' as path;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:logging/logging.dart';
 
-import 'mdk.dart' as mdk;
+import '../mdk.dart' as mdk;
 
 class MdkVideoPlayer extends VideoPlayerPlatform {
 
@@ -29,7 +29,6 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   "video.decoders": a list of decoder names. supported decoders: https://github.com/wang-bin/mdk-sdk/wiki/Decoders
   "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
  */
-
   static void registerWith({dynamic options}) {
     _options = options;
     _options ??= <String, dynamic>{};
