@@ -11,7 +11,7 @@ import 'package:fvp/fvp.dart';
 
 void main() {
   test('registration', () {
-    MdkVideoPlayer.registerWith();
+    registerWith();
     expect(VideoPlayerPlatform.instance, isA<MdkVideoPlayer>());
   });
 }

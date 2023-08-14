@@ -29,7 +29,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   "video.decoders": a list of decoder names. supported decoders: https://github.com/wang-bin/mdk-sdk/wiki/Decoders
   "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
  */
-  static void registerWith({dynamic options}) {
+  static void registerVideoPlayerPlatformsWith({dynamic options}) {
     _options = options;
     _options ??= <String, dynamic>{};
     const vd = {
@@ -61,6 +61,11 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
       default: return;
       }
     });
+  }
+
+  @Deprecated('Use global function registerWith() instead')
+  static void registerWith({dynamic options}) {
+    registerVideoPlayerPlatformsWith(options: options);
   }
 
   @override

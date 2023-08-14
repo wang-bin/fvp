@@ -9,10 +9,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:fvp/fvp.dart';
+import 'package:fvp/fvp.dart' as fvp;
 
 void main() {
-  MdkVideoPlayer.registerWith();
+  fvp.registerWith();
   runApp(
     MaterialApp(
       home: _App(),
