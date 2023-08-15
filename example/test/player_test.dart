@@ -7,11 +7,11 @@
 
 import 'package:test/test.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-import 'package:fvp/fvp.dart';
+import 'package:fvp/src/video_player_mdk.dart';
 
 void main() {
   test('registration', () {
-    registerWith();
+    MdkVideoPlayer.registerWith();
     expect(VideoPlayerPlatform.instance, isA<MdkVideoPlayer>());
   });
 }

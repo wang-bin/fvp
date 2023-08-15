@@ -8,9 +8,11 @@ import 'package:ffi/ffi.dart';
 import 'generated_bindings.dart';
 import 'lib.dart';
 
+/// a frame with [timestampEOS] indicates it's the last frame
 // TODO: generate by ffi
 const double timestampEOS = 1.7976931348623157e+308;
 
+/// Float timestamp unit is second, integer timestamp(for example Player.position, seek) unit is millisecond.
 const double timeScaleForInt = 1000.0;
 
 /// Stretch video content to fill renderer viewport.
@@ -71,6 +73,7 @@ class MediaStatus {
   }
 }
 
+/// Playback state
 enum PlaybackState {
   notRunning(MDK_State.MDK_State_NotRunning),
   stopped(MDK_State.MDK_State_Stopped),

@@ -50,7 +50,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             Dart_CObject t{
                 .type = Dart_CObject_kInt64,
                 .value = {
-                    .as_int64 = CallbackType::Log,
+                    .as_int64 = type,
                 }
             };
             Dart_CObject lv{
@@ -98,7 +98,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
         Dart_CObject t{
             .type = Dart_CObject_kInt64,
             .value = {
-                .as_int64 = CallbackType::Event,
+                .as_int64 = type,
             }
         };
         Dart_CObject err{
@@ -153,7 +153,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
         Dart_CObject t{
             .type = Dart_CObject_kInt64,
             .value = {
-                .as_int64 = CallbackType::State,
+                .as_int64 = type,
             }
         };
         Dart_CObject v0{
@@ -210,7 +210,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
         Dart_CObject t{
             .type = Dart_CObject_kInt64,
             .value = {
-                .as_int64 = CallbackType::MediaStatus,
+                .as_int64 = type,
             }
         };
         Dart_CObject v0{
@@ -324,4 +324,44 @@ FVP_EXPORT void MdkCallbacksReplyType(int64_t handle, int type, const void* data
     }
     sp->dataReady[type] = true;
     sp->cv[type].notify_one();
+}
+
+FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void* post_c_object, int64_t send_port)
+{
+    const auto it = players.find(handle);
+    if (it == players.cend()) {
+        return false;
+    }
+    const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
+    auto sp = it->second;
+    sp->prepare(pos, [=](int64_t position, bool* boost){
+        Dart_CObject t{
+            .type = Dart_CObject_kInt64,
+            .value = {
+                .as_int64 = CallbackType::Prepared,
+            }
+        };
+        Dart_CObject v{
+            .type = Dart_CObject_kInt64,
+            .value = {
+                .as_int64 = position,
+            }
+        };
+        Dart_CObject* arr[] = { &t, &v };
+        Dart_CObject msg {
+            .type = Dart_CObject_kArray,
+            .value = {
+                .as_array = {
+                    .length = std::size(arr),
+                    .values = arr,
+                },
+            },
+        };
+        if (!postCObject(send_port, &msg)) {
+            cout << "postCObject error" << endl; // when?
+            return false;
+        }
+        return true;
+    }, mdk::SeekFlag(seekFlags));
+    return true;
 }

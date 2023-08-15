@@ -57,4 +57,5 @@ abstract class Libfvp {
   static final registerType = instance.lookupFunction<Void Function(Int64, Int, Bool), void Function(int, int, bool)>('MdkCallbacksRegisterType');
   static final unregisterType = instance.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
   static final replyType = instance.lookupFunction<Void Function(Int64, Int, Pointer<Void>), void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
+  static final prepare = instance.lookupFunction<Bool Function(Int64, Int64, Int64, Pointer<Void>, Int64), bool Function(int, int, int, Pointer<Void>, int)>('MdkPrepare');
 }

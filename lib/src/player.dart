@@ -58,6 +58,12 @@ class Player {
           rep.ref.mediaStatus.ret = ret;
           Libfvp.replyType(nativeHandle, type, rep.cast());
         }
+        case 3: { // prepared
+          final pos = message[1] as int;
+          if (!_prepared.isCompleted) {
+            _prepared.complete(pos);
+          }
+        }
       }
       calloc.free(rep);
     });
@@ -245,12 +251,14 @@ class Player {
 
   /// Load the [media] from [position] in milliseconds and decode the first frame, then [state] will be [PlaybackState.paused].
   /// If error occurs, will be [PlaybackState.stopped].
+  /// Return the result position, or a negative value if failed.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-prepareint64_t-startposition--0-functionboolint64_t-position-bool-boost-cb--nullptr-seekflag-flags--seekflagfromstart
-  void prepare({int position = 0, SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags)}) {
-    final cb = calloc<mdkPrepareCallback>();
-    //cb.ref.cb =
-    _player.ref.prepare.asFunction<void Function(Pointer<mdkPlayer>, int, mdkPrepareCallback, int)>()(_player.ref.object, position, cb.ref, flags.rawValue);
-    calloc.free(cb);
+  Future<int> prepare({int position = 0, SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags)}) async {
+    _prepared = Completer<int>();
+    if (!Libfvp.prepare(nativeHandle, position, flags.rawValue, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort)) {
+      _prepared.complete(-1);
+    }
+    return _prepared.future;
   }
 
   /// Set decoder priority.
@@ -484,6 +492,7 @@ class Player {
 
   int _texId = -1;
   var _videoSize = Completer<ui.Size?>();
+  var _prepared = Completer<int>();
   final _receivePort = ReceivePort();
 
   void Function(MediaEvent)? _eventCb;
