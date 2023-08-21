@@ -26,9 +26,15 @@ import 'package:fvp/fvp.dart';
 registerWith(); // in main(), or anywhere before creating a player
 ```
 
+Then this plugin implementation will be used for all platforms. Sometimes you may want official implementation for android and ios, then you can call
+
+```dart
+registerWith(options: {'platforms': ['windows', 'macos', 'linux']}); // only these platforms will use this plugin implementation
+```
+
 To select [other decoders](https://github.com/wang-bin/mdk-sdk/wiki/Decoders), pass options like this
 ```dart
-registerWith({'video.decoders': ['D3D11', 'NVDEC', 'FFmpeg']}); // windows
+registerWith(options: {'video.decoders': ['D3D11', 'NVDEC', 'FFmpeg']}); // windows
 ```
 
 ### Backend Player API

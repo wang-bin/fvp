@@ -19,6 +19,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   static int? _maxWidth;
   static int? _maxHeight;
   static bool? _fitMaxSize;
+  static List<String>? _platforms;
   final _log = Logger('fvp');
   static final _mdkLog = Logger('mdk');
 
@@ -40,7 +41,13 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
       'android': ['AMediaCodec', 'FFmpeg'],
     };
     if (_options is Map<String, dynamic>) {
-      _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]);
+      _platforms = _options["platforms"];
+      if (_platforms is List<String>) {
+        if (!_platforms!.contains(Platform.operatingSystem)) {
+          return;
+        }
+      }
+      _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]!);
       _maxWidth = _options["maxWidth"];
       _maxHeight = _options["maxHeight"];
       _fitMaxSize = _options["fitMaxSize"];
