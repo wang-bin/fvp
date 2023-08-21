@@ -145,3 +145,22 @@ jobs:
       with:
         name: fvp-example-android
         path: example/fvp_example_android.apk
+
+
+  Web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: example
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+    - run: flutter pub get
+    - run: flutter build web --verbose
