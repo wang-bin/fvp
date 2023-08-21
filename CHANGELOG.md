@@ -1,3 +1,10 @@
+## 0.2.0
+
+* fix web build. web will use official implementation
+* add 'platforms' option for `registerWith()` to enable plugin for given platforms, other platforms will use official implementation
+* `Player.prepare()` is async
+* no longer export `MdkVideoPlayer`
+
 ## 0.1.0
 
 * fix fail to convert metadata to dart string

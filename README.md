@@ -8,12 +8,16 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 
 ## Features
 - All platforms: Windows, Linux, macOS, iOS, Android
+- You can choose official implementation or this plugin's
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android
 - Hardware decoders are enabled by default
 - Minimal code change for existing [Video Player](https://pub.dev/packages/video_player) apps
 - Support most formats via FFmpeg demuxer and software decoders if not supported by gpu. You can use your own ffmpeg 4.0~6.x(or master branch) by removing bundled ffmpeg dynamic library.
 - High performance. Lower cpu, gpu and memory load than libmpv based players.
 - Small footprint. Only about 10MB size increase(platform dependent).
+
+## Requirements
+- Android: ndk 23 or later(ndk has a stupid abi break in 23)
 
 ## How to Use
 
