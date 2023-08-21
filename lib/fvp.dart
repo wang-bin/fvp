@@ -2,10 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// won't be exporteds in a future version
-export 'src/video_player_mdk.dart';
-
-import 'src/video_player_mdk.dart';
+import 'src/video_player_mdk.dart'
+        if (dart.library.html) 'src/video_player_dummy.dart';
 
 /// Registers this plugin as the default instance of [VideoPlayerPlatform]. Then your [VideoPlayer] will support all platforms.
 
