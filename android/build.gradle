@@ -33,7 +33,7 @@ android {
 
     // Invoke the shared CMake build with the Android Gradle Plugin.
     externalNativeBuild {
-        cmake {
+        cmake {        
             path "CMakeLists.txt"
             // The default CMake version for the Android Gradle Plugin is 3.10.2.
             // https://developer.android.com/studio/projects/install-ndk#vanilla_cmake
@@ -42,7 +42,7 @@ android {
             // installed. You should not increase this version, as doing so will cause
             // the plugin to fail to compile for some customers of the plugin.
             // version "3.10.2"
-            //version "3.26.4"
+            version "3.22.1"
         }
     }
 
@@ -66,7 +66,7 @@ android {
             // libraries Gradle should build and package with your APK.
             abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
         }
-        //ndkVersion "25.2.9519653"
+        // ndkVersion "25.2.9519653"
     }
 
     dependencies {
