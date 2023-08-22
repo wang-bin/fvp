@@ -64,7 +64,7 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
     message(FATAL_ERROR "Failed to extract mdk-sdk. You can download manually from ${MDK_SDK_URL} and extract to ${CMAKE_CURRENT_SOURCE_DIR}")
   endif()
 endif()
-include(mdk-sdk/lib/cmake/FindMDK.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
 target_link_libraries(${PLUGIN_NAME} PRIVATE mdk
         log)
 
