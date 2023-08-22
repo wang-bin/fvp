@@ -1,3 +1,9 @@
+## 0.2.1
+
+* fix cmake include
+* allow http in m3u8 local file
+* add D3D11 decoder for windows
+
 ## 0.2.0
 
 * fix web build. web will use official implementation
