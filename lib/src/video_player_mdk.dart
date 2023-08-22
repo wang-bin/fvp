@@ -110,6 +110,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     }
     final player = mdk.Player();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
+    player.setProperty('avio.protocol_whitelist', 'file,http,https,tcp,tls,crypto');
     if (_options is Map<String, dynamic>) {
       player.videoDecoders = _options['video.decoders'];
     }
