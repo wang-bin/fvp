@@ -34,7 +34,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     _options = options;
     _options ??= <String, dynamic>{};
     const vd = {
-      'windows': ['MFT:d3d=11', 'CUDA', 'FFmpeg'],
+      'windows': ['MFT:d3d=11', 'CUDA', "D3D11", 'FFmpeg'],
       'macos': ['VT', 'FFmpeg'],
       'ios': ['VT', 'FFmpeg'],
       'linux': ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'],
