@@ -171,7 +171,7 @@ class Player {
 
   List<String> get audioDecoders => _adec;
 
-  /// Set video decoder priority. Default value prefers hardware decoders.
+  /// Set video decoder priority. Default is 'auto' decoder, which is usually 'FFmpeg'.
   /// Detail: https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setdecodersmediatype-type-const-stdvectorstdstring-names
   set videoDecoders(List<String> value) => setDecoders(MediaType.video, value);
 

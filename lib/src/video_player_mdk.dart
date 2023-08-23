@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart'; //
 import 'package:path/path.dart' as path;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:logging/logging.dart';
+import 'extensions.dart';
 
 import '../mdk.dart' as mdk;
 
@@ -33,8 +34,9 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   static void registerVideoPlayerPlatformsWith({dynamic options}) {
     _options = options;
     _options ??= <String, dynamic>{};
+    // prefer hardware decoders
     const vd = {
-      'windows': ['MFT:d3d=11', 'CUDA', "D3D11", 'FFmpeg'],
+      'windows': ['MFT:d3d=11', "D3D11", 'CUDA', 'FFmpeg'],
       'macos': ['VT', 'FFmpeg'],
       'ios': ['VT', 'FFmpeg'],
       'linux': ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'],
@@ -47,7 +49,9 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
           return;
         }
       }
-      _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]!);
+      if (!Platform().isAndroidEmulator()) {
+        _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]!);
+      }
       _maxWidth = _options["maxWidth"];
       _maxHeight = _options["maxHeight"];
       _fitMaxSize = _options["fitMaxSize"];
@@ -111,7 +115,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     final player = mdk.Player();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
     player.setProperty('avio.protocol_whitelist', 'file,http,https,tcp,tls,crypto');
-    if (_options is Map<String, dynamic>) {
+    if (_options is Map<String, dynamic> && _options.containsKey('video.decoders')) {
       player.videoDecoders = _options['video.decoders'];
     }
     if (dataSource.httpHeaders.isNotEmpty) {

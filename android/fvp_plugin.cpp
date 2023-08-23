@@ -12,6 +12,7 @@
 #include <cassert>
 #include <unordered_map>
 #include <iostream>
+#include <sys/system_properties.h>
 
 using namespace std;
 
@@ -72,4 +73,31 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
     auto player = make_shared<TexturePlayer>(player_handle);
     player->updateNativeSurface(surface, w, h);
     players[tex_id] = player;
+}
+
+extern "C"
+JNIEXPORT bool JNICALL
+MdkIsEmulator()
+{
+    // run getprop to see all properties
+    char v[PROP_VALUE_MAX+1];
+    __system_property_get("ro.kernel.qemu", v);
+    if (atoi(v) == 1)
+        return true;
+    __system_property_get("ro.boot.qemu", v);
+    if (atoi(v) == 1)
+        return true;
+    __system_property_get("ro.product.board", v);
+    if (strstr(v, "goldfish"))
+        return true;
+    __system_property_get("ro.hardware.egl", v);
+    if (strstr(v, "emulation"))
+        return true;
+    __system_property_get("ro.hardware", v);
+    if (strstr(v, "ranchu"))
+        return true;
+    __system_property_get("ro.build.characteristics", v);
+    if (strstr(v, "emulator"))
+        return true;
+    return false;
 }

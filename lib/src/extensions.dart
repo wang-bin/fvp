@@ -3,7 +3,19 @@
 // found in the LICENSE file.
 
 import 'dart:ffi';
+import 'dart:io';
 import 'package:ffi/ffi.dart';
+import 'lib.dart';
+
+extension EmulatorPlatform on Platform {
+  bool isAndroidEmulator() {
+    if (!Platform.isAndroid) {
+      return false;
+    }
+    // lsmod: goldfish_pipe, virtio_pci
+    return Libfvp.isEmulator();
+  }
+}
 
 extension NullTerminatedU8PtrArray on Pointer<Pointer<Utf8>> {
   void free() {
