@@ -1,3 +1,9 @@
+## 0.3.0
+
+* use software decoder in android emulator, fix black screen
+* able to pass global options and player properties to libmdk
+* improve log
+
 ## 0.2.1
 
 * fix cmake include

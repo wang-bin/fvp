@@ -264,9 +264,12 @@ class ProgramInfo {
 }
 
 class MediaInfo {
-  var startTime = 0; // ms
+  /// start time in milliseconds
+  var startTime = 0;
+  /// duration in milliseconds. may be 0, for example live stream.
   var duration = 0;
   var bitRate = 0;
+  /// format or container name, for example mp4, flv
   String? format;
   var streams = 0;
   var metadata = <String,String>{};
