@@ -104,6 +104,7 @@ class SeekFlag {
   static const keyFrame   = MDKSeekFlag.MDK_SeekFlag_KeyFrame;
   static const fast       = MDKSeekFlag.MDK_SeekFlag_Fast;
   static const inCache    = MDKSeekFlag.MDK_SeekFlag_InCache;
+  /// defaultFlags is keyFrame|fromStart|inCache
   static const defaultFlags  = MDKSeekFlag.MDK_SeekFlag_Default;
 
   final int rawValue;
@@ -229,7 +230,7 @@ class _GlobalCallbacks {
   static _GlobalCallbacks instance = _GlobalCallbacks();
 
   _GlobalCallbacks() {
-    Libfvp.registerPort(0, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
+    Libfvp.registerType(0, 5, false); // before registerPort() to ensure no log will be dropped
     _receivePort.listen((message) {
       final type = message[0] as int;
       switch (type) {
@@ -242,6 +243,7 @@ class _GlobalCallbacks {
         }
       }
     });
+    Libfvp.registerPort(0, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
   }
 
   void setLogHandler(void Function(LogLevel, String)? cb) {

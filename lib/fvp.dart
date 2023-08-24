@@ -10,11 +10,16 @@ import 'src/video_player_mdk.dart'
 /// [options] can be
 /// 'platforms': a list of [Platform.operatingSystem], only these platforms will use this plugin implementation. You can still use official implementation for android and ios if they are not in the list.
 /// If 'platforms' not set, this implementation will be used for all platforms.
+///
 /// "video.decoders": a list of decoder names. supported decoders: https://github.com/wang-bin/mdk-sdk/wiki/Decoders
+///
 /// "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
+///
 /// "player": backend player properties of type Map<String, String>. See https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setpropertyconst-stdstring-key-const-stdstring-value
+///
 /// "global": backend global options of type Map<String, Object>. See https://github.com/wang-bin/mdk-sdk/wiki/Global-Options
 ///
+/// Example:
 /// ```dart
 /// registerWith({options: {
 ///     'platforms': ['windows', 'linux', 'macos'], # or other Platform.operatingSystem

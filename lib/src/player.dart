@@ -26,7 +26,6 @@ class Player {
   Player() {
     _pp.value = _player;
     _fi.attach(this, this);
-    Libfvp.registerPort(nativeHandle, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
     _receivePort.listen((message) {
       final type = message[0] as int;
       final rep = calloc<_CallbackReply>();
@@ -67,6 +66,8 @@ class Player {
       }
       calloc.free(rep);
     });
+    Libfvp.registerPort(nativeHandle, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
+
     onMediaStatusChanged((oldValue, newValue) {
       if (!oldValue.test(MediaStatus.loaded) && newValue.test(MediaStatus.loaded)) {
         final video = mediaInfo.video;
