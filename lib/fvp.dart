@@ -12,6 +12,8 @@ import 'src/video_player_mdk.dart'
 /// If 'platforms' not set, this implementation will be used for all platforms.
 /// "video.decoders": a list of decoder names. supported decoders: https://github.com/wang-bin/mdk-sdk/wiki/Decoders
 /// "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
+/// "player": backend player properties of type Map<String, String>. See https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setpropertyconst-stdstring-key-const-stdstring-value
+/// "global": backend global options of type Map<String, Object>. See https://github.com/wang-bin/mdk-sdk/wiki/Global-Options
 ///
 /// ```dart
 /// registerWith({options: {

@@ -17,6 +17,8 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
   static final _players = <int, mdk.Player>{};
   static final _streamCtl = <int, StreamController<VideoEvent>>{};
   static dynamic _options;
+  static Map<String, Object>? _globalOpts;
+  static Map<String, String>? _playerOpts;
   static int? _maxWidth;
   static int? _maxHeight;
   static bool? _fitMaxSize;
@@ -55,7 +57,13 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
       _maxWidth = _options["maxWidth"];
       _maxHeight = _options["maxHeight"];
       _fitMaxSize = _options["fitMaxSize"];
+      _playerOpts = _options['player'];
+      _globalOpts = _options['global'];
     }
+
+    _globalOpts?.forEach((key, value) {
+      mdk.setGlobalOption(key, value);
+    });
 
     VideoPlayerPlatform.instance = MdkVideoPlayer();
 
@@ -115,9 +123,14 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     final player = mdk.Player();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
     player.setProperty('avio.protocol_whitelist', 'file,http,https,tcp,tls,crypto');
+    _playerOpts?.forEach((key, value) {
+      player.setProperty(key, value);
+    });
+
     if (_options is Map<String, dynamic> && _options.containsKey('video.decoders')) {
       player.videoDecoders = _options['video.decoders'];
     }
+
     if (dataSource.httpHeaders.isNotEmpty) {
       String headers = '';
       dataSource.httpHeaders.forEach((key, value) {
