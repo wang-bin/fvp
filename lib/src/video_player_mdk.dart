@@ -52,7 +52,7 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
           return;
         }
       }
-      if (!Platform().isAndroidEmulator()) {
+      if (!PlatformEx.isAndroidEmulator()) {
         _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]!);
       }
       _maxWidth = _options["maxWidth"];

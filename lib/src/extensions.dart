@@ -7,8 +7,8 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'lib.dart';
 
-extension EmulatorPlatform on Platform {
-  bool isAndroidEmulator() {
+extension PlatformEx on Platform {
+  static bool isAndroidEmulator() {
     if (!Platform.isAndroid) {
       return false;
     }
