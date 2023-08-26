@@ -268,6 +268,10 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
 
     player.onStateChanged((oldValue, newValue) {
       _log.fine('$hashCode player${player.nativeHandle} onPlaybackStateChanged: $oldValue => $newValue');
+      if (newValue == mdk.PlaybackState.stopped) {
+        sc.add(VideoEvent(eventType: VideoEventType.completed));
+        return;
+      }
       sc.add(VideoEvent(eventType: VideoEventType.isPlayingStateUpdate
         , isPlaying: newValue == mdk.PlaybackState.playing));
     });
