@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/widgets.dart'; //
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:logging/logging.dart';
@@ -146,6 +147,10 @@ class MdkVideoPlayer extends VideoPlayerPlatform {
     if (tex < 0) {
       sc.close();
       player.dispose();
+      throw PlatformException(
+        code: 'media open error',
+        message: 'invalid or unsupported media',
+      );
       return null;
     }
     _players[tex] = player;
