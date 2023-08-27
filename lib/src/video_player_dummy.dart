@@ -1,6 +1,6 @@
 
 /// A dummy class for web
-class MdkVideoPlayer {
+class MdkVideoPlayerPlatform {
   static void registerVideoPlayerPlatformsWith({dynamic options}) {
 
   }
