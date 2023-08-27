@@ -25,8 +25,8 @@ class MdkVideoPlayer extends mdk.Player {
   }
 
   MdkVideoPlayer() : super() {
-    onMediaStatusChanged((oldValue, newValue) {
-      _log.fine('$hashCode player$nativeHandle onMediaStatusChanged: $oldValue => $newValue');
+    onMediaStatus((oldValue, newValue) {
+      _log.fine('$hashCode player$nativeHandle onMediaStatus: $oldValue => $newValue');
       if (!oldValue.test(mdk.MediaStatus.loaded) && newValue.test(mdk.MediaStatus.loaded)) {
         final info = mediaInfo;
         var size = const Size(0, 0);

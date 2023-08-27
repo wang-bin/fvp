@@ -31,7 +31,6 @@ public:
     condition_variable cv[int(CallbackType::Count)];
 
     mdk::State oldState = mdk::State::Stopped;
-    mdk::MediaStatus oldStatus = mdk::MediaStatus::NoMedia;
 };
 
 static unordered_map<int64_t, shared_ptr<Player>> players;
@@ -193,14 +192,12 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
         });
     });
 
-    player->onMediaStatusChanged([=](mdk::MediaStatus s){
+    player->onMediaStatus([=](mdk::MediaStatus oldValue, mdk::MediaStatus newValue){
         auto sp = wp.lock();
         if (!sp)
             return false;
         auto p = sp.get();
         const auto type = int(CallbackType::MediaStatus);
-        const auto oldValue = p->oldStatus;
-        p->oldStatus = s;
         if (!(p->callbackTypes & (1 << type)))
             return true;
 
@@ -222,7 +219,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
         Dart_CObject v1{
             .type = Dart_CObject_kInt64,
             .value = {
-                .as_int64 = (int64_t)s,
+                .as_int64 = (int64_t)newValue,
             }
         };
         Dart_CObject* arr[] = { &t, &v0, &v1 };

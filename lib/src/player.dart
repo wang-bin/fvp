@@ -68,7 +68,7 @@ class Player {
     });
     Libfvp.registerPort(nativeHandle, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort);
 
-    onMediaStatusChanged((oldValue, newValue) {
+    onMediaStatus((oldValue, newValue) {
       if (!oldValue.test(MediaStatus.loaded) && newValue.test(MediaStatus.loaded)) {
         final video = mediaInfo.video;
         var size = const ui.Size(0, 0);
@@ -100,7 +100,7 @@ class Player {
     Libfvp.unregisterPort(nativeHandle);
     onEvent(null);
     onStateChanged(null);
-    onMediaStatusChanged(null);
+    onMediaStatus(null);
 
     _receivePort.close();
 
@@ -472,7 +472,7 @@ class Player {
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#player-onmediastatusstdfunctionboolmediastatus-oldvalue-mediastatus-newvalue-cb-callbacktoken-token--nullptr
 // reply: true to let native code wait for dart callback result, may result in dead lock because when native waiting main isolate reply, main isolate may execute another task(e.g. frequent seekTo) which also acquire the same lock in native
 // only the last callback reply parameter works
-  void onMediaStatusChanged(bool Function(MediaStatus oldValue, MediaStatus newValue)? callback, {bool reply = false}) {
+  void onMediaStatus(bool Function(MediaStatus oldValue, MediaStatus newValue)? callback, {bool reply = false}) {
     if (callback == null) {
       _statusCb.clear();
       Libfvp.unregisterType(nativeHandle, 2);
