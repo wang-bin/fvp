@@ -1,8 +1,17 @@
+## 0.4.0
+
+* free for all platforms
+* fix android x86 load error
+* enable x11 multi-thread on linux
+* VideoEvent.completed
+* better error handling if failed to open a media
+
 ## 0.3.0
 
 * use software decoder in android emulator, fix black screen
 * able to pass global options and player properties to libmdk
 * improve log
+* addm arm64 ios simulater
 
 ## 0.2.1
 
