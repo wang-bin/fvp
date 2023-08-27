@@ -30,11 +30,11 @@ import 'src/video_player_mdk.dart'
 /// ```
 ///
 void registerWith({dynamic options}) {
-  MdkVideoPlayer.registerVideoPlayerPlatformsWith(options: options);
+  MdkVideoPlayerPlatform.registerVideoPlayerPlatformsWith(options: options);
 }
 
 /*
 bool isRegistered() {
-  return VideoPlayerPlatform.instance.runtimeType == MdkVideoPlayer;
+  return VideoPlayerPlatform.instance.runtimeType == MdkVideoPlayerPlatform;
 }
 */
