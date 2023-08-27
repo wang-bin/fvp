@@ -230,3 +230,8 @@ void fvp_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
     mdk::SetGlobalOption("X11Display", GDK_DISPLAY_XDISPLAY(gdisp));
   }
 }
+
+__attribute__((constructor, used))
+static void init_xlib() {
+  XInitThreads();
+}
