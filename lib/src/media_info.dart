@@ -9,15 +9,20 @@ import 'generated_bindings.dart';
 import 'lib.dart';
 
 class CodecParameters {
+  /// codec name
   var codec = '';
+  /// fourcc
   var tag = 0;
   Uint8List? extra; /* without padding data */
 }
 
 class StreamInfo {
   int index = 0;
+  /// stream start time in milliseconds
   int startTime = 0; // ms
+  /// stream duration in milliseconds
   int duration = 0;  // ms
+  /// number of frames in the stream. can be 0 if not detected
   int frames = 0;
   var metadata = <String, String>{};
 }
@@ -98,7 +103,9 @@ class VideoCodecParameters extends CodecParameters {
   var profile = 0;
   var level = 0;
   double frameRate = 0;
+  /// pixel format
   var format = 0;
+  /// pixel format name
   String? formatName;
   var width = 0;
   var height = 0;
@@ -130,6 +137,7 @@ class VideoCodecParameters extends CodecParameters {
 }
 
 class VideoStreamInfo extends StreamInfo {
+  /// degree need to rotate clockwise. values can be 0, 90, 180, 270
   var rotation = 0;
   var codec = VideoCodecParameters();
 
@@ -163,7 +171,9 @@ class VideoStreamInfo extends StreamInfo {
 }
 
 class SubtitleCodecParameters extends CodecParameters {
+  /// display width. bitmap subtitles only
   var width = 0;
+  /// display height. bitmap subtitles only
   var height = 0;
 
   SubtitleCodecParameters();
@@ -213,7 +223,9 @@ class SubtitleStreamInfo extends StreamInfo {
 }
 
 class ChapterInfo {
+  /// chapter start time in milliseconds
   var startTime = 0;
+  /// chapter end time in milliseconds
   var endTime = 0;
   String? title; // null if no title
 

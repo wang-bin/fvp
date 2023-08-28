@@ -156,6 +156,13 @@ class Player {
   /// Audio volume value
   double get volume => _volume;
 
+  /// Set the audio renderer. Can be 'AudioTrack', 'OpenSL' on android.
+  set audioBackends(List<String> value) {
+    final u8p = value.toCZ();
+    _player.ref.setAudioBackends.asFunction<void Function(Pointer<mdkPlayer>, Pointer<Pointer<Char>>)>()(_player.ref.object, u8p.cast());
+    u8p.free();
+  }
+
   /// Set media, can be url, file path, assets://path etc.
   set media(String value) {
     _media = value;
