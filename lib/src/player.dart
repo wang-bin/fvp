@@ -63,6 +63,13 @@ class Player {
             _prepared.complete(pos);
           }
         }
+        case 6: { // seek
+          final pos = message[1] as int;
+          if (!_seeked!.isCompleted) {
+            _seeked!.complete(pos);
+          }
+          _seeked = null;
+        }
       }
       calloc.free(rep);
     });
@@ -326,13 +333,16 @@ class Player {
 
   /// Seek to [position] in milliseconds
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#bool-seekint64_t-pos-seekflag-flags-stdfunctionvoidint64_t-ret-cb--nullptr
-  bool seek({required int position, SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags), void Function(int)? callback}) {
-    final cb = calloc<mdkSeekCallback>();
-    //cb.ref.cb =
+  Future<int> seek({required int position, SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags)}) async {
     // FIXME: seek flags seems not work
-    final ret =_player.ref.seekWithFlags.asFunction<bool Function(Pointer<mdkPlayer>, int, int, mdkSeekCallback)>()(_player.ref.object, position, flags.rawValue, cb.ref);
-    calloc.free(cb);
-    return ret;
+    if (_seeked != null) {
+      return -1;
+    }
+    _seeked = Completer<int>();
+    if (!Libfvp.seek(nativeHandle, position, flags.rawValue, NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort)) {
+      _seeked!.complete(-10);
+    }
+    return _seeked!.future;
   }
 
   /// Return buffered duration in milliseconds.
@@ -501,6 +511,7 @@ class Player {
   int _texId = -1;
   var _videoSize = Completer<ui.Size?>();
   var _prepared = Completer<int>();
+  Completer<int>? _seeked;
   final _receivePort = ReceivePort();
 
   void Function(MediaEvent)? _eventCb;

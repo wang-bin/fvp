@@ -24,6 +24,7 @@ FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type, bool reply);
 FVP_EXPORT void MdkCallbacksUnregisterType(int64_t handle, int type);
 FVP_EXPORT void MdkCallbacksReplyType(int64_t handle, int type, const void* data);
 FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlag, void* post_c_object, int64_t send_port);// prepare() with a callback to post result to dart to set Completer<int>
+FVP_EXPORT bool MdkSeek(int64_t handle, int64_t pos, int64_t seekFlag, void* post_c_object, int64_t send_port);// prepare() with a callback to post result to dart to set Completer<int>
 
 enum CallbackType {
     Event, // not a callback, no need to wait for reply
@@ -32,6 +33,7 @@ enum CallbackType {
     Prepared,
     Sync,
     Log,
+    Seek,
     Count,
 };
 

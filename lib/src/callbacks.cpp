@@ -75,7 +75,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
                 },
             };
             if (!postCObject(send_port, &msg)) {
-                cout << "postCObject error" << endl; // clog: dead log. why post error?
+                cout << __func__ << "postCObject error" << endl; // clog: dead log. why post error?
                 return;
             }
         });
@@ -129,7 +129,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             },
         };
         if (!postCObject(send_port, &msg)) {
-            clog << "postCObject error" << endl;
+            clog << __func__ << __LINE__ << " postCObject error" << endl;
             return false;
         }
         return false;
@@ -178,7 +178,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             }
         };
         if (!postCObject(send_port, &msg)) {
-            clog << "postCObject error" << endl;
+            clog << __func__ << __LINE__ << " postCObject error" << endl;
             return;
         }
         if (!p->reply[type])
@@ -233,7 +233,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             }
         };
         if (!postCObject(send_port, &msg)) {
-            clog << "postCObject error" << endl;
+            clog << __func__ << __LINE__ << "postCObject error" << endl;
             return true;
         }
         if (!p->reply[type])
@@ -355,10 +355,49 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
             },
         };
         if (!postCObject(send_port, &msg)) {
-            cout << "postCObject error" << endl; // when?
+            clog << __func__ << __LINE__ << " postCObject error" << endl; // when?
             return false;
         }
         return true;
     }, mdk::SeekFlag(seekFlags));
     return true;
+}
+
+FVP_EXPORT bool MdkSeek(int64_t handle, int64_t pos, int64_t seekFlags, void* post_c_object, int64_t send_port)
+{
+    const auto it = players.find(handle);
+    if (it == players.cend()) {
+        return false;
+    }
+    const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
+    auto sp = it->second;
+    return sp->seek(pos, mdk::SeekFlag(seekFlags), [=](int64_t position){
+        Dart_CObject t{
+            .type = Dart_CObject_kInt64,
+            .value = {
+                .as_int64 = CallbackType::Seek,
+            }
+        };
+        Dart_CObject v{
+            .type = Dart_CObject_kInt64,
+            .value = {
+                .as_int64 = position,
+            }
+        };
+        Dart_CObject* arr[] = { &t, &v };
+        Dart_CObject msg {
+            .type = Dart_CObject_kArray,
+            .value = {
+                .as_array = {
+                    .length = std::size(arr),
+                    .values = arr,
+                },
+            },
+        };
+        if (!postCObject(send_port, &msg)) {
+            clog << __func__ << __LINE__ << " postCObject error" << endl; // when?
+            return false;
+        }
+        return true;
+    });
 }
