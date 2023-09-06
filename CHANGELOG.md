@@ -1,3 +1,8 @@
+## 0.5.0
+
+* fix s16p audio play on android
+* `Player.seek()` is async
+
 ## 0.4.0
 
 * free for all platforms
@@ -11,7 +16,7 @@
 * use software decoder in android emulator, fix black screen
 * able to pass global options and player properties to libmdk
 * improve log
-* addm arm64 ios simulater
+* add arm64 ios simulater
 
 ## 0.2.1
 
