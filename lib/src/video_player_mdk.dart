@@ -165,9 +165,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     }
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
-    if (Platform.isAndroid) {
-      player.audioBackends = ['AudioTrack', 'OpenSL'];
-    }
+
     player.setProperty('avio.protocol_whitelist', 'file,http,https,tcp,tls,crypto');
     _playerOpts?.forEach((key, value) {
       player.setProperty(key, value);
