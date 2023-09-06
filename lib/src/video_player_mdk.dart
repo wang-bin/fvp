@@ -26,49 +26,64 @@ class MdkVideoPlayer extends mdk.Player {
 
   MdkVideoPlayer() : super() {
     onMediaStatus((oldValue, newValue) {
-      _log.fine('$hashCode player$nativeHandle onMediaStatus: $oldValue => $newValue');
-      if (!oldValue.test(mdk.MediaStatus.loaded) && newValue.test(mdk.MediaStatus.loaded)) {
+      _log.fine(
+          '$hashCode player$nativeHandle onMediaStatus: $oldValue => $newValue');
+      if (!oldValue.test(mdk.MediaStatus.loaded) &&
+          newValue.test(mdk.MediaStatus.loaded)) {
         final info = mediaInfo;
         var size = const Size(0, 0);
         if (info.video != null) {
           final vc = info.video![0].codec;
           size = Size(vc.width.toDouble(), vc.height.toDouble());
         }
-        streamCtl.add(VideoEvent(eventType: VideoEventType.initialized
-          , duration: Duration(milliseconds: info.duration == 0 ? double.maxFinite.toInt() : info.duration) // FIXME: live stream info.duraiton == 0 and result a seekTo(0) in play()
-          , size: size));
-      } else if (!oldValue.test(mdk.MediaStatus.buffering) && newValue.test(mdk.MediaStatus.buffering)) {
+        streamCtl.add(VideoEvent(
+            eventType: VideoEventType.initialized,
+            duration: Duration(
+                milliseconds: info.duration == 0
+                    ? double.maxFinite.toInt()
+                    : info
+                        .duration) // FIXME: live stream info.duraiton == 0 and result a seekTo(0) in play()
+            ,
+            size: size));
+      } else if (!oldValue.test(mdk.MediaStatus.buffering) &&
+          newValue.test(mdk.MediaStatus.buffering)) {
         streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingStart));
-      } else if (!oldValue.test(mdk.MediaStatus.buffered) && newValue.test(mdk.MediaStatus.buffered)) {
+      } else if (!oldValue.test(mdk.MediaStatus.buffered) &&
+          newValue.test(mdk.MediaStatus.buffered)) {
         streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingEnd));
       }
       return true;
     });
 
     onEvent((ev) {
-      _log.fine('$hashCode player$nativeHandle onEvent: ${ev.category} ${ev.error}');
+      _log.fine(
+          '$hashCode player$nativeHandle onEvent: ${ev.category} ${ev.error}');
       if (ev.category == "reader.buffering") {
         final pos = position;
         final bufLen = buffered();
-        streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingUpdate
-          , buffered: [DurationRange(Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))]));
+        streamCtl.add(
+            VideoEvent(eventType: VideoEventType.bufferingUpdate, buffered: [
+          DurationRange(
+              Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))
+        ]));
       }
     });
 
     onStateChanged((oldValue, newValue) {
-      _log.fine('$hashCode player$nativeHandle onPlaybackStateChanged: $oldValue => $newValue');
+      _log.fine(
+          '$hashCode player$nativeHandle onPlaybackStateChanged: $oldValue => $newValue');
       if (newValue == mdk.PlaybackState.stopped) {
         streamCtl.add(VideoEvent(eventType: VideoEventType.completed));
         return;
       }
-      streamCtl.add(VideoEvent(eventType: VideoEventType.isPlayingStateUpdate
-        , isPlaying: newValue == mdk.PlaybackState.playing));
+      streamCtl.add(VideoEvent(
+          eventType: VideoEventType.isPlayingStateUpdate,
+          isPlaying: newValue == mdk.PlaybackState.playing));
     });
   }
 }
 
 class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
-
   static final _players = <int, MdkVideoPlayer>{};
   static dynamic _options;
   static Map<String, Object>? _globalOpts;
@@ -106,7 +121,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         'android': ['AMediaCodec', 'FFmpeg'],
       };
       if (!PlatformEx.isAndroidEmulator()) {
-        _options.putIfAbsent('video.decoders', () => vd[Platform.operatingSystem]!);
+        _options.putIfAbsent(
+            'video.decoders', () => vd[Platform.operatingSystem]!);
       }
       _maxWidth = _options["maxWidth"];
       _maxHeight = _options["maxHeight"];
@@ -125,12 +141,18 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         msg = msg.substring(0, msg.length - 1);
       }
       switch (level) {
-      case mdk.LogLevel.error: _mdkLog.severe(msg);
-      case mdk.LogLevel.warning: _mdkLog.warning(msg);
-      case mdk.LogLevel.info: _mdkLog.info(msg);
-      case mdk.LogLevel.debug: _mdkLog.fine(msg);
-      case mdk.LogLevel.all: _mdkLog.finest(msg);
-      default: return;
+        case mdk.LogLevel.error:
+          _mdkLog.severe(msg);
+        case mdk.LogLevel.warning:
+          _mdkLog.warning(msg);
+        case mdk.LogLevel.info:
+          _mdkLog.info(msg);
+        case mdk.LogLevel.debug:
+          _mdkLog.fine(msg);
+        case mdk.LogLevel.all:
+          _mdkLog.finest(msg);
+        default:
+          return;
       }
     });
 
@@ -138,8 +160,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> init() async{
-  }
+  Future<void> init() async {}
 
   @override
   Future<void> dispose(int textureId) async {
@@ -166,12 +187,14 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
 
-    player.setProperty('avio.protocol_whitelist', 'file,http,https,tcp,tls,crypto');
+    player.setProperty(
+        'avio.protocol_whitelist', 'file,http,https,tcp,tls,crypto');
     _playerOpts?.forEach((key, value) {
       player.setProperty(key, value);
     });
 
-    if (_options is Map<String, dynamic> && _options.containsKey('video.decoders')) {
+    if (_options is Map<String, dynamic> &&
+        _options.containsKey('video.decoders')) {
       player.videoDecoders = _options['video.decoders'];
     }
 
@@ -185,7 +208,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     player.media = uri!;
     player.prepare(); // required!
 // FIXME: pending events will be processed after texture returned, but no events before prepared
-    final tex = await player.updateTexture(width: _maxWidth, height: _maxHeight, fit: _fitMaxSize);
+    final tex = await player.updateTexture(
+        width: _maxWidth, height: _maxHeight, fit: _fitMaxSize);
     if (tex < 0) {
       player.dispose();
       throw PlatformException(
@@ -227,7 +251,11 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> seekTo(int textureId, Duration position) async {
-    _players[textureId]?.seek(position: position.inMilliseconds, flags: const mdk.SeekFlag(mdk.SeekFlag.fromStart|mdk.SeekFlag.keyFrame|mdk.SeekFlag.inCache));
+    _players[textureId]?.seek(
+        position: position.inMilliseconds,
+        flags: const mdk.SeekFlag(mdk.SeekFlag.fromStart |
+            mdk.SeekFlag.keyFrame |
+            mdk.SeekFlag.inCache));
   }
 
   @override
@@ -238,10 +266,13 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     }
     final pos = player.position;
     final bufLen = player.buffered();
-    player.streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingUpdate
-      , buffered: [DurationRange(Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))]));
+    player.streamCtl.add(VideoEvent(
+        eventType: VideoEventType.bufferingUpdate,
+        buffered: [
+          DurationRange(
+              Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))
+        ]));
     return Duration(milliseconds: pos);
-
   }
 
   @override
@@ -259,21 +290,24 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> setMixWithOthers(bool mixWithOthers) async {
-  }
+  Future<void> setMixWithOthers(bool mixWithOthers) async {}
 
   static String _assetUri(String asset, String? package) {
     final key = asset;
     switch (Platform.operatingSystem) {
-    case 'windows':
-        return path.join(path.dirname(Platform.resolvedExecutable), 'data', 'flutter_assets', key);
-    case 'linux':
-        return path.join(path.dirname(Platform.resolvedExecutable), 'data', 'flutter_assets', key);
-    case 'macos':
-        return path.join(path.dirname(Platform.resolvedExecutable), '..', 'Frameworks', 'App.framework', 'Resources', 'flutter_assets', key);
-    case 'ios':
-        return path.join(path.dirname(Platform.resolvedExecutable), 'Frameworks', 'App.framework', 'flutter_assets', key);
-    case 'android':
+      case 'windows':
+        return path.join(path.dirname(Platform.resolvedExecutable), 'data',
+            'flutter_assets', key);
+      case 'linux':
+        return path.join(path.dirname(Platform.resolvedExecutable), 'data',
+            'flutter_assets', key);
+      case 'macos':
+        return path.join(path.dirname(Platform.resolvedExecutable), '..',
+            'Frameworks', 'App.framework', 'Resources', 'flutter_assets', key);
+      case 'ios':
+        return path.join(path.dirname(Platform.resolvedExecutable),
+            'Frameworks', 'App.framework', 'flutter_assets', key);
+      case 'android':
         return 'assets://flutter_assets/$key';
     }
     return asset;

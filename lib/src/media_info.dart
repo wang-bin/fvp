@@ -11,6 +11,7 @@ import 'lib.dart';
 class CodecParameters {
   /// codec name
   var codec = '';
+
   /// fourcc
   var tag = 0;
   Uint8List? extra; /* without padding data */
@@ -18,10 +19,11 @@ class CodecParameters {
 
 class StreamInfo {
   int index = 0;
+
   /// stream start time in milliseconds
   int startTime = 0; // ms
   /// stream duration in milliseconds
-  int duration = 0;  // ms
+  int duration = 0; // ms
   /// number of frames in the stream. can be 0 if not detected
   int frames = 0;
   var metadata = <String, String>{};
@@ -84,10 +86,10 @@ class AudioStreamInfo extends StreamInfo {
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_AudioStreamMetadata(pcsi, entry)) {
       try {
-        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
-      // ignore: empty_catches
-      } catch (e) {
-      }
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] =
+            entry.ref.value.cast<Utf8>().toDartString();
+        // ignore: empty_catches
+      } catch (e) {}
     }
     calloc.free(entry);
   }
@@ -103,8 +105,10 @@ class VideoCodecParameters extends CodecParameters {
   var profile = 0;
   var level = 0;
   double frameRate = 0;
+
   /// pixel format
   var format = 0;
+
   /// pixel format name
   String? formatName;
   var width = 0;
@@ -156,10 +160,10 @@ class VideoStreamInfo extends StreamInfo {
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_VideoStreamMetadata(pcsi, entry)) {
       try {
-        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
-      // ignore: empty_catches
-      } catch (e) {
-      }
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] =
+            entry.ref.value.cast<Utf8>().toDartString();
+        // ignore: empty_catches
+      } catch (e) {}
     }
     calloc.free(entry);
   }
@@ -173,6 +177,7 @@ class VideoStreamInfo extends StreamInfo {
 class SubtitleCodecParameters extends CodecParameters {
   /// display width. bitmap subtitles only
   var width = 0;
+
   /// display height. bitmap subtitles only
   var height = 0;
 
@@ -208,10 +213,10 @@ class SubtitleStreamInfo extends StreamInfo {
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_SubtitleStreamMetadata(pcsi, entry)) {
       try {
-        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
-      // ignore: empty_catches
-      } catch (e) {
-      }
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] =
+            entry.ref.value.cast<Utf8>().toDartString();
+        // ignore: empty_catches
+      } catch (e) {}
     }
     calloc.free(entry);
   }
@@ -225,6 +230,7 @@ class SubtitleStreamInfo extends StreamInfo {
 class ChapterInfo {
   /// chapter start time in milliseconds
   var startTime = 0;
+
   /// chapter end time in milliseconds
   var endTime = 0;
   String? title; // null if no title
@@ -249,7 +255,7 @@ class ChapterInfo {
 class ProgramInfo {
   var id = 0;
   var stream = <int>[];
-  var metadata = <String,String>{};
+  var metadata = <String, String>{};
 
   ProgramInfo();
   ProgramInfo._from(Pointer<mdkProgramInfo> ppi) {
@@ -261,10 +267,10 @@ class ProgramInfo {
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_ProgramMetadata(ppi, entry)) {
       try {
-        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
-      // ignore: empty_catches
-      } catch (e) {
-      }
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] =
+            entry.ref.value.cast<Utf8>().toDartString();
+        // ignore: empty_catches
+      } catch (e) {}
     }
     calloc.free(entry);
   }
@@ -278,23 +284,25 @@ class ProgramInfo {
 class MediaInfo {
   /// start time in milliseconds
   var startTime = 0;
+
   /// duration in milliseconds. may be 0, for example live stream.
   var duration = 0;
   var bitRate = 0;
+
   /// format or container name, for example mp4, flv
   String? format;
   var streams = 0;
-  var metadata = <String,String>{};
+  var metadata = <String, String>{};
   List<AudioStreamInfo>? audio;
   List<VideoStreamInfo>? video;
   List<SubtitleStreamInfo>? subtitle;
   List<ChapterInfo>? chapters;
   List<ProgramInfo>? programs;
 
-
   @override
   String toString() {
-    var s = 'MediaInfo(range: $startTime + ${duration}ms, bitRate: $bitRate, format: $format, streams: $streams\nmetadata: $metadata';
+    var s =
+        'MediaInfo(range: $startTime + ${duration}ms, bitRate: $bitRate, format: $format, streams: $streams\nmetadata: $metadata';
     if (audio != null) s += '\n$audio';
     if (video != null) s += '\n$video';
     if (subtitle != null) s += '\n$subtitle';
@@ -318,10 +326,10 @@ class MediaInfo {
     var entry = calloc<mdkStringMapEntry>();
     while (Libmdk.instance.MDK_MediaMetadata(pci, entry)) {
       try {
-        metadata[entry.ref.key.cast<Utf8>().toDartString()] = entry.ref.value.cast<Utf8>().toDartString();
-      // ignore: empty_catches
-      } catch (e) {
-      }
+        metadata[entry.ref.key.cast<Utf8>().toDartString()] =
+            entry.ref.value.cast<Utf8>().toDartString();
+        // ignore: empty_catches
+      } catch (e) {}
     }
     calloc.free(entry);
 

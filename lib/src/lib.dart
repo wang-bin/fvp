@@ -9,11 +9,16 @@ abstract class Libmdk {
   static DynamicLibrary _load() {
     String name;
     switch (Platform.operatingSystem) {
-      case 'windows': name = 'mdk.dll';
-      case 'macos': name = 'mdk.framework/mdk';
-      case 'ios': name = 'mdk.framework/mdk';
-      case 'linux': name ='libmdk.so.0';
-      case 'android': name = 'libmdk.so';
+      case 'windows':
+        name = 'mdk.dll';
+      case 'macos':
+        name = 'mdk.framework/mdk';
+      case 'ios':
+        name = 'mdk.framework/mdk';
+      case 'linux':
+        name = 'libmdk.so.0';
+      case 'android':
+        name = 'libmdk.so';
       default:
         throw Exception(
           'Unsupported operating system: ${Platform.operatingSystem}.',
@@ -21,14 +26,13 @@ abstract class Libmdk {
     }
     try {
       return DynamicLibrary.open(name);
-    } catch(e) {
+    } catch (e) {
       rethrow;
     }
   }
 
   static final instance = NativeLibrary(_load());
 }
-
 
 abstract class Libfvp {
   static DynamicLibrary _load() {
@@ -41,23 +45,38 @@ abstract class Libfvp {
       name = 'libfvp_plugin.so';
     } else {
       throw Exception(
-          'Unsupported operating system: ${Platform.operatingSystem}.',
-        );
+        'Unsupported operating system: ${Platform.operatingSystem}.',
+      );
     }
     try {
       return DynamicLibrary.open(name);
-    } catch(e) {
+    } catch (e) {
       rethrow;
     }
   }
 
   static final instance = _load();
-  static final registerPort = instance.lookupFunction<Void Function(Int64, Pointer<Void>, Int64), void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
-  static final unregisterPort = instance.lookupFunction<Void Function(Int64), void Function(int)>('MdkCallbacksUnregisterPort');
-  static final registerType = instance.lookupFunction<Void Function(Int64, Int, Bool), void Function(int, int, bool)>('MdkCallbacksRegisterType');
-  static final unregisterType = instance.lookupFunction<Void Function(Int64, Int), void Function(int, int)>('MdkCallbacksUnregisterType');
-  static final replyType = instance.lookupFunction<Void Function(Int64, Int, Pointer<Void>), void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
-  static final prepare = instance.lookupFunction<Bool Function(Int64, Int64, Int64, Pointer<Void>, Int64), bool Function(int, int, int, Pointer<Void>, int)>('MdkPrepare');
-  static final seek = instance.lookupFunction<Bool Function(Int64, Int64, Int64, Pointer<Void>, Int64), bool Function(int, int, int, Pointer<Void>, int)>('MdkSeek');
-  static final isEmulator = instance.lookupFunction<Bool Function(), bool Function()>('MdkIsEmulator');
+  static final registerPort = instance.lookupFunction<
+      Void Function(Int64, Pointer<Void>, Int64),
+      void Function(int, Pointer<Void>, int)>('MdkCallbacksRegisterPort');
+  static final unregisterPort =
+      instance.lookupFunction<Void Function(Int64), void Function(int)>(
+          'MdkCallbacksUnregisterPort');
+  static final registerType = instance.lookupFunction<
+      Void Function(Int64, Int, Bool),
+      void Function(int, int, bool)>('MdkCallbacksRegisterType');
+  static final unregisterType = instance.lookupFunction<
+      Void Function(Int64, Int),
+      void Function(int, int)>('MdkCallbacksUnregisterType');
+  static final replyType = instance.lookupFunction<
+      Void Function(Int64, Int, Pointer<Void>),
+      void Function(int, int, Pointer<Void>)>('MdkCallbacksReplyType');
+  static final prepare = instance.lookupFunction<
+      Bool Function(Int64, Int64, Int64, Pointer<Void>, Int64),
+      bool Function(int, int, int, Pointer<Void>, int)>('MdkPrepare');
+  static final seek = instance.lookupFunction<
+      Bool Function(Int64, Int64, Int64, Pointer<Void>, Int64),
+      bool Function(int, int, int, Pointer<Void>, int)>('MdkSeek');
+  static final isEmulator = instance
+      .lookupFunction<Bool Function(), bool Function()>('MdkIsEmulator');
 }
