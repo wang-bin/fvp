@@ -90,7 +90,7 @@ class Player {
       if (!oldValue.test(MediaStatus.loaded) &&
           newValue.test(MediaStatus.loaded)) {
         final video = mediaInfo.video;
-        var size = const ui.Size(0, 0);
+        var size = const ui.Size(16, 16); // if no video stream, create a dummy texture
         if (video != null) {
           final vc = video[0].codec;
           size = ui.Size(vc.width.toDouble(), vc.height.toDouble());
