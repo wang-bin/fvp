@@ -80,18 +80,28 @@ private:
     ComPtr<ID3D11Texture2D> tex;
 };
 
+template<typename T>
+auto View_GetGraphicsAdapter(T* v) -> decltype(v->GetGraphicsAdapter())
+{
+    return v->GetGraphicsAdapter();
+}
+
+template<typename T>
+IDXGIAdapter* View_GetGraphicsAdapter(T v) {
+    return nullptr;
+}
+
 // static
 void FvpPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
+  IDXGIAdapter *adapter = View_GetGraphicsAdapter(registrar->GetView());
+  if (!adapter)
+    clog << "FlutterView::GetGraphicsAdapter() is not available, texture may be invisible" << endl;
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           registrar->messenger(), "fvp",
           &flutter::StandardMethodCodec::GetInstance());
-  auto plugin = std::make_unique<FvpPlugin>(registrar->texture_registrar()
-#ifdef VIEW_HAS_GetGraphicsAdapter
-      , registrar->GetView()->GetGraphicsAdapter()
-#endif
-      );
+  auto plugin = std::make_unique<FvpPlugin>(registrar->texture_registrar(), adapter);
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {

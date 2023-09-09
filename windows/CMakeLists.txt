@@ -47,27 +47,6 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 
-include(CheckCXXSourceCompiles)
-get_target_property(FLUTTER_INC flutter INTERFACE_INCLUDE_DIRECTORIES)
-get_target_property(FLUTTER_PLUGIN_INC flutter_wrapper_plugin INTERFACE_INCLUDE_DIRECTORIES)
-set(CMAKE_REQUIRED_INCLUDES ${FLUTTER_INC} ${FLUTTER_PLUGIN_INC})
-# DO NOT link to the wrapper
-check_cxx_source_compiles("
-#include <flutter/flutter_view.h>
-#include <type_traits>
-template <typename...> using void_t = void;
-template<typename, template<typename> class, typename = void_t<>> struct detect : std::false_type{};
-template<typename T, template<typename> class Op> struct detect<T, Op, void_t<Op<T>>> : std::true_type{};
-template <typename T> using GetGraphicsAdapter_t = decltype(std::declval<T>().GetGraphicsAdapter());
-template <typename T> using has_GetGraphicsAdapter = detect<T, GetGraphicsAdapter_t>;
-int main(){
-    static_assert(has_GetGraphicsAdapter<flutter::FlutterView>::value);
-}"
-    VIEW_HAS_GetGraphicsAdapter)
-if(VIEW_HAS_GetGraphicsAdapter)
-  target_compile_definitions(${PLUGIN_NAME} PRIVATE VIEW_HAS_GetGraphicsAdapter=1)
-endif()
-
 set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-windows-desktop-vs2022.7z")
 if(CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "[xX]64") # msvc
   set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-windows-desktop-vs2022-x64.7z")
@@ -98,7 +77,7 @@ get_filename_component(MDK_LIB_DIR ${MDK_LIBRARY} DIRECTORY)
 string(REPLACE "/lib/" "/bin/" MDK_BIN_DIR ${MDK_LIB_DIR})
 set(fvp_bundled_libraries
     ${MDK_BIN_DIR}/mdk.dll
-    ${MDK_BIN_DIR}/ffmpeg-6.dll
+    ${MDK_BIN_DIR}/ffmpeg-6.dll # MDK_FFMPEG
     ${MDK_BIN_DIR}/libass.dll
   PARENT_SCOPE
 )
