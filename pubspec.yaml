@@ -1,6 +1,6 @@
 name: fvp
 description: A plugin for video_player and APIs for your own players. Support all desktop/mobile platforms. Hardware decoders, optimal renders. Supports most formats via FFmpeg
-version: 0.5.0
+version: 0.6.0
 homepage: https://github.com/wang-bin/fvp
 
 environment:
@@ -8,18 +8,18 @@ environment:
   flutter: ">=2.5.0"
 
 dependencies:
-  ffi: ^2.0.2
+  ffi: ^2.1.0
   flutter:
     sdk: flutter
   logging: ^1.2.0
   path: ^1.8.3
-  plugin_platform_interface: ^2.0.2
-  video_player_platform_interface: ^6.2.0
+  plugin_platform_interface: ^2.1.6
+  video_player_platform_interface: ^6.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^2.0.3
   ffigen: ^9.0.1
   lints: ^2.1.1
 

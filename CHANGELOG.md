@@ -1,3 +1,9 @@
+## 0.6.0
+
+* fix incorrect dxgi adapter used on windows
+* fix video may be not displayed on windows 7
+* support audio without video
+
 ## 0.5.0
 
 * fix s16p audio play on android
