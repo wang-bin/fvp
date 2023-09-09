@@ -87,7 +87,9 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: fvp-example-windows
-        path: example/fvp_example_windows.7z
+        path: |
+          example/fvp_example_windows.7z
+          example/build/windows/CMakeFiles/CMakeConfigureLog.yaml
 
   Linux:
     runs-on: ubuntu-latest
