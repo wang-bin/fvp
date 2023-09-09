@@ -85,13 +85,12 @@ class MdkVideoPlayer extends mdk.Player {
 
 class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static final _players = <int, MdkVideoPlayer>{};
-  static dynamic _options;
   static Map<String, Object>? _globalOpts;
   static Map<String, String>? _playerOpts;
   static int? _maxWidth;
   static int? _maxHeight;
   static bool? _fitMaxSize;
-  static List<String>? _platforms;
+  static List<String>? _decoders;
   static final _mdkLog = Logger('mdk');
 
 /*
@@ -102,17 +101,24 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
  */
   static void registerVideoPlayerPlatformsWith({dynamic options}) {
-    _options = options;
-    _options ??= <String, dynamic>{};
     // prefer hardware decoders
-    if (_options is Map<String, dynamic>) {
-      _platforms = _options["platforms"];
-      if (_platforms is List<String>) {
-        if (!_platforms!.contains(Platform.operatingSystem)) {
+    if (options is Map<String, dynamic>) {
+      final platforms = options['platforms'];
+      if (platforms is List<String>) {
+        if (!platforms.contains(Platform.operatingSystem)) {
           return;
         }
       }
 
+      _maxWidth = options["maxWidth"];
+      _maxHeight = options["maxHeight"];
+      _fitMaxSize = options["fitMaxSize"];
+      _playerOpts = options['player'];
+      _globalOpts = options['global'];
+      _decoders = options['video.decoders'];
+    }
+
+    if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
       const vd = {
         'windows': ['MFT:d3d=11', "D3D11", 'CUDA', 'FFmpeg'],
         'macos': ['VT', 'FFmpeg'],
@@ -120,15 +126,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         'linux': ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'],
         'android': ['AMediaCodec', 'FFmpeg'],
       };
-      if (!PlatformEx.isAndroidEmulator()) {
-        _options.putIfAbsent(
-            'video.decoders', () => vd[Platform.operatingSystem]!);
-      }
-      _maxWidth = _options["maxWidth"];
-      _maxHeight = _options["maxHeight"];
-      _fitMaxSize = _options["fitMaxSize"];
-      _playerOpts = _options['player'];
-      _globalOpts = _options['global'];
+      _decoders = vd[Platform.operatingSystem];
     }
     _globalOpts?.forEach((key, value) {
       mdk.setGlobalOption(key, value);
@@ -193,9 +191,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       player.setProperty(key, value);
     });
 
-    if (_options is Map<String, dynamic> &&
-        _options.containsKey('video.decoders')) {
-      player.videoDecoders = _options['video.decoders'];
+    if (_decoders != null) {
+      player.videoDecoders = _decoders!;
     }
 
     if (dataSource.httpHeaders.isNotEmpty) {
