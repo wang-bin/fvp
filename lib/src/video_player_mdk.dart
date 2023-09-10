@@ -90,6 +90,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static int? _maxWidth;
   static int? _maxHeight;
   static bool? _fitMaxSize;
+  static int _seekFlags = mdk.SeekFlag.fromStart | mdk.SeekFlag.inCache;
   static List<String>? _decoders;
   static final _mdkLog = Logger('mdk');
 
@@ -110,6 +111,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         }
       }
 
+      if ((options['fastSeek'] ?? false) as bool) {
+        _seekFlags |= mdk.SeekFlag.keyFrame;
+      }
       _maxWidth = options["maxWidth"];
       _maxHeight = options["maxHeight"];
       _fitMaxSize = options["fitMaxSize"];
@@ -249,10 +253,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   @override
   Future<void> seekTo(int textureId, Duration position) async {
     _players[textureId]?.seek(
-        position: position.inMilliseconds,
-        flags: const mdk.SeekFlag(mdk.SeekFlag.fromStart |
-            mdk.SeekFlag.keyFrame |
-            mdk.SeekFlag.inCache));
+        position: position.inMilliseconds, flags: mdk.SeekFlag(_seekFlags));
   }
 
   @override

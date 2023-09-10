@@ -11,6 +11,8 @@ import 'src/video_player_mdk.dart'
 /// 'platforms': a list of [Platform.operatingSystem], only these platforms will use this plugin implementation. You can still use official implementation for android and ios if they are not in the list.
 /// If 'platforms' not set, this implementation will be used for all platforms.
 ///
+/// 'fastSeek': bool. default is false, faster but not accurate, i.e. result position can be a few seconds different from requested position
+///
 /// "video.decoders": a list of decoder names. supported decoders: https://github.com/wang-bin/mdk-sdk/wiki/Decoders
 ///
 /// "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
