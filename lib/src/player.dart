@@ -75,8 +75,8 @@ class Player {
           {
             // seek
             final pos = message[1] as int;
-            if (!_seeked!.isCompleted) {
-              _seeked!.complete(pos);
+            if (!(_seeked?.isCompleted ?? true)) {
+              _seeked?.complete(pos);
             }
             _seeked = null;
           }
@@ -389,9 +389,8 @@ class Player {
   Future<int> seek(
       {required int position,
       SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags)}) async {
-    // FIXME: seek flags seems not work
-    if (_seeked != null) {
-      return -1;
+    if (!(_seeked?.isCompleted ?? true)) {
+      _seeked?.complete(-2);
     }
     _seeked = Completer<int>();
     if (!Libfvp.seek(nativeHandle, position, flags.rawValue,
