@@ -1,3 +1,8 @@
+## 0.7.0
+
+* fix seek ignored if previous is not finished
+* default is accurate seek
+
 ## 0.6.0
 
 * fix incorrect dxgi adapter used on windows
