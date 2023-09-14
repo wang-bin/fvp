@@ -189,8 +189,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
 
-    player.setProperty(
-        'avio.protocol_whitelist', 'file,http,https,tcp,tls,crypto');
+    player.setProperty('avio.protocol_whitelist',
+        'file,rtmp,http,https,tls,rtp,tcp,udp,crypto,httpproxy,data,concatf,concat,subfile');
     _playerOpts?.forEach((key, value) {
       player.setProperty(key, value);
     });
