@@ -25,7 +25,7 @@ class Player {
   Player() {
     _pp.value = _player;
     _fi.attach(this, this);
-    _receivePort.listen((message) {
+    _receivePort.listen((message) async {
       final type = message[0] as int;
       final rep = calloc<_CallbackReply>();
       switch (type) {
@@ -70,6 +70,23 @@ class Player {
             if (!_prepared.isCompleted) {
               _prepared.complete(pos);
             }
+            rep.ref.prepared.ret = true;
+            rep.ref.prepared.boost = true;
+            if (!_videoSize.isCompleted) {
+              if (pos < 0) {
+                _videoSize.complete(null);
+              } else {
+                final vc = mediaInfo.video?[0].codec;
+                // if no video stream, create a dummy texture of size 16x16
+                _videoSize.complete(ui.Size(
+                    vc?.width.toDouble() ?? 16, vc?.height.toDouble() ?? 16));
+              }
+            }
+            if (_prepareCb != null) {
+              rep.ref.prepared.ret = await _prepareCb!();
+              _prepareCb = null;
+            }
+            Libfvp.replyType(nativeHandle, type, rep.cast());
           }
         case 6:
           {
@@ -87,24 +104,20 @@ class Player {
         _receivePort.sendPort.nativePort);
 
     onMediaStatus((oldValue, newValue) {
+      if (_videoSize.isCompleted) {
+        return true;
+      }
       if (!oldValue.test(MediaStatus.loaded) &&
           newValue.test(MediaStatus.loaded)) {
-        final video = mediaInfo.video;
-        var size =
-            const ui.Size(16, 16); // if no video stream, create a dummy texture
-        if (video != null) {
-          final vc = video[0].codec;
-          size = ui.Size(vc.width.toDouble(), vc.height.toDouble());
-        }
-        if (!_videoSize.isCompleted) {
-          _videoSize.complete(size);
-        }
+        final vc = mediaInfo.video?[0].codec;
+        // if no video stream, create a dummy texture of size 16x16
+        final size =
+            ui.Size(vc?.width.toDouble() ?? 16, vc?.height.toDouble() ?? 16);
+        _videoSize.complete(size);
       }
       if (oldValue.test(MediaStatus.loading) &&
           newValue.test(MediaStatus.invalid | MediaStatus.stalled)) {
-        if (!_videoSize.isCompleted) {
-          _videoSize.complete(null);
-        }
+        _videoSize.complete(null);
       }
       return true;
     });
@@ -308,8 +321,11 @@ class Player {
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-prepareint64_t-startposition--0-functionboolint64_t-position-bool-boost-cb--nullptr-seekflag-flags--seekflagfromstart
   Future<int> prepare(
       {int position = 0,
-      SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags)}) async {
+      SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags),
+      Future<bool> Function()? callback}) async {
     _prepared = Completer<int>();
+    Libfvp.registerType(nativeHandle, 3, true);
+    _prepareCb = callback;
     if (!Libfvp.prepare(nativeHandle, position, flags.rawValue,
         NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort)) {
       _prepared.complete(-1);
@@ -629,6 +645,7 @@ class Player {
   void Function(PlaybackState oldValue, PlaybackState newValue)? _stateCb;
   final _statusCb =
       <bool Function(MediaStatus oldValue, MediaStatus newValue)>[];
+  Future<bool> Function()? _prepareCb;
 
   bool _mute = false;
   double _volume = 1.0;

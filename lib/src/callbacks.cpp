@@ -331,11 +331,20 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
     }
     const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
     auto sp = it->second;
-    sp->prepare(pos, [=](int64_t position, bool* boost){
+    auto wp = weak_ptr<Player>(sp);
+    const auto tid = this_thread::get_id();
+    sp->prepare(pos, [send_port, postCObject, wp, tid](int64_t position, bool* boost){
+        auto sp = wp.lock();
+        if (!sp)
+            return false;
+        auto p = sp.get();
+        const auto type = int(CallbackType::Prepared);
+        unique_lock lock(p->mtx[type]);
+        p->dataReady[type] = false;
         Dart_CObject t{
             .type = Dart_CObject_kInt64,
             .value = {
-                .as_int64 = CallbackType::Prepared,
+                .as_int64 = type,
             }
         };
         Dart_CObject v{
@@ -358,7 +367,17 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
             clog << __func__ << __LINE__ << " postCObject error" << endl; // when?
             return false;
         }
-        return true;
+        if (!p->reply[type])
+            return true;
+        if (tid == this_thread::get_id()) {// FIXME: can not convert dart non-static function to native function, and dart object has no address, so func(context, args) is impossible too
+            clog << __func__ << "callback in main thread. won't wait callback" << endl;
+            return true;
+        }
+        p->cv[type].wait(lock, [=]{
+            return p->dataReady[type] || !(p->callbackTypes & (1 << type));
+        });
+        *boost = p->data[type].prepared.boost;
+        return p->data[type].prepared.ret;
     }, mdk::SeekFlag(seekFlags));
     return true;
 }
