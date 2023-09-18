@@ -1,7 +1,12 @@
+## 0.8.0
+
+* fix rtsp, rtmp open error
+* fix music cover art sometimes is not displayed. ensure texture is created before the 1st video frame.
+
 ## 0.7.0
 
 * fix seek ignored if previous is not finished
-* default is accurate seek
+* add `fastSeek` option in `registerWith()`. default is accurate seek
 
 ## 0.6.0
 
