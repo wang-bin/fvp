@@ -20,6 +20,9 @@ class MdkVideoPlayer extends mdk.Player {
 
   @override
   void dispose() {
+    onMediaStatus(null);
+    onEvent(null);
+    onStateChanged(null);
     streamCtl.close();
     super.dispose();
   }
