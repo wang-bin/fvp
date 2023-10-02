@@ -61,6 +61,7 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
     RESULT_VARIABLE EXTRACT_RET
   )
   if(NOT EXTRACT_RET EQUAL 0)
+    file(REMOVE ${MDK_SDK_SAVE})
     message(FATAL_ERROR "Failed to extract mdk-sdk. You can download manually from ${MDK_SDK_URL} and extract to ${CMAKE_CURRENT_SOURCE_DIR}")
   endif()
 endif()
