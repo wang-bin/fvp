@@ -45,7 +45,8 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     if (call.method.equals("CreateRT")) {
-      final long handle = call.argument("player");
+      final Number h = call.argument("player");  // directly cast to long: java.lang.Integer cannot be cast to java.lang.Long
+      final long handle = h.longValue();
       final int width = (int)call.argument("width");
       final int height = (int)call.argument("height");
       SurfaceTextureEntry te = texRegistry.createSurfaceTexture();
