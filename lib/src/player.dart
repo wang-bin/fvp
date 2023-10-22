@@ -82,7 +82,7 @@ class Player {
                 double h = 16;
                 if (vc != null) {
                   w = vc.width.toDouble();
-                  h = vc.height.toDouble() / vc.par;
+                  h = (vc.height.toDouble() / vc.par).roundToDouble();
                 }
                 _videoSize.complete(ui.Size(w, h));
               }
@@ -120,7 +120,7 @@ class Player {
         double h = 16;
         if (vc != null) {
           w = vc.width.toDouble();
-          h = vc.height.toDouble() / vc.par;
+          h = (vc.height.toDouble() / vc.par).roundToDouble();
         }
         final size = ui.Size(w, h);
         _videoSize.complete(size);
