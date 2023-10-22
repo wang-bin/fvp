@@ -121,6 +121,23 @@ class NativeLibrary {
   late final _MDK_setGlobalOptionInt32 = _MDK_setGlobalOptionInt32Ptr
       .asFunction<void Function(ffi.Pointer<ffi.Char>, int)>();
 
+  void MDK_setGlobalOptionFloat(
+    ffi.Pointer<ffi.Char> key,
+    double value,
+  ) {
+    return _MDK_setGlobalOptionFloat(
+      key,
+      value,
+    );
+  }
+
+  late final _MDK_setGlobalOptionFloatPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>, ffi.Float)>>(
+      'MDK_setGlobalOptionFloat');
+  late final _MDK_setGlobalOptionFloat = _MDK_setGlobalOptionFloatPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Char>, double)>();
+
   void MDK_setGlobalOptionPtr(
     ffi.Pointer<ffi.Char> key,
     ffi.Pointer<ffi.Void> value,
@@ -497,6 +514,7 @@ abstract class MDKSeekFlag {
   static const int MDK_SeekFlag_KeyFrame = 256;
   static const int MDK_SeekFlag_Fast = 256;
   static const int MDK_SeekFlag_InCache = 1024;
+  static const int MDK_SeekFlag_Backward = 65536;
   static const int MDK_SeekFlag_Default = 1282;
 }
 
@@ -514,6 +532,8 @@ abstract class MDK_ColorSpace {
   static const int MDK_ColorSpace_Unknown = 0;
   static const int MDK_ColorSpace_BT709 = 1;
   static const int MDK_ColorSpace_BT2100_PQ = 2;
+  static const int MDK_ColorSpace_scRGB = 3;
+  static const int MDK_ColorSpace_ExtendedLinearDisplayP3 = 4;
 }
 
 abstract class MDK_LogLevel {
@@ -666,7 +686,10 @@ final class mdkVideoCodecParameters extends ffi.Struct {
   @ffi.Int()
   external int b_frames;
 
-  @ffi.Array.multi([132])
+  @ffi.Float()
+  external double par;
+
+  @ffi.Array.multi([128])
   external ffi.Array<ffi.Char> reserved;
 }
 
@@ -1633,6 +1656,6 @@ const int MDK_MAJOR = 0;
 
 const int MDK_MINOR = 22;
 
-const int MDK_MICRO = 0;
+const int MDK_MICRO = 1;
 
-const int MDK_VERSION = 5632;
+const int MDK_VERSION = 5633;

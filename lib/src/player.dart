@@ -78,8 +78,13 @@ class Player {
               } else {
                 final vc = mediaInfo.video?[0].codec;
                 // if no video stream, create a dummy texture of size 16x16
-                _videoSize.complete(ui.Size(
-                    vc?.width.toDouble() ?? 16, vc?.height.toDouble() ?? 16));
+                double w = 16;
+                double h = 16;
+                if (vc != null) {
+                  w = vc.width.toDouble();
+                  h = vc.height.toDouble() / vc.par;
+                }
+                _videoSize.complete(ui.Size(w, h));
               }
             }
             if (_prepareCb != null) {
@@ -111,8 +116,13 @@ class Player {
           newValue.test(MediaStatus.loaded)) {
         final vc = mediaInfo.video?[0].codec;
         // if no video stream, create a dummy texture of size 16x16
-        final size =
-            ui.Size(vc?.width.toDouble() ?? 16, vc?.height.toDouble() ?? 16);
+        double w = 16;
+        double h = 16;
+        if (vc != null) {
+          w = vc.width.toDouble();
+          h = vc.height.toDouble() / vc.par;
+        }
+        final size = ui.Size(w, h);
         _videoSize.complete(size);
       }
       if (oldValue.test(MediaStatus.loading) &&

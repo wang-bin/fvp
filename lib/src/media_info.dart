@@ -115,6 +115,9 @@ class VideoCodecParameters extends CodecParameters {
   var height = 0;
   var bFrames = 0;
 
+  /// pixel aspect ratio
+  double par = 1.0;
+
   VideoCodecParameters();
 
   VideoCodecParameters._from(mdkVideoCodecParameters cp) {
@@ -132,6 +135,9 @@ class VideoCodecParameters extends CodecParameters {
     width = cp.width;
     height = cp.height;
     bFrames = cp.b_frames;
+    if (cp.par > 0) {
+      par = cp.par;
+    }
   }
 
   @override

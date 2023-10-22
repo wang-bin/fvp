@@ -37,7 +37,7 @@ class MdkVideoPlayer extends mdk.Player {
         var size = const Size(0, 0);
         if (info.video != null) {
           final vc = info.video![0].codec;
-          size = Size(vc.width.toDouble(), vc.height.toDouble());
+          size = Size(vc.width.toDouble(), vc.height.toDouble() / vc.par);
         }
         streamCtl.add(VideoEvent(
             eventType: VideoEventType.initialized,
