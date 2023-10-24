@@ -17,6 +17,8 @@ import 'src/video_player_mdk.dart'
 ///
 /// "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
 ///
+/// 'lowLatency': int. default is 0. reduce network stream latency. 1: for vod. 2: for live stream, may drop frames to ensure the latest content is displayed
+///
 /// "player": backend player properties of type Map<String, String>. See https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setpropertyconst-stdstring-key-const-stdstring-value
 ///
 /// "global": backend global options of type Map<String, Object>. See https://github.com/wang-bin/mdk-sdk/wiki/Global-Options

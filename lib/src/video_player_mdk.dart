@@ -94,6 +94,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static int? _maxWidth;
   static int? _maxHeight;
   static bool? _fitMaxSize;
+  static int _lowLatency = 0;
   static int _seekFlags = mdk.SeekFlag.fromStart | mdk.SeekFlag.inCache;
   static List<String>? _decoders;
   static final _mdkLog = Logger('mdk');
@@ -118,6 +119,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       if ((options['fastSeek'] ?? false) as bool) {
         _seekFlags |= mdk.SeekFlag.keyFrame;
       }
+      _lowLatency = (options['lowLatency'] ?? 0) as int;
       _maxWidth = options["maxWidth"];
       _maxHeight = options["maxHeight"];
       _fitMaxSize = options["fitMaxSize"];
@@ -196,12 +198,22 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     player.setProperty("keep_open", "1");
     player.setProperty('avio.protocol_whitelist',
         'file,rtmp,http,https,tls,rtp,tcp,udp,crypto,httpproxy,data,concatf,concat,subfile');
+    player.setProperty('avformat.rtsp_transport', 'tcp');
     _playerOpts?.forEach((key, value) {
       player.setProperty(key, value);
     });
 
     if (_decoders != null) {
       player.videoDecoders = _decoders!;
+    }
+    if (_lowLatency > 0) {
+      player.setProperty('avformat.fflags', '+nobuffer');
+      player.setProperty('avformat.fpsprobesize', '0');
+      if (_lowLatency > 1) {
+        player.setBufferRange(min: 0, max: 1000, drop: true);
+      } else {
+        player.setBufferRange(min: 0);
+      }
     }
 
     if (dataSource.httpHeaders.isNotEmpty) {

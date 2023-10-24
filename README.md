@@ -39,7 +39,10 @@ registerWith(options: {'platforms': ['windows', 'macos', 'linux']}); // only the
 
 To select [other decoders](https://github.com/wang-bin/mdk-sdk/wiki/Decoders), pass options like this
 ```dart
-registerWith(options: {'video.decoders': ['D3D11', 'NVDEC', 'FFmpeg']}); // windows
+registerWith(options: {
+    'video.decoders': ['D3D11', 'NVDEC', 'FFmpeg']
+    'lowLatency': 1, // optional for network streams
+    }); // windows
 ```
 
 ### Backend Player API
