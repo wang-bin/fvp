@@ -1,3 +1,13 @@
+## 0.10.0
+
+* keep open when play to end
+* fix texture aspect ratio
+* add lowLatency option
+
+## 0.9.0
+
+* remove callbacks before StreamController close, avoid add event when closed
+
 ## 0.8.0
 
 * fix rtsp, rtmp open error
