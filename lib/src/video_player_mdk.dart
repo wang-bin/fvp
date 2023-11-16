@@ -77,6 +77,7 @@ class MdkVideoPlayer extends mdk.Player {
       _log.fine(
           '$hashCode player$nativeHandle onPlaybackStateChanged: $oldValue => $newValue');
       if (newValue == mdk.PlaybackState.stopped) {
+        // FIXME: keep_open no stopped
         streamCtl.add(VideoEvent(eventType: VideoEventType.completed));
         return;
       }
@@ -195,7 +196,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
 
-    player.setProperty("keep_open", "1");
+    //player.setProperty("keep_open", "1");
     player.setProperty('avio.protocol_whitelist',
         'file,rtmp,http,https,tls,rtp,tcp,udp,crypto,httpproxy,data,concatf,concat,subfile');
     player.setProperty('avformat.rtsp_transport', 'tcp');
