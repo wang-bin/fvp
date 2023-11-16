@@ -24,7 +24,6 @@ class Player {
 
   Player() {
     _pp.value = _player;
-    _fi.attach(this, this);
     _receivePort.listen((message) async {
       final type = message[0] as int;
       final rep = calloc<_CallbackReply>();
@@ -639,11 +638,6 @@ class Player {
 
   final _player = Libmdk.instance.mdkPlayerAPI_new();
   var _pp = calloc<Pointer<mdkPlayerAPI>>();
-
-  static final _fi = Finalizer((p0) {
-    final p = p0 as Player;
-    p.dispose();
-  });
 
   int _texId = -1;
   var _videoSize = Completer<ui.Size?>();
