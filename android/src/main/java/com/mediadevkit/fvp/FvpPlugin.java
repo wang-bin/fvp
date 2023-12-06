@@ -95,6 +95,10 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   private native void nativeSetSurface(long playerHandle, long texId, Surface surface, int w, int h);
 
   static {
-    System.loadLibrary("fvp_plugin");
+    try {
+        System.loadLibrary("fvp_plugin");
+    } catch (UnsatisfiedLinkError e) {
+        Log.w("FvpPlugin", "static initializer: loadLibrary fvp_plugin error: " + e);
+    }
   }
 }
