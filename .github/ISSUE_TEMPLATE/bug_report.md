@@ -15,7 +15,7 @@ A clear and concise description of what the bug is.
 A clear and concise description of what you expected to happen.
 
 **Log**
-Add 
+Add
 ```
 import 'package:logging/logging.dart';
 import 'package:intl/intl.dart';

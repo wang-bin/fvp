@@ -1,3 +1,7 @@
+## 0.12.0
+
+* make libfvp_plugin.so optional on android
+
 ## 0.11.0
 
 * support flutter 3.16, fix runtime error
