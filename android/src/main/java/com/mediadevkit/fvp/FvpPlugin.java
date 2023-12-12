@@ -49,19 +49,20 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       final long handle = h.longValue();
       final int width = (int)call.argument("width");
       final int height = (int)call.argument("height");
+      final boolean tunnel = (boolean)call.argument("tunnel");
       SurfaceTextureEntry te = texRegistry.createSurfaceTexture();
       SurfaceTexture tex = te.surfaceTexture();
       tex.setDefaultBufferSize(width, height); // TODO: size from player. rotate, fullscreen change?
       Surface surface = new Surface(tex); // TODO: when to release
       long texId = te.id();
-      nativeSetSurface(handle, texId, surface, width, height);
+      nativeSetSurface(handle, texId, surface, width, height, tunnel);
       textures.put(texId, te);
       surfaces.put(texId, surface);
       result.success(texId);
     } else if (call.method.equals("ReleaseRT")) {
       final int texId = call.argument("texture"); // 32bit int, 0, 1, 2 .... but SurfaceTexture.id() is long
       final long texId64 = texId; // MUST cast texId to long, otherwise remove() error
-      nativeSetSurface(0, texId, null, -1, -1);
+      nativeSetSurface(0, texId, null, -1, -1, false);
       SurfaceTextureEntry te = textures.get(texId64);
       if (te == null) {
         Log.w("FvpPlugin", "onMethodCall: ReleaseRT texId not found: " + texId);
@@ -83,7 +84,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     channel.setMethodCallHandler(null);
     Log.i("FvpPlugin", "onDetachedFromEngine: ");
-    for (long texId : textures.keySet()) { nativeSetSurface(0, texId, null, -1, -1);}
+    for (long texId : textures.keySet()) { nativeSetSurface(0, texId, null, -1, -1, false);}
     surfaces = null;
     textures = null;
   }
@@ -92,7 +93,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
     \param playerHandle null to destroy
     \param texId
    */
-  private native void nativeSetSurface(long playerHandle, long texId, Surface surface, int w, int h);
+  private native void nativeSetSurface(long playerHandle, long texId, Surface surface, int w, int h, boolean tunnel);
 
   static {
     try {

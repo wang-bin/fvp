@@ -32,7 +32,8 @@ abstract class FvpPlatform extends PlatformInterface {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
-  Future<int> createTexture(int playerHandle, int width, int height) {
+  Future<int> createTexture(
+      int playerHandle, int width, int height, bool tunnel) {
     throw UnimplementedError('createTexture() has not been implemented.');
   }
 

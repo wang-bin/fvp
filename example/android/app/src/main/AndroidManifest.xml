@@ -36,8 +36,22 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <!--
+      Internet access permissions.
+      -->
     <uses-permission android:name="android.permission.INTERNET"
         tools:ignore="ManifestOrder" />
+      <!--
+        Media access permissions.
+        Android 13 or higher.
+        https://developer.android.com/about/versions/13/behavior-changes-13#granular-media-permissions
+        -->
+      <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+      <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+      <!--
+        Storage access permissions.
+        Android 12 or lower.
+        -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />

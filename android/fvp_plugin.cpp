@@ -25,10 +25,14 @@ public:
     }
 
     ~TexturePlayer() override {
+        if (anw) {
+            ANativeWindow_release(anw);
+        }
     }
 
     int width = 0;
     int height = 0;
+    ANativeWindow* anw = nullptr;
 private:
 };
 
@@ -61,7 +65,7 @@ void JNI_OnUnload(JavaVM *vm, void *reserved) {
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, jlong player_handle,
-                                                    jlong tex_id, jobject surface, jint w, jint h) {
+                                                    jlong tex_id, jobject surface, jint w, jint h, jboolean tunnel) {
     if (!player_handle) {
         if (auto it = players.find(tex_id); it != players.end()) {
             auto& player = it->second;
@@ -72,7 +76,12 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
     }
     assert(surface && "null surface");
     auto player = make_shared<TexturePlayer>(player_handle);
-    player->updateNativeSurface(surface, w, h);
+    if (tunnel) {
+        player->anw = ANativeWindow_fromSurface(env, surface);
+        player->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)player->anw));
+    } else {
+        player->updateNativeSurface(surface, w, h);
+    }
     players[tex_id] = player;
 }
 

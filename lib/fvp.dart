@@ -23,6 +23,8 @@ import 'src/video_player_mdk.dart'
 ///
 /// "global": backend global options of type Map<String, Object>. See https://github.com/wang-bin/mdk-sdk/wiki/Global-Options
 ///
+/// "tunnel": android only, default is false. AMediacodec/MediaCodec decoder output to a SurfaceTexture surface directly without OpenGL. Maybe more efficient, but some features are not supported, e.g. HDR tone mapping, less codecs.
+///
 /// Example:
 /// ```dart
 /// registerWith({options: {
