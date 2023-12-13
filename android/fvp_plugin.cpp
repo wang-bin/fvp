@@ -24,15 +24,9 @@ public:
     {
     }
 
-    ~TexturePlayer() override {
-        if (anw) {
-            ANativeWindow_release(anw);
-        }
-    }
-
     int width = 0;
     int height = 0;
-    ANativeWindow* anw = nullptr;
+    jobject surface = nullptr;
 private:
 };
 
@@ -69,16 +63,21 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
     if (!player_handle) {
         if (auto it = players.find(tex_id); it != players.end()) {
             auto& player = it->second;
+            auto s = player->surface;
             player->updateNativeSurface(nullptr);
             players.erase(it);
+            if (s) {
+                env->DeleteGlobalRef(surface);
+            }
         }
         return;
     }
     assert(surface && "null surface");
     auto player = make_shared<TexturePlayer>(player_handle);
+    clog << __func__ << endl;
     if (tunnel) {
-        player->anw = ANativeWindow_fromSurface(env, surface);
-        player->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)player->anw));
+        player->surface = env->NewGlobalRef(surface);
+        player->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)player->surface));
     } else {
         player->updateNativeSurface(surface, w, h);
     }
