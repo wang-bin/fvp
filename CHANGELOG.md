@@ -1,3 +1,8 @@
+## 0.13.0
+
+* support video with rotation
+* support tunnel mode for android
+
 ## 0.12.0
 
 * make libfvp_plugin.so optional on android
