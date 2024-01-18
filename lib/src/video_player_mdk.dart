@@ -1,4 +1,4 @@
-// Copyright 2022-2023 Wang Bin. All rights reserved.
+// Copyright 2022-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -39,6 +39,9 @@ class MdkVideoPlayer extends mdk.Player {
           final vc = info.video![0].codec;
           size = Size(vc.width.toDouble(),
               (vc.height.toDouble() / vc.par).roundToDouble());
+          if (info.video![0].rotation % 180 == 90) {
+            size = Size(size.height, size.width);
+          }
         }
         streamCtl.add(VideoEvent(
             eventType: VideoEventType.initialized,
@@ -110,6 +113,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
  */
   static void registerVideoPlayerPlatformsWith({dynamic options}) {
     // prefer hardware decoders
+    _log.fine('registerVideoPlayerPlatformsWith: $options');
     if (options is Map<String, dynamic>) {
       final platforms = options['platforms'];
       if (platforms is List<String>) {

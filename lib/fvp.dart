@@ -1,4 +1,4 @@
-// Copyright 2022 Wang Bin. All rights reserved.
+// Copyright 2022-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -27,12 +27,12 @@ import 'src/video_player_mdk.dart'
 ///
 /// Example:
 /// ```dart
-/// registerWith({options: {
+/// registerWith(options: {
 ///     'platforms': ['windows', 'linux', 'macos'], # or other Platform.operatingSystem
 ///     'video.decoders': ['BRAW:scale=1/4', 'auto'],
 ///     'maxWidth': screenWidth,
 ///     'maxHeight': screenHeight,
-///   }});
+///   });
 /// ```
 ///
 void registerWith({dynamic options}) {

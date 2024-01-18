@@ -1,4 +1,4 @@
-// Copyright 2022-2023 Wang Bin. All rights reserved.
+// Copyright 2022-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import 'dart:async';
@@ -82,6 +82,9 @@ class Player {
                 if (vc != null) {
                   w = vc.width.toDouble();
                   h = (vc.height.toDouble() / vc.par).roundToDouble();
+                  if (mediaInfo.video![0].rotation % 180 == 90) {
+                    (w, h) = (h, w);
+                  }
                 }
                 _videoSize.complete(ui.Size(w, h));
               }
@@ -120,6 +123,9 @@ class Player {
         if (vc != null) {
           w = vc.width.toDouble();
           h = (vc.height.toDouble() / vc.par).roundToDouble();
+          if (mediaInfo.video![0].rotation % 180 == 90) {
+            (w, h) = (h, w);
+          }
         }
         final size = ui.Size(w, h);
         _videoSize.complete(size);
