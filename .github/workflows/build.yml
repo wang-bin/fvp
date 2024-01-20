@@ -118,6 +118,25 @@ jobs:
         name: fvp-example-linux
         path: example/fvp_example_linux.tar.xz
 
+  Snap:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: example
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - run: |
+       sudo apt-get update -y
+       sudo apt-get install -y cmake clang ninja-build libgtk-3-dev libpulse-dev
+       sudo snap install flutter --classic
+       flutter doctor --verbose
+    - run: flutter pub get
+    - run: flutter build linux --verbose
+
   Android:
     runs-on: ubuntu-latest
     defaults:

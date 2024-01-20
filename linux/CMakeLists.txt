@@ -40,6 +40,8 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
+# flutter in snap: linker will try to resolve symbols and dependencies in libmdk.so.0, dependencies found in host OS but not snap are compatible with snap glibc
+target_link_libraries(${PLUGIN_NAME} INTERFACE -Wl,--unresolved-symbols=ignore-in-shared-libs)
 
 # add runpath, shared libs of a release bundle is in lib dir, plugin must add $ORIGIN to runpath to find libmdk
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--enable-new-dtags -Wl,-z,origin -Wl,-rpath,\\$ORIGIN")
