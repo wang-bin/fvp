@@ -1,3 +1,7 @@
+## 0.13.1
+
+* fix build in flutter installed via snap
+
 ## 0.13.0
 
 * support video with rotation
