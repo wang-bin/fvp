@@ -138,12 +138,15 @@ jobs:
     - run: flutter build linux --verbose
 
   Android:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.host }}-latest
+
     defaults:
       run:
         working-directory: example
     strategy:
       fail-fast: false
+      matrix:
+        host: [ubuntu, windows]
     steps:
     - uses: actions/checkout@v4
       with:
@@ -162,7 +165,7 @@ jobs:
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
-        name: fvp-example-android
+        name: fvp-example-android-${{ matrix.host }}
         path: example/fvp_example_android.apk
 
 
