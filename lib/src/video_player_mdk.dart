@@ -99,6 +99,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static int? _maxHeight;
   static bool? _fitMaxSize;
   static bool? _tunnel;
+  static String? _subtitleFontFile;
   static int _lowLatency = 0;
   static int _seekFlags = mdk.SeekFlag.fromStart | mdk.SeekFlag.inCache;
   static List<String>? _decoders;
@@ -133,6 +134,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _playerOpts = options['player'];
       _globalOpts = options['global'];
       _decoders = options['video.decoders'];
+      _subtitleFontFile = options['subtitleFontFile'];
     }
 
     if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
@@ -145,6 +147,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       };
       _decoders = vd[Platform.operatingSystem];
     }
+    mdk.setGlobalOption('subtitle.fonts.file',
+        _assetUri(_subtitleFontFile ?? 'assets/subfont.ttf', null));
     _globalOpts?.forEach((key, value) {
       mdk.setGlobalOption(key, value);
     });
@@ -233,6 +237,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     player.media = uri!;
     player.prepare(); // required!
 // FIXME: pending events will be processed after texture returned, but no events before prepared
+// FIXME: set tunnel too late
     final tex = await player.updateTexture(
         width: _maxWidth,
         height: _maxHeight,
