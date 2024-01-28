@@ -26,7 +26,7 @@ import 'src/video_player_mdk.dart'
 /// "tunnel": android only, default is false. AMediacodec/MediaCodec decoder output to a SurfaceTexture surface directly without OpenGL. Maybe more efficient, but some features are not supported, e.g. HDR tone mapping, less codecs.
 ///
 /// 'subtitleFontFile': default subtitle font file as the fallback. If not set, 'assets/subfont.ttf' will be used, you can add it in pubspec.yaml if you need it.
-/// subfont.ttf can be downloaded from https://github.com/mpv-android/mpv-android/blob/master/app/src/main/assets/subfont.ttf
+/// subfont.ttf can be downloaded from https://github.com/mpv-android/mpv-android/raw/master/app/src/main/assets/subfont.ttf
 ///
 /// Example:
 /// ```dart

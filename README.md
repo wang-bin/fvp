@@ -63,6 +63,13 @@ Now we also expose this backend player api so you can create your own players ea
 - Callbacks and events in C++ are notified by ReceivePort
 - Function with a one time callback is async and returns a future
 
+
+# Enable Subtitles
+
+libass is required, and it's added to your app automatically for windows, macOS and android(remove ass.dll, libass.dylib and libass.so from mdk-sdk if you don't need it). For iOS, [download](https://sourceforge.net/projects/mdk-sdk/files/deps/dep.7z/download) and add `ass.framework` to your xcode project. For linux, system libass can be used, you may have to install manually via system package manager.
+
+If required subtitle font is not found in the system(e.g. android), you can add [assets/subfont.ttf](https://github.com/mpv-android/mpv-android/raw/master/app/src/main/assets/subfont.ttf) in pubspec.yaml as the fallback.
+
 # Screenshots
 ![fpv_android](https://user-images.githubusercontent.com/785206/248862591-40f458e5-d7ca-4513-b709-b056deaaf421.jpeg)
 ![fvp_ios](https://user-images.githubusercontent.com/785206/250348936-e5e1fb14-9c81-4652-8f53-37e8d64195a3.jpg)
