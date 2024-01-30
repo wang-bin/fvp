@@ -176,6 +176,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     });
 
     // mdk.setGlobalOptions('plugins', 'mdk-braw');
+    mdk.setGlobalOption('d3d11.sync.cpu', 1);
   }
 
   @override
@@ -207,6 +208,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
 
     //player.setProperty("keep_open", "1");
+    player.setProperty('video.decoder', 'shader_resource=0');
     player.setProperty('avformat.strict', 'experimental');
     player.setProperty('avio.protocol_whitelist',
         'file,rtmp,http,https,tls,rtp,tcp,udp,crypto,httpproxy,data,concatf,concat,subfile');
