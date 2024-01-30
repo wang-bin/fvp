@@ -17,8 +17,6 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 - Support audio without video
 - Small footprint. Only about 10MB size increase per cpu architecture(platform dependent).
 
-## Requirements
-- Android: ndk 23 or later(ndk has a stupid abi break in 23)
 
 ## How to Use
 

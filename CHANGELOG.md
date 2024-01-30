@@ -1,3 +1,7 @@
+## 0.14.0
+
+* set default subtitle file, required by android subtitle rendering
+
 ## 0.13.1
 
 * fix build in flutter installed via snap
