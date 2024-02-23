@@ -35,8 +35,8 @@ class Player {
             final category = message[2] as String;
             final detail = message[3] as String;
             final ev = MediaEvent(error, category, detail);
-            if (_eventCb != null) {
-              _eventCb!(ev);
+            for (final cb in _eventCb) {
+              cb(ev);
             }
           }
         case 1:
@@ -44,9 +44,8 @@ class Player {
             // state
             final oldValue = message[1] as int;
             final newValue = message[2] as int;
-            if (_stateCb != null) {
-              _stateCb!(
-                  PlaybackState.from(oldValue), PlaybackState.from(newValue));
+            for (final cb in _stateCb) {
+              cb(PlaybackState.from(oldValue), PlaybackState.from(newValue));
             }
             Libfvp.replyType(nativeHandle, type, nullptr);
           }
@@ -605,10 +604,11 @@ class Player {
   /// Set [MediaEvent] callback.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#player-oneventstdfunctionboolconst-mediaevent-cb-callbacktoken-token--nullptr
   void onEvent(void Function(MediaEvent)? callback) {
-    _eventCb = callback;
     if (callback == null) {
+      _eventCb.clear();
       Libfvp.unregisterType(nativeHandle, 0);
     } else {
+      _eventCb.add(callback);
       Libfvp.registerType(nativeHandle, 0, false);
     }
   }
@@ -619,10 +619,11 @@ class Player {
   void onStateChanged(
       void Function(PlaybackState oldValue, PlaybackState newValue)? callback,
       {bool reply = false}) {
-    _stateCb = callback;
     if (callback == null) {
+      _stateCb.clear();
       Libfvp.unregisterType(nativeHandle, 1);
     } else {
+      _stateCb.add(callback);
       Libfvp.registerType(nativeHandle, 1, reply);
     }
   }
@@ -652,8 +653,8 @@ class Player {
   Completer<int>? _seeked;
   final _receivePort = ReceivePort();
 
-  void Function(MediaEvent)? _eventCb;
-  void Function(PlaybackState oldValue, PlaybackState newValue)? _stateCb;
+  final _eventCb = <Function(MediaEvent)>[];
+  final _stateCb = <Function(PlaybackState oldValue, PlaybackState newValue)>[];
   final _statusCb =
       <bool Function(MediaStatus oldValue, MediaStatus newValue)>[];
   Future<bool> Function()? _prepareCb;
