@@ -74,18 +74,7 @@ class Player {
               if (pos < 0) {
                 _videoSize.complete(null);
               } else {
-                final vc = mediaInfo.video?[0].codec;
-                // if no video stream, create a dummy texture of size 16x16
-                double w = 16;
-                double h = 16;
-                if (vc != null) {
-                  w = vc.width.toDouble();
-                  h = (vc.height.toDouble() / vc.par).roundToDouble();
-                  if (mediaInfo.video![0].rotation % 180 == 90) {
-                    (w, h) = (h, w);
-                  }
-                }
-                _videoSize.complete(ui.Size(w, h));
+                _setVideoSize();
               }
             }
             if (_prepareCb != null) {
@@ -115,25 +104,21 @@ class Player {
       }
       if (!oldValue.test(MediaStatus.loaded) &&
           newValue.test(MediaStatus.loaded)) {
-        final vc = mediaInfo.video?[0].codec;
-        // if no video stream, create a dummy texture of size 16x16
-        double w = 16;
-        double h = 16;
-        if (vc != null) {
-          w = vc.width.toDouble();
-          h = (vc.height.toDouble() / vc.par).roundToDouble();
-          if (mediaInfo.video![0].rotation % 180 == 90) {
-            (w, h) = (h, w);
-          }
-        }
-        final size = ui.Size(w, h);
-        _videoSize.complete(size);
+        _setVideoSize();
       }
       if (oldValue.test(MediaStatus.loading) &&
           newValue.test(MediaStatus.invalid | MediaStatus.stalled)) {
         _videoSize.complete(null);
       }
       return true;
+    });
+    onEvent((e) {
+      if (_videoSize.isCompleted) {
+        return;
+      }
+      if (e.category == 'decoder.video') {
+        _setVideoSize();
+      }
     });
   }
 
@@ -642,6 +627,26 @@ class Player {
       _statusCb.add(callback);
       Libfvp.registerType(nativeHandle, 2, reply);
     }
+  }
+
+  void _setVideoSize() {
+    final vc = mediaInfo.video?[0].codec;
+    // if no video stream, create a dummy texture of size 16x16
+    double w = 16;
+    double h = 16;
+    if (vc != null) {
+      if (vc.width <= 0 || vc.height <= 0) {
+        // failed to parse video size, e.g. small probesize
+        return;
+      }
+      w = vc.width.toDouble();
+      h = (vc.height.toDouble() / vc.par).roundToDouble();
+      if (mediaInfo.video![0].rotation % 180 == 90) {
+        (w, h) = (h, w);
+      }
+    }
+    final size = ui.Size(w, h);
+    _videoSize.complete(size);
   }
 
   final _player = Libmdk.instance.mdkPlayerAPI_new();

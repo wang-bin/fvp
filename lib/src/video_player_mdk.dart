@@ -238,7 +238,14 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       player.setProperty('avio.headers', headers);
     }
     player.media = uri!;
-    player.prepare(); // required!
+    int ret = await player.prepare(); // required!
+    if (ret < 0) {
+      player.dispose();
+      throw PlatformException(
+        code: 'media open error',
+        message: 'invalid or unsupported media',
+      );
+    }
 // FIXME: pending events will be processed after texture returned, but no events before prepared
 // FIXME: set tunnel too late
     final tex = await player.updateTexture(
@@ -249,7 +256,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     if (tex < 0) {
       player.dispose();
       throw PlatformException(
-        code: 'media open error',
+        code: 'video size error',
         message: 'invalid or unsupported media',
       );
     }
