@@ -4,10 +4,12 @@ description: Bindings to libmdk
 headers:
   entry-points:
     - mdk-sdk/include/mdk/c/module.h
+#    - lib/src/callbacks.h
 functions:
   include:
     - MDK.*
     - mdk.*
+    - Mdk.*
 structs:
   include:
     - MDK.*
@@ -32,5 +34,5 @@ globals:
     - mdk.*
 comments: true
 preamble: |
-  // Copyright (c) 2019-2023 WangBin <wbsecg1 at gmail.com>
+  // Copyright (c) 2019-2024 WangBin <wbsecg1 at gmail.com>
   // https://github.com/wang-bin/mdk-sdk

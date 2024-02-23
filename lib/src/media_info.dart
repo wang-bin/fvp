@@ -1,4 +1,4 @@
-// Copyright 2022 Wang Bin. All rights reserved.
+// Copyright 2022-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import 'dart:ffi';
@@ -342,21 +342,21 @@ class MediaInfo {
     if (ci.nb_audio > 0) {
       audio = <AudioStreamInfo>[];
       for (int i = 0; i < ci.nb_audio; ++i) {
-        final cci = ci.audio.elementAt(i);
+        final cci = ci.audio + i;
         audio!.add(AudioStreamInfo._from(cci));
       }
     }
     if (ci.nb_video > 0) {
       video = <VideoStreamInfo>[];
       for (int i = 0; i < ci.nb_video; ++i) {
-        final cci = ci.video.elementAt(i);
+        final cci = ci.video + i;
         video!.add(VideoStreamInfo._from(cci));
       }
     }
     if (ci.nb_subtitle > 0) {
       subtitle = <SubtitleStreamInfo>[];
       for (int i = 0; i < ci.nb_subtitle; ++i) {
-        final cci = ci.subtitle.elementAt(i);
+        final cci = ci.subtitle + i;
         subtitle!.add(SubtitleStreamInfo._from(cci));
       }
     }
@@ -369,7 +369,7 @@ class MediaInfo {
     if (ci.nb_programs > 0) {
       programs = <ProgramInfo>[];
       for (int i = 0; i < ci.nb_programs; ++i) {
-        programs!.add(ProgramInfo._from(ci.programs.elementAt(i)));
+        programs!.add(ProgramInfo._from(ci.programs + i));
       }
     }
   }
