@@ -1,3 +1,9 @@
+## 0.15.0
+
+* fix deprecated methods
+* delay texture creation if video size is unknown, improve low latency streams
+* Player: support registing multiple event and state callbacks
+
 ## 0.14.0
 
 * set default subtitle file, required by android subtitle rendering
