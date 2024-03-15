@@ -79,8 +79,8 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
 # external build triggered from this build file.
 get_filename_component(MDK_LIB_DIR ${MDK_LIBRARY} DIRECTORY)
 set(fvp_bundled_libraries
-    ${MDK_LIBRARY}.0
-    ${MDK_LIB_DIR}/libffmpeg.so.6
+    ${MDK_RUNTIME}
+    ${MDK_FFMPEG}
     ${MDK_LIB_DIR}/libc++.so.1
   PARENT_SCOPE
 )

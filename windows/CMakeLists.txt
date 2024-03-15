@@ -77,8 +77,8 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
 get_filename_component(MDK_LIB_DIR ${MDK_LIBRARY} DIRECTORY)
 string(REPLACE "/lib/" "/bin/" MDK_BIN_DIR ${MDK_LIB_DIR})
 set(fvp_bundled_libraries
-    ${MDK_BIN_DIR}/mdk.dll
-    ${MDK_BIN_DIR}/ffmpeg-6.dll # MDK_FFMPEG
-    ${MDK_BIN_DIR}/libass.dll
+    ${MDK_RUNTIME}
+    ${MDK_FFMPEG}
+    ${MDK_LIBASS}
   PARENT_SCOPE
 )
