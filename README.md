@@ -12,7 +12,7 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android
 - Hardware decoders are enabled by default
 - Minimal code change for existing [Video Player](https://pub.dev/packages/video_player) apps
-- Support most formats via FFmpeg demuxer and software decoders if not supported by gpu. You can use your own ffmpeg 4.0~6.x(or master branch) by removing bundled ffmpeg dynamic library.
+- Support most formats via FFmpeg demuxer and software decoders if not supported by gpu. You can use your own ffmpeg 4.0~7.0(or master branch) by removing bundled ffmpeg dynamic library.
 - High performance. Lower cpu, gpu and memory load than libmpv based players.
 - Support audio without video
 - Small footprint. Only about 10MB size increase per cpu architecture(platform dependent).
@@ -21,7 +21,7 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 ## How to Use
 
 - Add [fvp](https://pub.dev/packages/fvp) in your pubspec.yaml dependencies: `flutter pub add fvp`
-- Add 2 lines in your video_player examples,
+- Add 2 lines in your video_player examples. **It's OPTIONAL for official video_player unsupported platforms(i.e. windows and linux)**
 
 ```dart
 import 'package:fvp/fvp.dart';
@@ -29,7 +29,7 @@ import 'package:fvp/fvp.dart';
 registerWith(); // in main(), or anywhere before creating a player
 ```
 
-Then this plugin implementation will be used for all platforms. Sometimes you may want official implementation for android and ios, then you can call
+Then this plugin implementation will be used for all platforms. Without these lines the official implementation(if exists) will be used. You can also select the platforms to enable fvp implementation
 
 ```dart
 registerWith(options: {'platforms': ['windows', 'macos', 'linux']}); // only these platforms will use this plugin implementation
@@ -39,9 +39,11 @@ To select [other decoders](https://github.com/wang-bin/mdk-sdk/wiki/Decoders), p
 ```dart
 registerWith(options: {
     'video.decoders': ['D3D11', 'NVDEC', 'FFmpeg']
-    'lowLatency': 1, // optional for network streams
+    //'lowLatency': 1, // optional for network streams
     }); // windows
 ```
+
+[The document](https://pub.dev/documentation/fvp/latest/fvp/registerWith.html) lists all options for `registerWith()`
 
 ### Backend Player API
 
