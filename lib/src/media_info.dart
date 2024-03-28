@@ -342,21 +342,24 @@ class MediaInfo {
     if (ci.nb_audio > 0) {
       audio = <AudioStreamInfo>[];
       for (int i = 0; i < ci.nb_audio; ++i) {
-        final cci = ci.audio + i;
+        //final cci = ci.audio + i; // since dart3.3, elememtAt() is deprecated
+        final cci = Pointer<mdkAudioStreamInfo>.fromAddress(ci.audio.address + i * sizeOf<mdkAudioStreamInfo>());
         audio!.add(AudioStreamInfo._from(cci));
       }
     }
     if (ci.nb_video > 0) {
       video = <VideoStreamInfo>[];
       for (int i = 0; i < ci.nb_video; ++i) {
-        final cci = ci.video + i;
+        //final cci = ci.video + i; // since dart3.3, elememtAt() is deprecated
+        final cci = Pointer<mdkVideoStreamInfo>.fromAddress(ci.video.address + i * sizeOf<mdkVideoStreamInfo>());
         video!.add(VideoStreamInfo._from(cci));
       }
     }
     if (ci.nb_subtitle > 0) {
       subtitle = <SubtitleStreamInfo>[];
       for (int i = 0; i < ci.nb_subtitle; ++i) {
-        final cci = ci.subtitle + i;
+        //final cci = ci.subtitle + i; // since dart3.3, elememtAt() is deprecated
+        final cci = Pointer<mdkSubtitleStreamInfo>.fromAddress(ci.subtitle.address + i * sizeOf<mdkSubtitleStreamInfo>()); // Pointer.fromAddress(address + index * sizeOf<T>());
         subtitle!.add(SubtitleStreamInfo._from(cci));
       }
     }
@@ -369,7 +372,9 @@ class MediaInfo {
     if (ci.nb_programs > 0) {
       programs = <ProgramInfo>[];
       for (int i = 0; i < ci.nb_programs; ++i) {
-        programs!.add(ProgramInfo._from(ci.programs + i));
+        //final cci = ci.programs + i; // since dart3.3, elememtAt() is deprecated
+        final cci = Pointer<mdkProgramInfo>.fromAddress(ci.programs.address + i * sizeOf<mdkProgramInfo>());
+        programs!.add(ProgramInfo._from(cci));
       }
     }
   }
