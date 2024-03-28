@@ -1,3 +1,8 @@
+## 0.16.0
+
+* `import 'package:fvp/fvp.dart'` and `registerWith(...)` are optional on windows and linux
+* don't hardcode ffmpeg library name. prepare for ffmpeg 7.0
+
 ## 0.15.0
 
 * fix deprecated methods

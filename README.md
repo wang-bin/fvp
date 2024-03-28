@@ -21,7 +21,7 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 ## How to Use
 
 - Add [fvp](https://pub.dev/packages/fvp) in your pubspec.yaml dependencies: `flutter pub add fvp`
-- Add 2 lines in your video_player examples. **It's OPTIONAL for official video_player unsupported platforms(i.e. windows and linux)**
+- Add 2 lines in your video_player examples. **It's OPTIONAL for official video_player unsupported platforms(i.e. windows and linux)** since v0.16.0
 
 ```dart
 import 'package:fvp/fvp.dart';
