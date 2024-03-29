@@ -1,3 +1,7 @@
+## 0.16.1
+
+* compatible with dart < 3.3
+
 ## 0.16.0
 
 * `import 'package:fvp/fvp.dart'` and `registerWith(...)` are optional on windows and linux
