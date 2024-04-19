@@ -33,6 +33,10 @@ class MdkVideoPlayer extends mdk.Player {
           '$hashCode player$nativeHandle onMediaStatus: $oldValue => $newValue');
       if (!oldValue.test(mdk.MediaStatus.loaded) &&
           newValue.test(mdk.MediaStatus.loaded)) {
+        // initialized event must be sent only once. keep_open=1 is another solution
+        if ((textureId.value ?? -1) >= 0) {
+          return true;
+        }
         final info = mediaInfo;
         var size = const Size(0, 0);
         if (info.video != null) {
@@ -64,7 +68,7 @@ class MdkVideoPlayer extends mdk.Player {
 
     onEvent((ev) {
       _log.fine(
-          '$hashCode player$nativeHandle onEvent: ${ev.category} ${ev.error}');
+          '$hashCode player$nativeHandle onEvent: ${ev.category} - ${ev.detail} - ${ev.error}');
       if (ev.category == "reader.buffering") {
         final pos = position;
         final bufLen = buffered();
@@ -221,6 +225,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       player.videoDecoders = _decoders!;
     }
     if (_lowLatency > 0) {
+// +nobuffer: the 1st key-frame packet is dropped. -nobuffer: high latency
       player.setProperty('avformat.fflags', '+nobuffer');
       player.setProperty('avformat.fpsprobesize', '0');
       if (_lowLatency > 1) {
