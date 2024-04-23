@@ -11,7 +11,7 @@ topics:
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
-  flutter: ">=2.5.0"
+  flutter: ">=3.0.0"
 
 dependencies:
   ffi: ^2.1.0
