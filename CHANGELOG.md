@@ -1,3 +1,7 @@
+## 0.17.0
+
+* fix initialized event
+
 ## 0.16.1
 
 * compatible with dart < 3.3
