@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2023-2024 WangBin <wbsecg1 at gmail.com>
  */
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -20,7 +20,9 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.view.TextureRegistry;
+import io.flutter.view.TextureRegistry.TextureEntry;
 import io.flutter.view.TextureRegistry.SurfaceTextureEntry;
+import io.flutter.view.TextureRegistry.SurfaceProducer;
 
 /** FvpPlugin */
 public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
@@ -31,7 +33,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   private MethodChannel channel;
   // https://api.flutter.dev/javadoc/io/flutter/view/TextureRegistry.html
   private TextureRegistry texRegistry;
-  private Map<Long, SurfaceTextureEntry> textures;
+  private Map<Long, TextureEntry> textures; // SurfaceProducer or SurfaceTextureEntry
   private Map<Long, Surface> surfaces;
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -50,10 +52,16 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       final int width = (int)call.argument("width");
       final int height = (int)call.argument("height");
       final boolean tunnel = (boolean)call.argument("tunnel");
+/*
       SurfaceTextureEntry te = texRegistry.createSurfaceTexture();
       SurfaceTexture tex = te.surfaceTexture();
       tex.setDefaultBufferSize(width, height); // TODO: size from player. rotate, fullscreen change?
       Surface surface = new Surface(tex); // TODO: when to release
+*/
+      SurfaceProducer te = texRegistry.createSurfaceProducer();
+      te.setSize(width, height);
+      Surface surface = te.getSurface();
+
       long texId = te.id();
       nativeSetSurface(handle, texId, surface, width, height, tunnel);
       textures.put(texId, te);
@@ -63,7 +71,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       final int texId = call.argument("texture"); // 32bit int, 0, 1, 2 .... but SurfaceTexture.id() is long
       final long texId64 = texId; // MUST cast texId to long, otherwise remove() error
       nativeSetSurface(0, texId, null, -1, -1, false);
-      SurfaceTextureEntry te = textures.get(texId64);
+      TextureEntry te = textures.get(texId64);
       if (te == null) {
         Log.w("FvpPlugin", "onMethodCall: ReleaseRT texId not found: " + texId);
       } else {
