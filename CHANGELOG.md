@@ -1,3 +1,7 @@
+# 0.18.0
+
+* support Impeller for android. may require flutter 3.19+ to build
+
 ## 0.17.0
 
 * fix initialized event
