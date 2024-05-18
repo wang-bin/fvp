@@ -9,7 +9,7 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 ## Features
 - All platforms: Windows(including win7), Linux, macOS, iOS, Android.
 - You can choose official implementation or this plugin's
-- Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android
+- Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android(Impeller support)
 - Hardware decoders are enabled by default
 - Minimal code change for existing [Video Player](https://pub.dev/packages/video_player) apps
 - Support most formats via FFmpeg demuxer and software decoders if not supported by gpu. You can use your own ffmpeg 4.0~7.0(or master branch) by removing bundled ffmpeg dynamic library.
@@ -55,6 +55,20 @@ The plugin implements [VideoPlayerPlatform](https://pub.dev/packages/video_playe
 
 Now we also expose this backend player api so you can create your own players easily, and gain more features than official [video_player](https://pub.dev/packages/video_player), for example, play from a given position, loop in a range, decoder selection, media information detail etc. You can also reuse the Player instance without unconditionally create and dispose, changing the `Player.media` is enough.
 [This is an example](https://github.com/wang-bin/mdk-examples/blob/master/flutter/simple/lib/multi_textures.dart)
+
+
+# Upgrade Dependencies Manually
+Upgrading binary dependencies can bring new features and backend bug fixes. For macOS and iOS, in your project dir, run
+```bash
+pod cache clean mdk
+find . -name Podfile.lock -delete
+rm -rf {mac,i}os/Pods
+```
+
+For other platforms, run
+```bash
+flutter pub cache clean
+```
 
 
 # Design
