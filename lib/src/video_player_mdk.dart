@@ -50,7 +50,7 @@ class MdkVideoPlayer extends mdk.Player {
         streamCtl.add(VideoEvent(
             eventType: VideoEventType.initialized,
             duration: Duration(
-                milliseconds: info.duration == 0
+                milliseconds: info.duration <= 0
                     ? double.maxFinite.toInt()
                     : info
                         .duration) // FIXME: live stream info.duraiton == 0 and result a seekTo(0) in play()
