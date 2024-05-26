@@ -270,7 +270,7 @@ FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle)
 
     sp->onEvent(nullptr);
     sp->onStateChanged(nullptr);
-    sp->onMediaStatusChanged(nullptr);
+    sp->onMediaStatus(nullptr);
     players.erase(it);
 }
 
@@ -338,6 +338,7 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
         if (!sp)
             return false;
         auto p = sp.get();
+        const auto info = p->mediaInfo();
         const auto type = int(CallbackType::Prepared);
         unique_lock lock(p->mtx[type]);
         p->dataReady[type] = false;
@@ -353,7 +354,14 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
                 .as_int64 = position,
             }
         };
-        Dart_CObject* arr[] = { &t, &v };
+// live video duration is 0 when prepared, and then increases to max read time
+        Dart_CObject live{
+            .type = Dart_CObject_kBool,
+            .value = {
+                .as_bool = info.duration <= 0,
+            }
+        };
+        Dart_CObject* arr[] = { &t, &v, &live };
         Dart_CObject msg {
             .type = Dart_CObject_kArray,
             .value = {

@@ -50,11 +50,10 @@ class MdkVideoPlayer extends mdk.Player {
         streamCtl.add(VideoEvent(
             eventType: VideoEventType.initialized,
             duration: Duration(
-                milliseconds: info.duration <= 0
+                microseconds: isLive
+// int max for live streams, duration.inMicroseconds == 9223372036854775807
                     ? double.maxFinite.toInt()
-                    : info
-                        .duration) // FIXME: live stream info.duraiton == 0 and result a seekTo(0) in play()
-            ,
+                    : info.duration * 1000),
             size: size));
       } else if (!oldValue.test(mdk.MediaStatus.buffering) &&
           newValue.test(mdk.MediaStatus.buffering)) {

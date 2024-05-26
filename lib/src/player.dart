@@ -65,6 +65,7 @@ class Player {
           {
             // prepared
             final pos = message[1] as int;
+            _live = message[2] as bool;
             if (!_prepared.isCompleted) {
               _prepared.complete(pos);
             }
@@ -307,6 +308,9 @@ class Player {
   /// Playback speed set by user.
   double get playbackRate => _playbackRate;
 
+  /// It's a live stream or not.
+  bool get isLive => _live;
+
   /// Media information.
   MediaInfo get mediaInfo {
     _mediaInfoC = _player.ref.mediaInfo
@@ -319,6 +323,12 @@ class Player {
   /// If error occurs, will be [PlaybackState.stopped].
   /// Return the result position, or a negative value if failed.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-prepareint64_t-startposition--0-functionboolint64_t-position-bool-boost-cb--nullptr-seekflag-flags--seekflagfromstart
+  ///
+  /// Return
+  /// 0: if mediaInfo.streams == 0, invalid media. otherwise success
+  /// -1: already loading or loaded
+  /// -4: requested position out of range
+  /// -10: internal error
   Future<int> prepare(
       {int position = 0,
       SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags),
@@ -328,7 +338,7 @@ class Player {
     _prepareCb = callback;
     if (!Libfvp.prepare(nativeHandle, position, flags.rawValue,
         NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort)) {
-      _prepared.complete(-1);
+      _prepared.complete(-10);
     }
     return _prepared.future;
   }
@@ -652,6 +662,7 @@ class Player {
   final _player = Libmdk.instance.mdkPlayerAPI_new();
   var _pp = calloc<Pointer<mdkPlayerAPI>>();
 
+  bool _live = false;
   int _texId = -1;
   var _videoSize = Completer<ui.Size?>();
   var _prepared = Completer<int>();
