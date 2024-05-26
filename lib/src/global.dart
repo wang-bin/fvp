@@ -175,6 +175,8 @@ enum LogLevel {
         return warning;
       case MDK_LogLevel.MDK_LogLevel_Info:
         return info;
+      case MDK_LogLevel.MDK_LogLevel_Debug:
+        return debug;
       case MDK_LogLevel.MDK_LogLevel_All:
         return all;
       default:
@@ -207,6 +209,8 @@ void setGlobalOption<T>(String name, T value) {
     Libmdk.instance.MDK_setGlobalOptionInt32(k.cast(), value);
   } else if (value is bool) {
     Libmdk.instance.MDK_setGlobalOptionInt32(k.cast(), value ? 1 : 0);
+  } else if (value is LogLevel) {
+    Libmdk.instance.MDK_setGlobalOptionInt32(k.cast(), value.rawValue);
   }
   malloc.free(k);
 }

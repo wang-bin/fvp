@@ -119,6 +119,28 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static void registerVideoPlayerPlatformsWith({dynamic options}) {
     // prefer hardware decoders
     _log.fine('registerVideoPlayerPlatformsWith: $options');
+    mdk.setLogHandler((level, msg) {
+      if (msg.endsWith('\n')) {
+        msg = msg.substring(0, msg.length - 1);
+      }
+      switch (level) {
+        case mdk.LogLevel.error:
+          _mdkLog.severe(msg);
+        case mdk.LogLevel.warning:
+          _mdkLog.warning(msg);
+        case mdk.LogLevel.info:
+          _mdkLog.info(msg);
+        case mdk.LogLevel.debug:
+          _mdkLog.fine(msg);
+        case mdk.LogLevel.all:
+          _mdkLog.finest(msg);
+        default:
+          return;
+      }
+    });
+    // mdk.setGlobalOptions('plugins', 'mdk-braw');
+    mdk.setGlobalOption('d3d11.sync.cpu', 1);
+
     if (options is Map<String, dynamic>) {
       final platforms = options['platforms'];
       if (platforms is List<String>) {
@@ -158,29 +180,6 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     });
 
     VideoPlayerPlatform.instance = MdkVideoPlayerPlatform();
-
-    mdk.setLogHandler((level, msg) {
-      if (msg.endsWith('\n')) {
-        msg = msg.substring(0, msg.length - 1);
-      }
-      switch (level) {
-        case mdk.LogLevel.error:
-          _mdkLog.severe(msg);
-        case mdk.LogLevel.warning:
-          _mdkLog.warning(msg);
-        case mdk.LogLevel.info:
-          _mdkLog.info(msg);
-        case mdk.LogLevel.debug:
-          _mdkLog.fine(msg);
-        case mdk.LogLevel.all:
-          _mdkLog.finest(msg);
-        default:
-          return;
-      }
-    });
-
-    // mdk.setGlobalOptions('plugins', 'mdk-braw');
-    mdk.setGlobalOption('d3d11.sync.cpu', 1);
   }
 
   @override
@@ -228,6 +227,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 // +nobuffer: the 1st key-frame packet is dropped. -nobuffer: high latency
       player.setProperty('avformat.fflags', '+nobuffer');
       player.setProperty('avformat.fpsprobesize', '0');
+      player.setProperty('avformat.analyzeduration', '100000');
       if (_lowLatency > 1) {
         player.setBufferRange(min: 0, max: 1000, drop: true);
       } else {
