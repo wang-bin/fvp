@@ -298,7 +298,21 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> seekTo(int textureId, Duration position) async {
-    _players[textureId]?.seek(
+    final player = _players[textureId];
+    if (player == null) {
+      return;
+    }
+    if (player.isLive) {
+      final bufMax = player.buffered();
+      final pos = player.position;
+      if (position.inMilliseconds <= pos ||
+          position.inMilliseconds > pos + bufMax) {
+        _log.fine(
+            'seekTo: $position out of live stream buffered range [$pos, ${pos + bufMax}]');
+        return;
+      }
+    }
+    player.seek(
         position: position.inMilliseconds, flags: mdk.SeekFlag(_seekFlags));
   }
 
