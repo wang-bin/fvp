@@ -6,6 +6,7 @@ import 'src/video_player_mdk.dart'
     if (dart.library.html) 'src/video_player_dummy.dart';
 
 /// Registers this plugin as the default instance of [VideoPlayerPlatform]. Then your [VideoPlayer] will support all platforms.
+/// If registerWith is not called, the official implementation will be used when available.
 
 /// [options] can be
 /// 'platforms': a list of [Platform.operatingSystem], only these platforms will use this plugin implementation. You can still use official implementation for android and ios if they are not in the list.
@@ -43,8 +44,8 @@ void registerWith({dynamic options}) {
   MdkVideoPlayerPlatform.registerVideoPlayerPlatformsWith(options: options);
 }
 
-/// Registers this plugin automatically by dart tooling. requires `implements: video_player` and `dartPluginClass: VideoPlayerRegistrant` in pubspec.yaml
 class VideoPlayerRegistrant {
+  /// Registers this plugin automatically by dart tooling. requires `implements: video_player` and `dartPluginClass: VideoPlayerRegistrant` in pubspec.yaml
   static void registerWith() {
     MdkVideoPlayerPlatform.registerVideoPlayerPlatformsWith();
   }

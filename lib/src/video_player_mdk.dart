@@ -8,6 +8,8 @@ import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+import 'package:video_player_android/video_player_android.dart';
+import 'package:video_player_avfoundation/video_player_avfoundation.dart';
 import 'package:logging/logging.dart';
 import 'extensions.dart';
 
@@ -116,8 +118,46 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
  */
   static void registerVideoPlayerPlatformsWith({dynamic options}) {
-    // prefer hardware decoders
     _log.fine('registerVideoPlayerPlatformsWith: $options');
+    if (options is Map<String, dynamic>) {
+      final platforms = options['platforms'];
+      if (platforms is List<String>) {
+        if (!platforms.contains(Platform.operatingSystem)) {
+          if (Platform.isIOS || Platform.isMacOS) {
+            AVFoundationVideoPlayer.registerWith();
+          } else if (Platform.isAndroid) {
+            AndroidVideoPlayer.registerWith();
+          }
+          return;
+        }
+      }
+
+      if ((options['fastSeek'] ?? false) as bool) {
+        _seekFlags |= mdk.SeekFlag.keyFrame;
+      }
+      _lowLatency = (options['lowLatency'] ?? 0) as int;
+      _maxWidth = options["maxWidth"];
+      _maxHeight = options["maxHeight"];
+      _fitMaxSize = options["fitMaxSize"];
+      _tunnel = options["tunnel"];
+      _playerOpts = options['player'];
+      _globalOpts = options['global'];
+      _decoders = options['video.decoders'];
+      _subtitleFontFile = options['subtitleFontFile'];
+    }
+
+    if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
+      // prefer hardware decoders
+      const vd = {
+        'windows': ['MFT:d3d=11', "D3D11", 'CUDA', 'FFmpeg'],
+        'macos': ['VT', 'FFmpeg'],
+        'ios': ['VT', 'FFmpeg'],
+        'linux': ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'],
+        'android': ['AMediaCodec', 'FFmpeg'],
+      };
+      _decoders = vd[Platform.operatingSystem];
+    }
+
     mdk.setLogHandler((level, msg) {
       if (msg.endsWith('\n')) {
         msg = msg.substring(0, msg.length - 1);
@@ -139,39 +179,6 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     });
     // mdk.setGlobalOptions('plugins', 'mdk-braw');
     mdk.setGlobalOption('d3d11.sync.cpu', 1);
-
-    if (options is Map<String, dynamic>) {
-      final platforms = options['platforms'];
-      if (platforms is List<String>) {
-        if (!platforms.contains(Platform.operatingSystem)) {
-          return;
-        }
-      }
-
-      if ((options['fastSeek'] ?? false) as bool) {
-        _seekFlags |= mdk.SeekFlag.keyFrame;
-      }
-      _lowLatency = (options['lowLatency'] ?? 0) as int;
-      _maxWidth = options["maxWidth"];
-      _maxHeight = options["maxHeight"];
-      _fitMaxSize = options["fitMaxSize"];
-      _tunnel = options["tunnel"];
-      _playerOpts = options['player'];
-      _globalOpts = options['global'];
-      _decoders = options['video.decoders'];
-      _subtitleFontFile = options['subtitleFontFile'];
-    }
-
-    if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
-      const vd = {
-        'windows': ['MFT:d3d=11', "D3D11", 'CUDA', 'FFmpeg'],
-        'macos': ['VT', 'FFmpeg'],
-        'ios': ['VT', 'FFmpeg'],
-        'linux': ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'],
-        'android': ['AMediaCodec', 'FFmpeg'],
-      };
-      _decoders = vd[Platform.operatingSystem];
-    }
     mdk.setGlobalOption('subtitle.fonts.file',
         _assetUri(_subtitleFontFile ?? 'assets/subfont.ttf', null));
     _globalOpts?.forEach((key, value) {
