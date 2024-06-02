@@ -7,41 +7,59 @@
     "type": "shell",
     "options": {
         "env":{
-            "NINJA_STATUS": "[%f/%t %e %r %s]"
+            "NINJA_STATUS": "[%f/%t %e %r %s]",
         }
     },
     "tasks": [
         {
             "label": "Run Debug",
-            //"type": "shell",
-            "windows":{
-                "args": ["run", "-d", "windows"]
+            "windows": {
+                "args": [
+                    "run",
+                    "-d",
+                    "windows"
+                ]
             },
-            "linux":{
-                "args": ["run", "-d", "linux"]
+            "linux": {
+                "args": [
+                    "run",
+                    "-d",
+                    "linux"
+                ]
             },
-            "osx":{
-                "args": ["run", "-d", "macos", "--verbose"]
+            "osx": {
+                "args": [
+                    "run",
+                    "-d",
+                    "macos",
+                    "--verbose"
+                ]
             },
             "options": {
                 "cwd": "${workspaceRoot}/example",
-                "env": {
-                    //"MDK_CLOG": "1",
-                    //"MDK_LOG_STATUS": 1,
-                }
+                "env": {}
             },
             "problemMatcher": []
         },
         {
             "label": "Build",
-            "windows":{
-                "args": ["build", "windows"]
+            "windows": {
+                "args": [
+                    "build",
+                    "windows"
+                ]
             },
-            "linux":{
-                "args": ["build", "linux"]
+            "linux": {
+                "args": [
+                    "build",
+                    "linux"
+                ]
             },
-            "osx":{
-                "args": ["build", "macos"]
+            "osx": {
+                "args": [
+                    "build",
+                    "macos",
+                ]
             },
             "options": {
                 "cwd": "${workspaceRoot}/example"
@@ -50,55 +68,93 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": ["$gcc", "$msCompile"]
+            "problemMatcher": [
+                "$gcc",
+                "$msCompile"
+            ]
         },
         {
             "label": "Build iOS",
-            "args": ["build", "ios", "--release", "--no-codesign",
-                "--verbose",
+            "args": [
+                "build",
+                "ios",
+                "--release",
+                "--no-codesign",
+                "--verbose"
             ],
             "options": {
                 "cwd": "${workspaceRoot}/example",
                 "env": {
                     "MDK_CLOG": 1,
-                    "MDK_LOG_STATUS": 1,
+                    "MDK_LOG_STATUS": 1
                 }
             },
             "problemMatcher": []
         },
         {
             "label": "Run Debug Android",
-            "args": ["run", "-d",
+            "args": [
+                "run",
+                "-d",
                 "23013RK75C",
                 "--verbose",
+                "--enable-impeller"
             ],
             "options": {
                 "cwd": "${workspaceRoot}/example",
                 "env": {
                     "MDK_CLOG": 1,
-                    "MDK_LOG_STATUS": 1,
+                    "MDK_LOG_STATUS": 1
                 }
             },
             "problemMatcher": []
         },
         {
             "label": "Build APK",
-            "args": ["build", "apk",
-                "--verbose",
+            "args": [
+                "build",
+                "apk",
+                "--release",
+                "--verbose"
             ],
             "options": {
-                "cwd": "${workspaceRoot}/example",
+                "cwd": "${workspaceRoot}/example"
             },
             "problemMatcher": []
         },
         {
-            "label": "FFIGen",
+            "label": "Build Web",
+            "args": [
+                "build",
+                "web",
+                "-v"
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/example"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build WASM",
+            "args": [
+                "build",
+                "web",
+                "--wasm",
+                "-v"
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/example"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Gen FFI",
             "command": "dart",
             "args": [
                 "run",
                 "ffigen",
                 "--config",
-                "config.yaml",
+                "config.yaml"
             ],
             "problemMatcher": []
         }

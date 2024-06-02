@@ -1,4 +1,12 @@
-# 0.18.0
+## 0.19.0
+
+* registerWith() can register official backends if a platform is not specified in platforms
+* check seekable range for live streams
+* live stream duration.inMicroseconds is int max
+* fix wasm build
+* fix log level
+
+## 0.18.0
 
 * support Impeller for android. may require flutter 3.19+ to build
 
