@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'src/video_player_mdk.dart'
+    if (dart.library.js_interop) 'src/video_player_dummy.dart'
     if (dart.library.html) 'src/video_player_dummy.dart';
 
 /// Registers this plugin as the default instance of [VideoPlayerPlatform]. Then your [VideoPlayer] will support all platforms.

@@ -187,6 +187,8 @@ jobs:
         working-directory: example
     strategy:
       fail-fast: false
+      matrix:
+        wasm: ['--wasm', '']
     steps:
     - uses: actions/checkout@v4
       with:
@@ -197,4 +199,4 @@ jobs:
         cache: true
     - run: flutter doctor --verbose
     - run: flutter pub get
-    - run: flutter build web --verbose
+    - run: flutter build web ${{ matrix.wasm }} --verbose
