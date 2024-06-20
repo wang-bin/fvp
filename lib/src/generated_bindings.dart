@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2023 WangBin <wbsecg1 at gmail.com>
+// Copyright (c) 2019-2024 WangBin <wbsecg1 at gmail.com>
 // https://github.com/wang-bin/mdk-sdk
 // AUTO GENERATED FILE, DO NOT EDIT.
 //
@@ -300,6 +300,26 @@ class NativeLibrary {
       bool Function(
           ffi.Pointer<mdkVideoStreamInfo>, ffi.Pointer<mdkStringMapEntry>)>();
 
+  ffi.Pointer<ffi.Uint8> MDK_VideoStreamData(
+    ffi.Pointer<mdkVideoStreamInfo> arg0,
+    ffi.Pointer<ffi.Int> len,
+    int flags,
+  ) {
+    return _MDK_VideoStreamData(
+      arg0,
+      len,
+      flags,
+    );
+  }
+
+  late final _MDK_VideoStreamDataPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Uint8> Function(ffi.Pointer<mdkVideoStreamInfo>,
+              ffi.Pointer<ffi.Int>, ffi.Int)>>('MDK_VideoStreamData');
+  late final _MDK_VideoStreamData = _MDK_VideoStreamDataPtr.asFunction<
+      ffi.Pointer<ffi.Uint8> Function(
+          ffi.Pointer<mdkVideoStreamInfo>, ffi.Pointer<ffi.Int>, int)>();
+
   void MDK_SubtitleStreamCodecParameters(
     ffi.Pointer<mdkSubtitleStreamInfo> arg0,
     ffi.Pointer<mdkSubtitleCodecParameters> p,
@@ -408,6 +428,21 @@ class NativeLibrary {
       'mdkVideoFrameAPI_delete');
   late final _mdkVideoFrameAPI_delete = _mdkVideoFrameAPI_deletePtr
       .asFunction<void Function(ffi.Pointer<ffi.Pointer<mdkVideoFrameAPI>>)>();
+
+  void mdkVideoBufferPoolFree(
+    ffi.Pointer<ffi.Pointer<mdkVideoBufferPool>> pool,
+  ) {
+    return _mdkVideoBufferPoolFree(
+      pool,
+    );
+  }
+
+  late final _mdkVideoBufferPoolFreePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Pointer<mdkVideoBufferPool>>)>>(
+      'mdkVideoBufferPoolFree');
+  late final _mdkVideoBufferPoolFree = _mdkVideoBufferPoolFreePtr.asFunction<
+      void Function(ffi.Pointer<ffi.Pointer<mdkVideoBufferPool>>)>();
 
   ffi.Pointer<mdkPlayerAPI> mdkPlayerAPI_new() {
     return _mdkPlayerAPI_new();
@@ -534,6 +569,8 @@ abstract class MDK_ColorSpace {
   static const int MDK_ColorSpace_BT2100_PQ = 2;
   static const int MDK_ColorSpace_scRGB = 3;
   static const int MDK_ColorSpace_ExtendedLinearDisplayP3 = 4;
+  static const int MDK_ColorSpace_ExtendedSRGB = 5;
+  static const int MDK_ColorSpace_ExtendedLinearSRGB = 6;
 }
 
 abstract class MDK_LogLevel {
@@ -567,11 +604,21 @@ final class mdkMediaEvent extends ffi.Struct {
 
 final class UnnamedUnion1 extends ffi.Union {
   external UnnamedStruct1 decoder;
+
+  external UnnamedStruct2 video;
 }
 
 final class UnnamedStruct1 extends ffi.Struct {
   @ffi.Int()
   external int stream;
+}
+
+final class UnnamedStruct2 extends ffi.Struct {
+  @ffi.Int()
+  external int width;
+
+  @ffi.Int()
+  external int height;
 }
 
 final class mdkStringMapEntry extends ffi.Struct {
@@ -813,6 +860,29 @@ final class mdkMediaInfo extends ffi.Struct {
   external int nb_programs;
 }
 
+final class mdkDX11Resource extends ffi.Struct {
+  @ffi.Int()
+  external int size;
+
+  external ffi.Pointer<ID3D11DeviceChild> resource;
+
+  @ffi.Int()
+  external int subResource;
+}
+
+final class ID3D11DeviceChild extends ffi.Opaque {}
+
+final class mdkDX9Resource extends ffi.Struct {
+  @ffi.Int()
+  external int size;
+
+  external ffi.Pointer<IDirect3DSurface9> surface;
+}
+
+final class IDirect3DSurface9 extends ffi.Opaque {}
+
+final class mdkVideoBufferPool extends ffi.Opaque {}
+
 final class mdkVideoFrame extends ffi.Opaque {}
 
 abstract class MDK_PixelFormat {
@@ -915,33 +985,44 @@ final class mdkVideoFrameAPI extends ffi.Struct {
   external ffi.Pointer<
       ffi.NativeFunction<
           ffi.Pointer<mdkVideoFrameAPI> Function(
-              ffi.Pointer<mdkVideoFrame>)>> toHost;
+              ffi.Pointer<mdkVideoFrame>)>> onDestroy;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Pointer<mdkVideoFrameAPI> Function()>>
-      fromGL;
+  /// !
+  /// \brief mdkVideoFrameAPI_fromDX11
+  /// create a frame containing dx11
+  /// \param pool if *pool not null, the pool will be used, otherwise a new pool will be created and returned. Users usually have to keep the pool object for the same resource producer, release by mdkVideoBufferPoolFree
+  /// \param width frame width, can be 0, then the width is the texture width
+  /// \param height frame height, can be 0, then the height is the texture height
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<mdkVideoFrame>,
+              ffi.Pointer<ffi.Pointer<mdkVideoBufferPool>>,
+              ffi.Pointer<mdkDX11Resource>,
+              ffi.Int,
+              ffi.Int)>> fromDX11;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Pointer<mdkVideoFrameAPI> Function()>>
-      fromMetal;
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<mdkVideoFrame>,
+              ffi.Pointer<ffi.Pointer<mdkVideoBufferPool>>,
+              ffi.Pointer<mdkDX9Resource>,
+              ffi.Int,
+              ffi.Int)>> fromDX9;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Pointer<mdkVideoFrameAPI> Function()>>
-      fromVk;
+  external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromDX12;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Pointer<mdkVideoFrameAPI> Function()>>
-      fromD3D9;
+  external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromMetal;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Pointer<mdkVideoFrameAPI> Function()>>
-      fromD3D11;
+  external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromVk;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Pointer<mdkVideoFrameAPI> Function()>>
-      fromD3D12;
+  external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromGL;
 
-  @ffi.Array.multi([13])
+  external ffi.Pointer<
+      ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<mdkVideoFrame>)>> toHost;
+
+  @ffi.Array.multi([12])
   external ffi.Array<ffi.Pointer<ffi.Void>> reserved;
 }
 
@@ -1259,7 +1340,12 @@ final class mdkPlayerAPI extends ffi.Struct {
   /// !
   /// \brief getVideoFrame
   /// get current rendered frame, i.e. the decoded video frame rendered by renderVideo()
-  external ffi.Pointer<ffi.NativeFunction<ffi.Void Function()>> getVideoFrame;
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<mdkPlayer> p,
+              ffi.Pointer<mdkVideoFrameAPI> frame,
+              ffi.Pointer<ffi.Void> vo_opaque)>> getVideoFrame;
 
   external ffi.Pointer<
       ffi.NativeFunction<
@@ -1622,6 +1708,19 @@ final class mdkPlayerAPI extends ffi.Struct {
               ffi.Pointer<mdkPlayer>,
               ffi.Pointer<mdkVideoFrameAPI>,
               ffi.Pointer<ffi.Void>)>> enqueueVideo;
+
+  /// !
+  /// \brief bufferedTimeRanges
+  /// time(position) is relative to media start time.
+  /// Available if demuxer cache is enabled by property "demux.buffer.ranges" and "demux.buffer.protocols"
+  /// \param t time range array. can be null and returns range count, otherwise fill at most count ranges. a range is an int64_t pair {t[2n], t[2n + 1]} indicates start time(in milliseconds) and end time of the range
+  /// \param count number of ranges can be filled in array
+  /// \return total ranges count. If it's > count in array t, only count ranges will be filled
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Int Function(
+                  ffi.Pointer<mdkPlayer>, ffi.Pointer<ffi.Int64>, ffi.Int)>>
+      bufferedTimeRanges;
 }
 
 final class SwitchBitrateCallback extends ffi.Struct {
@@ -1639,6 +1738,7 @@ final class SwitchBitrateCallback extends ffi.Struct {
 /// Null callback(.opaque == null) + non-null token: can remove the callback of given token.
 /// Null callback(.opaque == null) + null token: clear all callbacks.
 typedef MDK_CallbackToken = ffi.Uint64;
+typedef DartMDK_CallbackToken = int;
 
 /// !
 /// \brief size
@@ -1654,8 +1754,8 @@ final class UnnamedUnion2 extends ffi.Union {
 
 const int MDK_MAJOR = 0;
 
-const int MDK_MINOR = 22;
+const int MDK_MINOR = 28;
 
-const int MDK_MICRO = 1;
+const int MDK_MICRO = 0;
 
-const int MDK_VERSION = 5633;
+const int MDK_VERSION = 7168;
