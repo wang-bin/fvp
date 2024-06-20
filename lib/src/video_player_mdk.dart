@@ -331,12 +331,14 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     }
     final pos = player.position;
     final bufLen = player.buffered();
+    final ranges = player.bufferedTimeRanges();
     player.streamCtl.add(VideoEvent(
         eventType: VideoEventType.bufferingUpdate,
-        buffered: [
-          DurationRange(
-              Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))
-        ]));
+        buffered: ranges +
+            [
+              DurationRange(Duration(milliseconds: pos),
+                  Duration(milliseconds: pos + bufLen))
+            ]));
     return Duration(milliseconds: pos);
   }
 

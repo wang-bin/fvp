@@ -4,10 +4,12 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
 import 'fvp_platform_interface.dart';
 import 'generated_bindings.dart';
@@ -424,6 +426,21 @@ class Player {
       _seeked!.complete(-10);
     }
     return _seeked!.future;
+  }
+
+  List<DurationRange> bufferedTimeRanges() {
+    const int n = 16;
+    final cbytes = calloc<Int64>(2 * n);
+    final count = _player.ref.bufferedTimeRanges.asFunction<
+            int Function(Pointer<mdkPlayer>, Pointer<Int64>, int)>()(
+        _player.ref.object, cbytes, n);
+    var ret = <DurationRange>[];
+    for (int i = 0; i < min(count, n); ++i) {
+      ret.add(DurationRange(Duration(milliseconds: cbytes[2 * i].toInt()),
+          Duration(milliseconds: cbytes[2 * i + 1].toInt())));
+    }
+    calloc.free(cbytes);
+    return ret;
   }
 
   /// Return buffered duration in milliseconds.

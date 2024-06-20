@@ -11,6 +11,7 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 - You can choose official implementation or this plugin's
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android(Impeller support)
 - Hardware decoders are enabled by default
+- Dolby Vision support on all platforms
 - Minimal code change for existing [Video Player](https://pub.dev/packages/video_player) apps
 - Support most formats via FFmpeg demuxer and software decoders if not supported by gpu. You can use your own ffmpeg 4.0~7.0(or master branch) by removing bundled ffmpeg dynamic library.
 - High performance. Lower cpu, gpu and memory load than libmpv based players.
