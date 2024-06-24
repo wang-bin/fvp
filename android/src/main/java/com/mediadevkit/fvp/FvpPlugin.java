@@ -5,7 +5,10 @@
 // found in the LICENSE file.
 package com.mediadevkit.fvp;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
 
@@ -23,6 +26,7 @@ import io.flutter.view.TextureRegistry;
 import io.flutter.view.TextureRegistry.TextureEntry;
 import io.flutter.view.TextureRegistry.SurfaceTextureEntry;
 import io.flutter.view.TextureRegistry.SurfaceProducer;
+// TODO: implement SurfaceProducer.Callback.onSurfaceCreated/onSurfaceDestroyed https://github.com/flutter/engine/pull/53280/files#diff-5029b9afc856679672880958cdebb729d04892b7ec8c80ebd649ef55fff744f3
 
 /** FvpPlugin */
 public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
@@ -35,8 +39,21 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   private TextureRegistry texRegistry;
   private Map<Long, TextureEntry> textures; // SurfaceProducer or SurfaceTextureEntry
   private Map<Long, Surface> surfaces;
+  private boolean impeller;
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+    Bundle metaData = null;
+    Context appCtx = flutterPluginBinding.getApplicationContext();
+    try {
+        metaData = appCtx.getPackageManager().getApplicationInfo(appCtx.getPackageName(), PackageManager.GET_META_DATA).metaData;
+    } catch (PackageManager.NameNotFoundException e) {
+        throw new RuntimeException(e);
+    }
+    impeller = false;
+    if (metaData != null) {
+      impeller = metaData.getBoolean("io.flutter.embedding.android.EnableImpeller", false);
+    }
+    Log.i("FvpPlugin", "metaData: " + metaData + ", impeller: " + impeller);
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "fvp");
     channel.setMethodCallHandler(this);
     texRegistry = flutterPluginBinding.getTextureRegistry();
@@ -52,16 +69,20 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       final int width = (int)call.argument("width");
       final int height = (int)call.argument("height");
       final boolean tunnel = (boolean)call.argument("tunnel");
-/*
-      SurfaceTextureEntry te = texRegistry.createSurfaceTexture();
-      SurfaceTexture tex = te.surfaceTexture();
-      tex.setDefaultBufferSize(width, height); // TODO: size from player. rotate, fullscreen change?
-      Surface surface = new Surface(tex); // TODO: when to release
-*/
-      SurfaceProducer te = texRegistry.createSurfaceProducer();
-      te.setSize(width, height);
-      Surface surface = te.getSurface();
-
+      TextureEntry te = null;
+      Surface surface = null;
+      if (impeller) {
+        SurfaceProducer sp = texRegistry.createSurfaceProducer();
+        sp.setSize(width, height);
+        surface = sp.getSurface();
+        te = sp;
+      } else {
+        SurfaceTextureEntry ste = texRegistry.createSurfaceTexture();
+        SurfaceTexture tex = ste.surfaceTexture();
+        tex.setDefaultBufferSize(width, height); // TODO: size from player. rotate, fullscreen change?
+        surface = new Surface(tex); // TODO: when to release
+        te = ste;
+      }
       long texId = te.id();
       nativeSetSurface(handle, texId, surface, width, height, tunnel);
       textures.put(texId, te);
