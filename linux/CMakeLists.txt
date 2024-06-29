@@ -50,30 +50,9 @@ target_compile_options(${PLUGIN_NAME} PRIVATE -fno-rtti -fno-exceptions -ffuncti
 target_compile_options(${PLUGIN_NAME} PRIVATE -Wno-unused-function) # https://github.com/wang-bin/fvp/issues/49
 target_link_libraries(${PLUGIN_NAME} PRIVATE -Wl,--gc-sections)
 
-set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-linux.tar.xz")
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "[xX].*64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "[aA][mM][dD]64")
-  set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-linux-x64.tar.xz")
-endif()
-set(MDK_SDK_SAVE ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk-linux.tar.xz)
-if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
-  if(NOT EXISTS ${MDK_SDK_SAVE})
-    message("Downloading mdk-sdk from ${MDK_SDK_URL}")
-    file(DOWNLOAD ${MDK_SDK_URL} ${MDK_SDK_SAVE} SHOW_PROGRESS)
-  endif()
-  execute_process(
-    COMMAND ${CMAKE_COMMAND} -E tar "Jxvf" ${MDK_SDK_SAVE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE EXTRACT_RET
-  )
-  if(NOT EXTRACT_RET EQUAL 0)
-    file(REMOVE ${MDK_SDK_SAVE})
-    message(FATAL_ERROR "Failed to extract mdk-sdk. You can download manually from ${MDK_SDK_URL} and extract to ${CMAKE_CURRENT_SOURCE_DIR}")
-  endif()
-endif()
-include(${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
+include(../cmake/deps.cmake)
+fvp_setup_deps()
 target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
-
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.

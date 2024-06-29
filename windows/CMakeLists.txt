@@ -40,6 +40,7 @@ apply_standard_settings(${PLUGIN_NAME})
 set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden)
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
+#target_compile_definitions(${PLUGIN_NAME} PUBLIC DART_SHARED_LIB) # all platforms?
 
 # Source include directories and library dependencies. Add any plugin-specific
 # dependencies here.
@@ -47,28 +48,8 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 
-set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-windows-desktop-vs2022.7z")
-if(CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "[xX]64") # msvc
-  set(MDK_SDK_URL "https://sourceforge.net/projects/mdk-sdk/files/nightly/mdk-sdk-windows-desktop-vs2022-x64.7z")
-endif()
-set(MDK_SDK_SAVE ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk-windows-desktop-vs2022.7z)
-if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
-  if(NOT EXISTS ${MDK_SDK_SAVE})
-    message("Downloading mdk-sdk from ${MDK_SDK_URL}")
-    file(DOWNLOAD ${MDK_SDK_URL} ${MDK_SDK_SAVE} SHOW_PROGRESS)
-  endif()
-  execute_process(
-    COMMAND ${CMAKE_COMMAND} -E tar "xvf" ${MDK_SDK_SAVE} "--format=7zip"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE EXTRACT_RET
-  )
-  if(NOT EXTRACT_RET EQUAL 0)
-    file(REMOVE ${MDK_SDK_SAVE})
-    message(FATAL_ERROR "Failed to extract mdk-sdk. You can download manually from ${MDK_SDK_URL} and extract to ${CMAKE_CURRENT_SOURCE_DIR}")
-  endif()
-endif()
-include(${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
+include(../cmake/deps.cmake)
+fvp_setup_deps()
 target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
 
 # List of absolute paths to libraries that should be bundled with the plugin.
