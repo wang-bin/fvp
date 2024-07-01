@@ -1,3 +1,9 @@
+## 0.20.0
+
+* android: use SurfaceProducer only for impeller, fix surface lifetime if impeller not enabled
+- force upgrade dependencies via environment var `FVP_DEPS_LATEST=1`(except macOS and iOS)
+- support http(s) cache via `registerOpts['player']['demux.buffer.ranges'] = '$positive_int'`
+
 ## 0.19.0
 
 * registerWith() can register official backends if a platform is not specified in platforms

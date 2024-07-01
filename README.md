@@ -6,8 +6,10 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 
 [More examples are here](https://github.com/wang-bin/mdk-examples/tree/master/flutter)
 
+project is create with `flutter create -t plugin --platforms=linux,macos,windows,android,ios -i objc -a java fvp`
+
 ## Features
-- All platforms: Windows(including win7), Linux, macOS, iOS, Android.
+- All platforms: Windows(including win7), Linux arm64 and x64, macOS, iOS, Android.
 - You can choose official implementation or this plugin's
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android(Impeller support)
 - Hardware decoders are enabled by default
@@ -66,10 +68,7 @@ find . -name Podfile.lock -delete
 rm -rf {mac,i}os/Pods
 ```
 
-For other platforms, run
-```bash
-flutter pub cache clean
-```
+For other platforms, set environment var `FVP_DEPS_LATEST=1` and rebuilt, will upgrade to the latest sdk. If fvp is installed from pub.dev, run `flutter pub cache clean` is another option.
 
 
 # Design
