@@ -1,4 +1,4 @@
-function(fvp_setup_deps)
+macro(fvp_setup_deps)
   if(WIN32)
     set(MDK_SDK_PKG mdk-sdk-windows-desktop-vs2022.7z)
     if(CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "[xX]64") # msvc
@@ -53,4 +53,4 @@ function(fvp_setup_deps)
     endif()
   endif()
   include(${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
-endfunction()
+endmacro()
