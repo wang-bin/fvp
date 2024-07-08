@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'fvp'
-  s.version          = '0.17.0'
+  s.version          = '0.20.1'
   s.summary          = 'libmdk based Flutter video player plugin'
   s.description      = <<-DESC
 Flutter video player plugin.
@@ -21,8 +21,8 @@ Flutter video player plugin.
   s.public_header_files = 'Classes/**/*.h'
   s.ios.dependency 'Flutter'
   s.osx.dependency 'FlutterMacOS'
-  s.ios.deployment_target = '11.0'
-  s.osx.deployment_target = '10.11'
+  s.ios.deployment_target = '12.0'
+  s.osx.deployment_target = '10.13'
   s.dependency 'mdk', '~> 0.29.1'
 
 #  s.platform = :osx, '10.11'
