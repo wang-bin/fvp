@@ -1,3 +1,7 @@
+## 0.20.2
+
+* fix macos and ios dependency
+
 ## 0.20.1
 
 * fix dependencies install
