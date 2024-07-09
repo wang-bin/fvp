@@ -44,8 +44,10 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 #  OUTPUT_NAME "fvp_plugin"
 #)
 
-target_compile_definitions(fvp_plugin PUBLIC DART_SHARED_LIB)
-
+target_compile_definitions(${PLUGIN_NAME} PUBLIC DART_SHARED_LIB)
+if(ANDROID_ABI MATCHES 64)
+  target_link_options(${PLUGIN_NAME} PRIVATE -Wl,-z,max-page-size=16384)
+endif()
 
 include(../cmake/deps.cmake)
 fvp_setup_deps()
