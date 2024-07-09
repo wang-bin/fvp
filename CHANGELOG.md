@@ -1,3 +1,9 @@
+## 0.21.0
+
+* add `Player.setAsset()`
+* android 16KB page size
+* compatible with vcrt 14.20
+
 ## 0.20.2
 
 * fix macos and ios dependency
