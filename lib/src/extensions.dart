@@ -1,4 +1,4 @@
-// Copyright 2022 Wang Bin. All rights reserved.
+// Copyright 2022-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,6 +6,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'lib.dart';
+import 'package:path/path.dart' as path;
 
 extension PlatformEx on Platform {
   static bool isAndroidEmulator() {
@@ -14,6 +15,27 @@ extension PlatformEx on Platform {
     }
     // lsmod: goldfish_pipe, virtio_pci
     return Libfvp.isEmulator();
+  }
+
+  static String assetUri(String asset, {String? package}) {
+    final key = asset;
+    switch (Platform.operatingSystem) {
+      case 'windows':
+        return path.join(path.dirname(Platform.resolvedExecutable), 'data',
+            'flutter_assets', key);
+      case 'linux':
+        return path.join(path.dirname(Platform.resolvedExecutable), 'data',
+            'flutter_assets', key);
+      case 'macos':
+        return path.join(path.dirname(Platform.resolvedExecutable), '..',
+            'Frameworks', 'App.framework', 'Resources', 'flutter_assets', key);
+      case 'ios':
+        return path.join(path.dirname(Platform.resolvedExecutable),
+            'Frameworks', 'App.framework', 'flutter_assets', key);
+      case 'android':
+        return 'assets://flutter_assets/$key';
+    }
+    return asset;
   }
 }
 

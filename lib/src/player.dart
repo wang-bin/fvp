@@ -395,6 +395,15 @@ class Player {
     malloc.free(cs);
   }
 
+  void setAsset(String asset, {String? package, MediaType? type}) {
+    final uri = PlatformEx.assetUri(asset, package: package);
+    if (type == null) {
+      media = uri;
+    } else {
+      setMedia(uri, type);
+    }
+  }
+
   /// Set the next media to play when current media playback is finished.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setnextmediaconst-char-url-int64_t-startposition--0-seekflag-flags--seekflagfromstart
   void setNext(String uri,

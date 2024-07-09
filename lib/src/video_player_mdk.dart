@@ -6,7 +6,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as path;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:video_player_android/video_player_android.dart';
 import 'package:video_player_avfoundation/video_player_avfoundation.dart';
@@ -180,7 +179,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     // mdk.setGlobalOptions('plugins', 'mdk-braw');
     mdk.setGlobalOption('d3d11.sync.cpu', 1);
     mdk.setGlobalOption('subtitle.fonts.file',
-        _assetUri(_subtitleFontFile ?? 'assets/subfont.ttf', null));
+        PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
     _globalOpts?.forEach((key, value) {
       mdk.setGlobalOption(key, value);
     });
@@ -201,7 +200,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     String? uri;
     switch (dataSource.sourceType) {
       case DataSourceType.asset:
-        uri = _assetUri(dataSource.asset!, dataSource.package);
+        uri =
+            PlatformEx.assetUri(dataSource.asset!, package: dataSource.package);
         break;
       case DataSourceType.network:
         uri = dataSource.uri;
@@ -358,25 +358,4 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> setMixWithOthers(bool mixWithOthers) async {}
-
-  static String _assetUri(String asset, String? package) {
-    final key = asset;
-    switch (Platform.operatingSystem) {
-      case 'windows':
-        return path.join(path.dirname(Platform.resolvedExecutable), 'data',
-            'flutter_assets', key);
-      case 'linux':
-        return path.join(path.dirname(Platform.resolvedExecutable), 'data',
-            'flutter_assets', key);
-      case 'macos':
-        return path.join(path.dirname(Platform.resolvedExecutable), '..',
-            'Frameworks', 'App.framework', 'Resources', 'flutter_assets', key);
-      case 'ios':
-        return path.join(path.dirname(Platform.resolvedExecutable),
-            'Frameworks', 'App.framework', 'flutter_assets', key);
-      case 'android':
-        return 'assets://flutter_assets/$key';
-    }
-    return asset;
-  }
 }
