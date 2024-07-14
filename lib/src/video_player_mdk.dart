@@ -4,15 +4,16 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/widgets.dart'; //
+
 import 'package:flutter/services.dart';
-import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-import 'package:video_player_android/video_player_android.dart';
-import 'package:video_player_avfoundation/video_player_avfoundation.dart';
+import 'package:flutter/widgets.dart'; //
 import 'package:logging/logging.dart';
-import 'extensions.dart';
 
 import '../mdk.dart' as mdk;
+import 'avfoundation.dart';
+import 'extensions.dart';
+import 'media_info.dart';
+import 'video_player_platform.dart';
 
 final _log = Logger('fvp');
 
@@ -125,7 +126,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
           if (Platform.isIOS || Platform.isMacOS) {
             AVFoundationVideoPlayer.registerWith();
           } else if (Platform.isAndroid) {
-            AndroidVideoPlayer.registerWith();
+            // AndroidVideoPlayer.registerWith();
           }
           return;
         }
@@ -281,6 +282,16 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     if (player != null) {
       player.loop = looping ? -1 : 0;
     }
+  }
+
+  @override
+  MediaInfo? getMediaInfo(int textureId) {
+    return _players[textureId]?.mediaInfo;
+  }
+
+  @override
+  void setAudioTrack(int textureId, int trackNum) {
+    _players[textureId]?.activeAudioTracks = [trackNum];
   }
 
   @override

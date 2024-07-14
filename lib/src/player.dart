@@ -9,14 +9,14 @@ import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
+import 'extensions.dart';
 import 'fvp_platform_interface.dart';
 import 'generated_bindings.dart';
 import 'global.dart';
-import 'media_info.dart';
 import 'lib.dart';
-import 'extensions.dart';
+import 'media_info.dart';
+import 'video_player_platform.dart';
 
 class Player {
   int get nativeHandle => _player.address;

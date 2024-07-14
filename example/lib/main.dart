@@ -7,9 +7,12 @@
 /// An example of using the plugin, controlling lifecycle and playback of the
 /// video.
 
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'package:fvp/fvp.dart' as fvp;
+import 'package:fvp/fvp.dart';
 
 void main() {
   fvp.registerWith();
@@ -156,21 +159,35 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.network(
-        'https://cdn.theoplayer.com/video/big_buck_bunny/stream-3-3000000/index.m3u8');
-
-    _controller.addListener(() {
-      setState(() {});
-    });
-    _controller.setLooping(true);
-    _controller.initialize().then((_) => setState(() {}));
-    _controller.play();
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  bool isInit = false;
+  void _pickFile() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      final file = result.files.first;
+      _controller = VideoPlayerController.file(File(file.path!));
+      _controller.addListener(() {
+        setState(() {});
+      });
+      _controller.setLooping(true);
+      _controller.initialize().then((_) => setState(() {
+            final mediaInfo = _controller.getMediaInfo();
+            print(mediaInfo?.audio?.length);
+            for (final audio in mediaInfo?.audio ?? []) {
+              print(audio.metadata);
+            }
+            isInit = true;
+          }));
+
+      _controller.play();
+    }
   }
 
   @override
@@ -181,21 +198,35 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
           Container(
             padding: const EdgeInsets.only(top: 20.0),
           ),
-          const Text('With assets mp4'),
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                children: <Widget>[
-                  VideoPlayer(_controller),
-                  _ControlsOverlay(controller: _controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
-                ],
+          TextButton(
+            child: const Text('With assets mp4'),
+            onPressed: () {
+              _pickFile();
+            },
+          ),
+          if (isInit)
+            for (final audio in [0, 1])
+              TextButton(
+                child: const Text("jeje"),
+                onPressed: () {
+                  _controller.setAudioTrack(1);
+                },
+              ),
+          if (isInit)
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: <Widget>[
+                    VideoPlayer(_controller),
+                    _ControlsOverlay(controller: _controller),
+                    VideoProgressIndicator(_controller, allowScrubbing: true),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
