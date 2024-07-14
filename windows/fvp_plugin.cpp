@@ -30,14 +30,21 @@ class TexturePlayer final: public Player
 public:
     TexturePlayer(int64_t handle, const ComPtr<ID3D11Texture2D>& d3d11tex, flutter::TextureRegistrar* texRegistrar)
         : Player(reinterpret_cast<mdkPlayerAPI*>(handle))
-        , tex(d3d11tex)
+        , rt(d3d11tex)
     {
+        ComPtr<ID3D11Device> dev;
+        rt->GetDevice(&dev);
+        dev->GetImmediateContext(&ctx);
+
         D3D11_TEXTURE2D_DESC desc;
-        tex->GetDesc(&desc);
+        rt->GetDesc(&desc);
+        desc.MiscFlags |= D3D11_RESOURCE_MISC_SHARED;
+        MS_ENSURE(dev->CreateTexture2D(&desc, nullptr, &tex));
+
         ComPtr<IDXGIResource> res;
-        MS_WARN(tex.As(&res));
+        MS_ENSURE(tex.As(&res));
         HANDLE shared_handle = nullptr;
-        MS_WARN(res->GetSharedHandle(&shared_handle));
+        MS_ENSURE(res->GetSharedHandle(&shared_handle));
         flt_surface_desc->struct_size = sizeof(FlutterDesktopGpuSurfaceDescriptor);
         flt_surface_desc->handle = shared_handle;// tex.Get();
         //flt_surface_desc->handle = tex.Get(); // eglbind error
@@ -49,22 +56,27 @@ public:
         flt_tex = make_unique<flutter::TextureVariant>(flutter::GpuSurfaceTexture(
             kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle
             //kFlutterDesktopGpuSurfaceTypeD3d11Texture2D
-            , [pflt_surface_desc = flt_surface_desc.get()](size_t width, size_t height) {
+            , [pflt_surface_desc = flt_surface_desc.get(), this](size_t width, size_t height) {
                 //printf("ObtainDescriptorCallback %llux%llu. shared_handle_ %p\n", width, height, shared_handle_); fflush(nullptr);
                 //player.renderVideo(); // stutter
+                scoped_lock lock(mtx);
+                ctx->CopyResource(tex.Get(), rt.Get());
+                ctx->Flush();
                 return pflt_surface_desc;
             }));
         textureId = texRegistrar->RegisterTexture(flt_tex.get());
 
 
         D3D11RenderAPI ra{};
-        ra.rtv = tex.Get();
+        ra.rtv = rt.Get();
         setRenderAPI(&ra);
         setVideoSurfaceSize(desc.Width, desc.Height);
         setRenderCallback([this, texRegistrar](void*) {
+            scoped_lock lock(mtx);
             renderVideo();
             texRegistrar->MarkTextureFrameAvailable(textureId);
             });
+
     }
 
     ~TexturePlayer() override {
@@ -78,6 +90,9 @@ private:
     unique_ptr<flutter::TextureVariant> flt_tex;
     unique_ptr<FlutterDesktopGpuSurfaceDescriptor> flt_surface_desc = make_unique<FlutterDesktopGpuSurfaceDescriptor>();
     ComPtr<ID3D11Texture2D> tex;
+    ComPtr<ID3D11Texture2D> rt;
+    ComPtr<ID3D11DeviceContext> ctx;
+    mutex mtx;
 };
 
 template<typename T>
