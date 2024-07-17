@@ -45,6 +45,8 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 #)
 
 target_compile_definitions(${PLUGIN_NAME} PUBLIC DART_SHARED_LIB)
+target_compile_options(${PLUGIN_NAME} PRIVATE -fno-rtti -fno-exceptions -ffunction-sections -fdata-sections)
+target_link_options(${PLUGIN_NAME} PRIVATE -Wl,--gc-sections)
 if(ANDROID_ABI MATCHES 64)
   target_link_options(${PLUGIN_NAME} PRIVATE -Wl,-z,max-page-size=16384)
 endif()
