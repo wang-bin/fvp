@@ -6,7 +6,9 @@ cmake_minimum_required(VERSION 3.14)
 
 # Project-level configuration.
 set(PROJECT_NAME "fvp")
-project(${PROJECT_NAME} LANGUAGES CXX)
+project(${PROJECT_NAME} VERSION 0.21.0
+    DESCRIPTION "Flutter video_player plugin via libmdk")
+set(PROJECT_VERSION_TWEAK 0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -20,12 +22,21 @@ list(APPEND PLUGIN_SOURCES
   "fvp_plugin.h"
 )
 
+string(TIMESTAMP COPYRIGHT_YEAR "%Y")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version.rc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc.0
+  @ONLY)
+configure_file( ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc.0
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc
+  @ONLY)
+
 # Define the plugin library target. Its name must not be changed (see comment
 # on PLUGIN_NAME above).
 add_library(${PLUGIN_NAME} SHARED
   "include/fvp/fvp_plugin_c_api.h"
   "fvp_plugin_c_api.cpp"
   ../lib/src/callbacks.cpp
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc"
   ${PLUGIN_SOURCES}
 )
 
@@ -48,6 +59,8 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 target_compile_options(${PLUGIN_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR=1>")
+target_compile_options(${PLUGIN_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:-Os;-GR-;-EHs-c-a->")
+target_link_options(${PLUGIN_NAME} PRIVATE -opt:ref,icf,lbr)
 
 include(../cmake/deps.cmake)
 fvp_setup_deps()
