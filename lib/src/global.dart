@@ -1,4 +1,4 @@
-// Copyright 2022 Wang Bin. All rights reserved.
+// Copyright 2022-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import 'dart:ffi';
@@ -70,6 +70,7 @@ class MediaStatus {
     if (test(buffering)) s += '+buffering';
     if (test(buffered)) s += '+buffered';
     if (test(end)) s += '+end';
+    if (test(seeking)) s += '+seeking';
     if (test(invalid)) s += '+invalid';
     return '$s)';
   }
