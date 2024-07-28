@@ -1,3 +1,8 @@
+## 0.22.0
+
+* windows: fix d3d11 sync issue
+* android: min api level is 21, target sdk 34
+
 ## 0.21.0
 
 * add `Player.setAsset()`

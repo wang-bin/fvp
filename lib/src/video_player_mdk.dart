@@ -18,6 +18,7 @@ final _log = Logger('fvp');
 
 class MdkVideoPlayer extends mdk.Player {
   final streamCtl = StreamController<VideoEvent>();
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -25,6 +26,7 @@ class MdkVideoPlayer extends mdk.Player {
     onEvent(null);
     onStateChanged(null);
     streamCtl.close();
+    _initialized = false;
     super.dispose();
   }
 
@@ -35,9 +37,13 @@ class MdkVideoPlayer extends mdk.Player {
       if (!oldValue.test(mdk.MediaStatus.loaded) &&
           newValue.test(mdk.MediaStatus.loaded)) {
         // initialized event must be sent only once. keep_open=1 is another solution
-        if ((textureId.value ?? -1) >= 0) {
+        //if ((textureId.value ?? -1) >= 0) {
+        //  return true; // prepared callback is invoked before MediaStatus.loaded, so textureId can be a valid value here
+        //}
+        if (_initialized) {
           return true;
         }
+        _initialized = true;
         final info = mediaInfo;
         var size = const Size(0, 0);
         if (info.video != null) {
