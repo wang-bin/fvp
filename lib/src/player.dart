@@ -101,6 +101,9 @@ class Player {
     Libfvp.registerPort(nativeHandle, NativeApi.postCObject.cast(),
         _receivePort.sendPort.nativePort);
 
+    onStateChanged((oldValue, newValue) {
+      _state = newValue;
+    });
     onMediaStatus((oldValue, newValue) {
       if (_videoSize.isCompleted) {
         return true;
