@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart';
@@ -94,6 +95,14 @@ class Player {
               _seeked?.complete(pos);
             }
             _seeked = null;
+          }
+        case 7:
+          {
+            final data = message[1] as Uint8List; //null?
+            if (!(_snapshot?.isCompleted ?? true)) {
+              _snapshot?.complete(data.isEmpty ? null : data);
+            }
+            _snapshot = null;
           }
       }
       calloc.free(rep);
@@ -623,6 +632,20 @@ class Player {
           .asFunction<double Function(Pointer<mdkPlayer>, Pointer<Void>)>()(
       _player.ref.object, Pointer.fromAddress(vid.hashCode));
 
+  /// Take a snapshot for current rendered frame.
+  /// Return rgba data, image size is `mediaInfo.video[current_track].codec.width/height`, stride is `width*4`
+  Future<Uint8List?> snapshot({int? width, int? height}) {
+    if (!(_snapshot?.isCompleted ?? true)) {
+      _snapshot?.complete(null);
+    }
+    _snapshot = Completer<Uint8List?>();
+    Libfvp.registerType(nativeHandle, 8, true);
+    if (!Libfvp.snapshot(nativeHandle, width ?? 0, height ?? 0,
+        NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort)) {
+      _snapshot!.complete(null);
+    }
+    return _snapshot!.future;
+  }
   // callbacks
 
   /// Set [MediaEvent] callback.
@@ -695,6 +718,7 @@ class Player {
   int _texId = -1;
   var _videoSize = Completer<ui.Size?>();
   var _prepared = Completer<int>();
+  Completer<Uint8List?>? _snapshot;
   Completer<int>? _seeked;
   final _receivePort = ReceivePort();
 

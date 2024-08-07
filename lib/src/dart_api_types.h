@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 // Dart API type declarations.
+// from dart_native_api.h
 
 typedef int64_t Dart_Port;
 typedef void (*Dart_HandleFinalizer)(void* isolate_callback_data, void* peer);
