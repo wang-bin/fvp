@@ -633,7 +633,10 @@ class Player {
       _player.ref.object, Pointer.fromAddress(vid.hashCode));
 
   /// Take a snapshot for current rendered frame.
-  /// Return rgba data, image size is `mediaInfo.video[current_track].codec.width/height`, stride is `width*4`
+  ///
+  /// [width] snapshot width. if not set, result is `mediaInfo.video[current_track].codec.width`
+  /// [height] snapshot height. if not set, result is `mediaInfo.video[current_track].codec.height`
+  /// Return rgba data of image size [width]x[height], stride is `width*4`
   Future<Uint8List?> snapshot({int? width, int? height}) {
     if (!(_snapshot?.isCompleted ?? true)) {
       _snapshot?.complete(null);

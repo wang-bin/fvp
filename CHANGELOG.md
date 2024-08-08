@@ -1,3 +1,10 @@
+## 0.23.0
+
+* add `Player.snapshot()`
+* fix sometimes no intialized event
+* enable http(s) reconnect
+* fix Player.state is not current state
+
 ## 0.22.0
 
 * windows: fix d3d11 sync issue
