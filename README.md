@@ -84,6 +84,9 @@ libass is required, and it's added to your app automatically for windows, macOS 
 
 If required subtitle font is not found in the system(e.g. android), you can add [assets/subfont.ttf](https://github.com/mpv-android/mpv-android/raw/master/app/src/main/assets/subfont.ttf) in pubspec.yaml as the fallback.
 
+# DO NOT use flutter-snap
+Flutter can be installed by snap, but it will add some [enviroment vars(`CPLUS_INCLUDE_PATH` and `LIBRARY_PATH`) which may break C++ compiler](https://github.com/canonical/flutter-snap/blob/main/env.sh#L15-L18). It's not recommended to use snap, althrough building for linux is [fixed](https://github.com/wang-bin/fvp/commit/567c68270ba16b95b1198ae58850707ae4ad7b22), but it's not possible for android.
+
 # Screenshots
 ![fpv_android](https://user-images.githubusercontent.com/785206/248862591-40f458e5-d7ca-4513-b709-b056deaaf421.jpeg)
 ![fvp_ios](https://user-images.githubusercontent.com/785206/250348936-e5e1fb14-9c81-4652-8f53-37e8d64195a3.jpg)
