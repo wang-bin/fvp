@@ -299,6 +299,20 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
+  void toNextFrame(int textureId) {
+    _players[textureId]?.seek(
+        position: 1,
+        flags: const mdk.SeekFlag(mdk.SeekFlag.fromNow | mdk.SeekFlag.frame));
+  }
+
+  @override
+  void toPrevFrame(int textureId) {
+    _players[textureId]?.seek(
+        position: -1,
+        flags: const mdk.SeekFlag(mdk.SeekFlag.fromNow | mdk.SeekFlag.frame));
+  }
+
+  @override
   void setAudioTrack(int textureId, int trackNum) {
     _players[textureId]?.activeAudioTracks = [trackNum];
   }

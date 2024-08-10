@@ -555,6 +555,14 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     _videoPlayerPlatform.setAudioTrack(_textureId, trackNum);
   }
 
+  void toNextFrame() {
+    _videoPlayerPlatform.toNextFrame(_textureId);
+  }
+
+  void toPrevFrame() {
+    _videoPlayerPlatform.toPrevFrame(_textureId);
+  }
+
   /// Sets whether or not the video should loop after playing once. See also
   /// [VideoPlayerValue.isLooping].
   Future<void> setLooping(bool looping) async {

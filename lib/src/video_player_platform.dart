@@ -116,6 +116,14 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
   void setAudioTrack(int textureId, int trackNum) {
     throw UnimplementedError('getMediaInfo() has not been implemented.');
   }
+
+  void toNextFrame(int textureId) {
+    throw UnimplementedError('toNextFrame() has not been implemented.');
+  }
+
+  void toPrevFrame(int textureId) {
+    throw UnimplementedError('toPrevFrame() has not been implemented.');
+  }
 }
 
 class _PlaceholderImplementation extends VideoPlayerPlatform {}
