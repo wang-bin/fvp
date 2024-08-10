@@ -1,4 +1,4 @@
-// Copyright 2022 Wang Bin. All rights reserved.
+// Copyright 2022-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -427,4 +427,52 @@ FVP_EXPORT bool MdkSeek(int64_t handle, int64_t pos, int64_t seekFlags, void* po
         }
         return true;
     });
+}
+
+FVP_EXPORT bool MdkSnapshot(int64_t handle, int w, int h, void* post_c_object, int64_t send_port)
+{
+    const auto it = players.find(handle);
+    if (it == players.cend()) {
+        return false;
+    }
+    const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
+    auto sp = it->second;
+    Player::SnapshotRequest req{
+        .width = w,
+        .height = h,
+    };
+    sp->snapshot(&req, [=](const Player::SnapshotRequest* ret, double frameTime)->string {
+        Dart_CObject t{
+            .type = Dart_CObject_kInt64,
+            .value = {
+                .as_int64 = CallbackType::Snapshot,
+            }
+        };
+        Dart_CObject v{
+            .type = Dart_CObject_kTypedData, // copy to dart. External: no copy
+            .value = {
+                .as_typed_data = {
+                    .type = Dart_TypedData_kUint8,
+                    .length = ret->stride * ret->height,
+                    .values = ret->data,
+                },
+            }
+        };
+        Dart_CObject* arr[] = { &t, &v };
+        Dart_CObject msg {
+            .type = Dart_CObject_kArray,
+            .value = {
+                .as_array = {
+                    .length = std::size(arr),
+                    .values = arr,
+                },
+            },
+        };
+        if (!postCObject(send_port, &msg)) {
+            clog << __func__ << __LINE__ << " postCObject error" << endl; // when?
+            return {};
+        }
+        return {};
+    });
+    return true;
 }

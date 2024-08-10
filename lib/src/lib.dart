@@ -1,4 +1,4 @@
-// Copyright 2022 Wang Bin. All rights reserved.
+// Copyright 2022-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import 'dart:ffi';
@@ -77,6 +77,9 @@ abstract class Libfvp {
   static final seek = instance.lookupFunction<
       Bool Function(Int64, Int64, Int64, Pointer<Void>, Int64),
       bool Function(int, int, int, Pointer<Void>, int)>('MdkSeek');
+  static final snapshot = instance.lookupFunction<
+      Bool Function(Int64, Int, Int, Pointer<Void>, Int64),
+      bool Function(int, int, int, Pointer<Void>, int)>('MdkSnapshot');
   static final isEmulator = instance
       .lookupFunction<Bool Function(), bool Function()>('MdkIsEmulator');
 }

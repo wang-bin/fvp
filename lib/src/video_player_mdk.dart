@@ -42,6 +42,7 @@ class MdkVideoPlayer extends mdk.Player {
         //  return true; // prepared callback is invoked before MediaStatus.loaded, so textureId can be a valid value here
         //}
         if (_initialized) {
+          _log.fine('$hashCode player$nativeHandle already initialized');
           return true;
         }
         _initialized = true;
@@ -226,6 +227,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     //player.setProperty("keep_open", "1");
     player.setProperty('video.decoder', 'shader_resource=0');
     player.setProperty('avformat.strict', 'experimental');
+    player.setProperty('avio.reconnect', '1');
+    player.setProperty('avio.reconnect_delay_max', '7');
     player.setProperty('avio.protocol_whitelist',
         'file,rtmp,http,https,tls,rtp,tcp,udp,crypto,httpproxy,data,concatf,concat,subfile');
     player.setProperty('avformat.rtsp_transport', 'tcp');
