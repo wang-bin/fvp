@@ -555,12 +555,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     _videoPlayerPlatform.setAudioTrack(_textureId, trackNum);
   }
 
-  void toNextFrame() {
-    _videoPlayerPlatform.toNextFrame(_textureId);
+  void toNextFrame([int? step]) {
+    _videoPlayerPlatform.toNextFrame(_textureId, step);
   }
 
-  void toPrevFrame() {
-    _videoPlayerPlatform.toPrevFrame(_textureId);
+  void toPrevFrame([int? step]) {
+    _videoPlayerPlatform.toPrevFrame(_textureId, step);
   }
 
   /// Sets whether or not the video should loop after playing once. See also
@@ -593,7 +593,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       // Cancel previous timer.
       _timer?.cancel();
       _timer = Timer.periodic(
-        const Duration(milliseconds: 500),
+        const Duration(milliseconds: 16),
         (Timer timer) async {
           if (_isDisposed) {
             return;
