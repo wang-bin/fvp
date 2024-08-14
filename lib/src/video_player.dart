@@ -555,6 +555,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     _videoPlayerPlatform.setAudioTrack(_textureId, trackNum);
   }
 
+  void setSubtitleTrack(int trackNum) {
+    _videoPlayerPlatform.setSubtitleTrack(_textureId, trackNum);
+  }
+
   void toNextFrame([int? step]) {
     _videoPlayerPlatform.toNextFrame(_textureId, step);
   }

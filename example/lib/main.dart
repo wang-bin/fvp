@@ -6,6 +6,7 @@
 
 /// An example of using the plugin, controlling lifecycle and playback of the
 /// video.
+library;
 
 import 'dart:io';
 
@@ -29,120 +30,7 @@ class _App extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        key: const ValueKey<String>('home_page'),
-        appBar: AppBar(
-          title: const Text('Video player example'),
-          actions: <Widget>[
-            IconButton(
-              key: const ValueKey<String>('push_tab'),
-              icon: const Icon(Icons.navigation),
-              onPressed: () {
-                Navigator.push<_PlayerVideoAndPopPage>(
-                  context,
-                  MaterialPageRoute<_PlayerVideoAndPopPage>(
-                    builder: (BuildContext context) => _PlayerVideoAndPopPage(),
-                  ),
-                );
-              },
-            )
-          ],
-          bottom: const TabBar(
-            isScrollable: true,
-            tabs: <Widget>[
-              Tab(
-                icon: Icon(Icons.cloud),
-                text: 'Remote',
-              ),
-              Tab(icon: Icon(Icons.insert_drive_file), text: 'Asset'),
-              Tab(icon: Icon(Icons.list), text: 'List example'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: <Widget>[
-            _BumbleBeeRemoteVideo(),
-            _ButterFlyAssetVideo(),
-            _ButterFlyAssetVideoInList(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ButterFlyAssetVideoInList extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      children: <Widget>[
-        const _ExampleCard(title: 'Item a'),
-        const _ExampleCard(title: 'Item b'),
-        const _ExampleCard(title: 'Item c'),
-        const _ExampleCard(title: 'Item d'),
-        const _ExampleCard(title: 'Item e'),
-        const _ExampleCard(title: 'Item f'),
-        const _ExampleCard(title: 'Item g'),
-        Card(
-            child: Column(children: <Widget>[
-          Column(
-            children: <Widget>[
-              const ListTile(
-                leading: Icon(Icons.cake),
-                title: Text('Video video'),
-              ),
-              Stack(
-                  alignment: FractionalOffset.bottomRight +
-                      const FractionalOffset(-0.1, -0.1),
-                  children: <Widget>[
-                    _ButterFlyAssetVideo(),
-                    Image.asset('assets/flutter-mark-square-64.png'),
-                  ]),
-            ],
-          ),
-        ])),
-        const _ExampleCard(title: 'Item h'),
-        const _ExampleCard(title: 'Item i'),
-        const _ExampleCard(title: 'Item j'),
-        const _ExampleCard(title: 'Item k'),
-        const _ExampleCard(title: 'Item l'),
-      ],
-    );
-  }
-}
-
-/// A filler card to show the video in a list of scrolling contents.
-class _ExampleCard extends StatelessWidget {
-  const _ExampleCard({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ListTile(
-            leading: const Icon(Icons.airline_seat_flat_angled),
-            title: Text(title),
-          ),
-          ButtonBar(
-            children: <Widget>[
-              TextButton(
-                child: const Text('BUY TICKETS'),
-                onPressed: () {
-                  /* ... */
-                },
-              ),
-              TextButton(
-                child: const Text('SELL TICKETS'),
-                onPressed: () {
-                  /* ... */
-                },
-              ),
-            ],
-          ),
-        ],
+        body: _ButterFlyAssetVideo(),
       ),
     );
   }
@@ -179,8 +67,8 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
       _controller.setLooping(true);
       _controller.initialize().then((_) => setState(() {
             final mediaInfo = _controller.getMediaInfo();
-            print(mediaInfo?.audio?.length);
-            for (final audio in mediaInfo?.audio ?? []) {
+            print(mediaInfo?.subtitle?.length);
+            for (final audio in mediaInfo?.subtitle ?? []) {
               print(audio.metadata);
             }
             isInit = true;
@@ -209,7 +97,7 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
               TextButton(
                 child: const Text("jeje"),
                 onPressed: () {
-                  _controller.setAudioTrack(1);
+                  _controller.setSubtitleTrack(10);
                 },
               ),
           if (isInit)

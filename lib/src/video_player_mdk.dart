@@ -299,6 +299,11 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
+  void setSubtitleTrack(int textureId, int trackNum) {
+    _players[textureId]?.activeSubtitleTracks = [trackNum];
+  }
+
+  @override
   void toNextFrame(int textureId, [int? step]) {
     _players[textureId]?.seek(
       position: step ?? 1,
