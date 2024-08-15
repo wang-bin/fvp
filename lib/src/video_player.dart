@@ -547,6 +547,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyPlayPause();
   }
 
+  Future<Duration> getPosition() async {
+    return _videoPlayerPlatform.getPosition(_textureId);
+  }
+
   MediaInfo? getMediaInfo() {
     return _videoPlayerPlatform.getMediaInfo(_textureId);
   }
