@@ -547,10 +547,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyPlayPause();
   }
 
-  Future<Duration> getPosition() async {
-    return _videoPlayerPlatform.getPosition(_textureId);
-  }
-
   MediaInfo? getMediaInfo() {
     return _videoPlayerPlatform.getMediaInfo(_textureId);
   }
@@ -563,12 +559,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     _videoPlayerPlatform.setSubtitleTrack(_textureId, trackNum);
   }
 
-  void toNextFrame([int? step]) {
-    _videoPlayerPlatform.toNextFrame(_textureId, step);
+  Future<Duration?> toNextFrame([int? step]) async {
+    return _videoPlayerPlatform.toNextFrame(_textureId, step);
   }
 
-  void toPrevFrame([int? step]) {
-    _videoPlayerPlatform.toPrevFrame(_textureId, step);
+  Future<Duration?> toPrevFrame([int? step]) async {
+    return _videoPlayerPlatform.toPrevFrame(_textureId, step);
   }
 
   /// Sets whether or not the video should loop after playing once. See also

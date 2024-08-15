@@ -304,19 +304,27 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
-  void toNextFrame(int textureId, [int? step]) {
-    _players[textureId]?.seek(
+  Future<Duration?> toNextFrame(int textureId, [int? step]) async {
+    final duration = await _players[textureId]?.seek(
       position: step ?? 1,
       flags: const mdk.SeekFlag(mdk.SeekFlag.fromNow | mdk.SeekFlag.frame),
     );
+    if (duration == null) {
+      return null;
+    }
+    return Duration(milliseconds: duration);
   }
 
   @override
-  void toPrevFrame(int textureId, [int? step]) {
-    _players[textureId]?.seek(
+  Future<Duration?> toPrevFrame(int textureId, [int? step]) async {
+    final duration = await _players[textureId]?.seek(
       position: step ?? -1,
       flags: const mdk.SeekFlag(mdk.SeekFlag.fromNow | mdk.SeekFlag.frame),
     );
+    if (duration == null) {
+      return null;
+    }
+    return Duration(milliseconds: duration);
   }
 
   @override
