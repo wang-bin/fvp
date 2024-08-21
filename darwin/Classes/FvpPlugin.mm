@@ -1,12 +1,15 @@
-// Copyright 2023 Wang Bin. All rights reserved.
+// Copyright 2023-2024 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
+#define USE_TEXCACHE 0
 
 #import "FvpPlugin.h"
 #import "Metal/Metal.h"
 #import "CoreVideo/CoreVideo.h"
 #include "mdk/RenderAPI.h"
 #include "mdk/Player.h"
+#include <mutex>
 #include <unordered_map>
 #include <iostream>
 
@@ -22,7 +25,9 @@ using namespace std;
     id<MTLCommandQueue> cmdQueue;
     id<MTLTexture> texture;
     CVPixelBufferRef pixbuf;
+    id<MTLTexture> fltex;
     CVMetalTextureCacheRef texCache;
+    mutex mtx; // ensure whole frame render pass commands are recorded before blitting
 }
 
 - (instancetype)initWithWidth:(int)width height:(int)height
@@ -30,15 +35,28 @@ using namespace std;
     self = [super init];
     device = MTLCreateSystemDefaultDevice();
     cmdQueue = [device newCommandQueue];
-    CVMetalTextureCacheCreate(nullptr, nullptr, device, nullptr, &texCache);
+    auto td = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm width:width height:height mipmapped:NO];
+    td.storageMode = MTLStorageModePrivate;
+    td.usage = MTLTextureUsageRenderTarget;
+    texture = [device newTextureWithDescriptor:td];
+    //assert(!texture.iosurface); // CVPixelBufferCreateWithIOSurface(fltex.iosurface)
     auto attr = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     CFDictionarySetValue(attr, kCVPixelBufferMetalCompatibilityKey, kCFBooleanTrue);
+    auto iosurface_props = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CFDictionarySetValue(attr, kCVPixelBufferIOSurfacePropertiesKey, iosurface_props); // optional?
     CVPixelBufferCreate(nil, width, height, kCVPixelFormatType_32BGRA, attr, &pixbuf);
     CFRelease(attr);
+#if (USE_TEXCACHE + 0)
+    CVMetalTextureCacheCreate(nullptr, nullptr, device, nullptr, &texCache);
     CVMetalTextureRef cvtex;
     CVMetalTextureCacheCreateTextureFromImage(nil, texCache, pixbuf, nil, MTLPixelFormatBGRA8Unorm, width, height, 0, &cvtex);
-    texture = CVMetalTextureGetTexture(cvtex);
+    fltex = CVMetalTextureGetTexture(cvtex);
     CFRelease(cvtex);
+#else
+    auto iosurface = CVPixelBufferGetIOSurface(pixbuf);
+    td.usage = MTLTextureUsageShaderRead; // Unknown?
+    fltex = [device newTextureWithDescriptor:td iosurface:iosurface plane:0];
+#endif
     return self;
 }
 
@@ -48,6 +66,14 @@ using namespace std;
 }
 
 - (CVPixelBufferRef _Nullable)copyPixelBuffer {
+    //return CVPixelBufferRetain(pixbuf);
+    scoped_lock lock(mtx);
+    auto cmdbuf = [cmdQueue commandBuffer];
+    auto blit = [cmdbuf blitCommandEncoder];
+    [blit copyFromTexture:texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(texture.width, texture.height, texture.depth)
+        toTexture:fltex destinationSlice:0 destinationLevel:0 destinationOrigin:MTLOriginMake(0, 0, 0)]; // macos 10.15
+    [blit endEncoding];
+	[cmdbuf commit];
     return CVPixelBufferRetain(pixbuf);
 }
 @end
@@ -64,11 +90,13 @@ public:
         MetalRenderAPI ra{};
         ra.device = (__bridge void*)mtex_->device;
         ra.cmdQueue = (__bridge void*)mtex_->cmdQueue;
+// TODO: texture pool to avoid blitting
         ra.texture = (__bridge void*)mtex_->texture;
         setRenderAPI(&ra);
         setVideoSurfaceSize(width, height);
 
         setRenderCallback([this, texReg](void* opaque){
+            scoped_lock lock(mtex_->mtx);
             renderVideo();
             [texReg textureFrameAvailable:texId_];
         });
