@@ -1,3 +1,7 @@
+## 0.24.0
+
+* fix metal sync issue
+
 ## 0.23.0
 
 * add `Player.snapshot()`
