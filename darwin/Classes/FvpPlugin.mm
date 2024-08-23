@@ -46,6 +46,7 @@ using namespace std;
     CFDictionarySetValue(attr, kCVPixelBufferIOSurfacePropertiesKey, iosurface_props); // optional?
     CVPixelBufferCreate(nil, width, height, kCVPixelFormatType_32BGRA, attr, &pixbuf);
     CFRelease(attr);
+    texCache = {};
 #if (USE_TEXCACHE + 0)
     CVMetalTextureCacheCreate(nullptr, nullptr, device, nullptr, &texCache);
     CVMetalTextureRef cvtex;
@@ -62,7 +63,8 @@ using namespace std;
 
 - (void)dealloc {
     CVPixelBufferRelease(pixbuf);
-    CFRelease(texCache);
+    if (texCache)
+        CFRelease(texCache);
 }
 
 - (CVPixelBufferRef _Nullable)copyPixelBuffer {
