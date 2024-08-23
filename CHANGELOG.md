@@ -1,3 +1,7 @@
+## 0.24.1
+
+* fix dispose crash on apple platforms
+
 ## 0.24.0
 
 * fix metal sync issue
