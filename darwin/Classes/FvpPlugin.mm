@@ -36,7 +36,6 @@ using namespace std;
     device = MTLCreateSystemDefaultDevice();
     cmdQueue = [device newCommandQueue];
     auto td = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm width:width height:height mipmapped:NO];
-    td.storageMode = MTLStorageModePrivate;
     td.usage = MTLTextureUsageRenderTarget;
     texture = [device newTextureWithDescriptor:td];
     //assert(!texture.iosurface); // CVPixelBufferCreateWithIOSurface(fltex.iosurface)
@@ -56,6 +55,8 @@ using namespace std;
 #else
     auto iosurface = CVPixelBufferGetIOSurface(pixbuf);
     td.usage = MTLTextureUsageShaderRead; // Unknown?
+// macos: failed assertion `Texture Descriptor Validation IOSurface textures must use MTLStorageModeManaged or MTLStorageModeShared'
+// ios: failed assertion `Texture Descriptor Validation IOSurface textures must use MTLStorageModeShared
     fltex = [device newTextureWithDescriptor:td iosurface:iosurface plane:0];
 #endif
     return self;
