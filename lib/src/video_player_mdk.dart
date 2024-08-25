@@ -260,11 +260,14 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     player.media = uri!;
     int ret = await player.prepare(); // required!
     if (ret < 0) {
-      player.dispose();
-      throw PlatformException(
+      // no throw, handle error in controller.addListener
+      _players[-hashCode] = player;
+      player.streamCtl.addError(PlatformException(
         code: 'media open error',
         message: 'invalid or unsupported media',
-      );
+      ));
+      //player.dispose(); // dispose for throw
+      return -hashCode;
     }
 // FIXME: pending events will be processed after texture returned, but no events before prepared
 // FIXME: set tunnel too late
@@ -274,12 +277,15 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         tunnel: _tunnel,
         fit: _fitMaxSize);
     if (tex < 0) {
-      player.dispose();
-      throw PlatformException(
+      _players[-hashCode] = player;
+      player.streamCtl.addError(PlatformException(
         code: 'video size error',
         message: 'invalid or unsupported media',
-      );
+      ));
+      //player.dispose();
+      return -hashCode;
     }
+    _log.fine('$hashCode player${player.nativeHandle} textureId=$tex');
     _players[tex] = player;
     return tex;
   }
