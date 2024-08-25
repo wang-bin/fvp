@@ -21,8 +21,6 @@ dependencies:
   path: ^1.8.0
   plugin_platform_interface: ^2.0.0
   video_player_platform_interface: ^6.2.0
-  video_player_android: ^2.4.0
-  video_player_avfoundation: ^2.4.0
 
 dev_dependencies:
   flutter_test:

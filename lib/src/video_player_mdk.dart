@@ -7,8 +7,6 @@ import 'dart:io';
 import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-import 'package:video_player_android/video_player_android.dart';
-import 'package:video_player_avfoundation/video_player_avfoundation.dart';
 import 'package:logging/logging.dart';
 import 'extensions.dart';
 
@@ -115,6 +113,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static int _seekFlags = mdk.SeekFlag.fromStart | mdk.SeekFlag.inCache;
   static List<String>? _decoders;
   static final _mdkLog = Logger('mdk');
+  // _prevImpl: required if registerWith() can be invoked multiple times by user
+  static VideoPlayerPlatform? _prevImpl;
 
 /*
   Registers this class as the default instance of [VideoPlayerPlatform].
@@ -129,10 +129,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       final platforms = options['platforms'];
       if (platforms is List<String>) {
         if (!platforms.contains(Platform.operatingSystem)) {
-          if (Platform.isIOS || Platform.isMacOS) {
-            AVFoundationVideoPlayer.registerWith();
-          } else if (Platform.isAndroid) {
-            AndroidVideoPlayer.registerWith();
+          if (_prevImpl != null) {
+            // null if it's the 1st time to call registerWith() including current platform
+            VideoPlayerPlatform.instance = _prevImpl!;
           }
           return;
         }
@@ -191,6 +190,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       mdk.setGlobalOption(key, value);
     });
 
+    // if VideoPlayerPlatform.instance.runtimeType.toString() != '_PlaceholderImplementation' ?
+    _prevImpl ??= VideoPlayerPlatform.instance;
     VideoPlayerPlatform.instance = MdkVideoPlayerPlatform();
   }
 
