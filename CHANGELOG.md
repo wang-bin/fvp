@@ -1,3 +1,9 @@
+## 0.25.0
+
+* replace exceptions with error events
+* fix metal crash if api validation is enabled
+* cleanup dependencies
+
 ## 0.24.1
 
 * fix dispose crash on apple platforms
