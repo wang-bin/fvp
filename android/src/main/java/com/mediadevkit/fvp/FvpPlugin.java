@@ -26,7 +26,6 @@ import io.flutter.view.TextureRegistry;
 import io.flutter.view.TextureRegistry.TextureEntry;
 import io.flutter.view.TextureRegistry.SurfaceTextureEntry;
 import io.flutter.view.TextureRegistry.SurfaceProducer;
-// TODO: implement SurfaceProducer.Callback.onSurfaceCreated/onSurfaceDestroyed https://github.com/flutter/engine/pull/53280/files#diff-5029b9afc856679672880958cdebb729d04892b7ec8c80ebd649ef55fff744f3
 
 /** FvpPlugin */
 public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
@@ -71,23 +70,45 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       final boolean tunnel = (boolean)call.argument("tunnel");
       TextureEntry te = null;
       Surface surface = null;
-      if (impeller) {
-        SurfaceProducer sp = texRegistry.createSurfaceProducer();
+      final SurfaceProducer sp = impeller ? texRegistry.createSurfaceProducer() : null;
+      if (sp != null) {
         sp.setSize(width, height);
         surface = sp.getSurface();
         te = sp;
       } else {
         SurfaceTextureEntry ste = texRegistry.createSurfaceTexture();
         SurfaceTexture tex = ste.surfaceTexture();
-        tex.setDefaultBufferSize(width, height); // TODO: size from player. rotate, fullscreen change?
-        surface = new Surface(tex); // TODO: when to release
+        tex.setDefaultBufferSize(width, height);
+        surface = new Surface(tex);
         te = ste;
       }
-      long texId = te.id();
+      final long texId = te.id();
       nativeSetSurface(handle, texId, surface, width, height, tunnel);
       textures.put(texId, te);
       surfaces.put(texId, surface);
       result.success(texId);
+      if (sp != null) { // FIXME: requires 3.24. how to build conditionally?
+        // 3.24: https://docs.flutter.dev/release/breaking-changes/android-surface-plugins
+        sp.setCallback(
+                new TextureRegistry.SurfaceProducer.Callback() {
+                  @Override
+                  public void onSurfaceCreated() {
+                    Log.d("FvpPlugin", "SurfaceProducer.onSurfaceCreated for textureId " + texId);
+                    final Surface newSurface = sp.getSurface();
+                    surfaces.put(texId, newSurface);
+                    // will do nothing if same surface
+                    nativeSetSurface(handle, texId, newSurface, width, height, tunnel);
+                  }
+
+                  @Override
+                  public void onSurfaceDestroyed() {
+                    Log.d("FvpPlugin", "SurfaceProducer.onSurfaceDestroyed for textureId " + texId);
+                    textures.remove(texId);
+                    nativeSetSurface(handle, texId, null, 0, 0, tunnel);
+                  }
+                }
+        );
+      }
     } else if (call.method.equals("ReleaseRT")) {
       final int texId = call.argument("texture"); // 32bit int, 0, 1, 2 .... but SurfaceTexture.id() is long
       final long texId64 = texId; // MUST cast texId to long, otherwise remove() error
@@ -99,10 +120,12 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
         te.release();
       }
       if (textures.remove(texId64) == null) {
+        Log.w("FvpPlugin", "onMethodCall: ReleaseRT texture not found for " + texId);
       }
       if (surfaces.remove(texId64) == null) {
+        Log.w("FvpPlugin", "onMethodCall: ReleaseRT surface not found for " + texId);
       }
-      Log.w("FvpPlugin", "onMethodCall: ReleaseRT texId: " + texId + ", surfaces: " + surfaces.size() + " textures: " + textures.size());
+      Log.i("FvpPlugin", "onMethodCall: ReleaseRT texId: " + texId + ", surfaces: " + surfaces.size() + " textures: " + textures.size());
       result.success(null);
     } else {
       result.notImplemented();
