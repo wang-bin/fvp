@@ -333,6 +333,8 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
     auto sp = it->second;
     auto wp = weak_ptr<Player>(sp);
     const auto tid = this_thread::get_id();
+    sp->set(mdk::State::Stopped);
+    sp->waitFor(mdk::State::Stopped); // ensure correct state
     sp->prepare(pos, [send_port, postCObject, wp, tid](int64_t position, bool* boost){
         auto sp = wp.lock();
         if (!sp)
