@@ -24,15 +24,15 @@ project is create with `flutter create -t plugin --platforms=linux,macos,windows
 ## How to Use
 
 - Add [fvp](https://pub.dev/packages/fvp) in your pubspec.yaml dependencies: `flutter pub add fvp`
-- Add 2 lines in your video_player examples. **It's OPTIONAL for official video_player unsupported platforms(i.e. windows and linux)** since v0.16.0
+- **(Optional)** Add 2 lines in your video_player examples. Without this step, this plugin will be used for video_player unsupported platforms(windows, linux), official implementation will be used for other platform.
 
 ```dart
-import 'package:fvp/fvp.dart';
+import 'package:fvp/fvp.dart' as fvp;
 
-registerWith(); // in main(), or anywhere before creating a player
+fvp.registerWith(); // in main() or anywhere before creating a player. use fvp for all platforms.
 ```
 
-Then this plugin implementation will be used for all platforms. Without these lines the official implementation(if exists) will be used. You can also select the platforms to enable fvp implementation
+You can also select the platforms to enable fvp implementation
 
 ```dart
 registerWith(options: {'platforms': ['windows', 'macos', 'linux']}); // only these platforms will use this plugin implementation
@@ -40,7 +40,7 @@ registerWith(options: {'platforms': ['windows', 'macos', 'linux']}); // only the
 
 To select [other decoders](https://github.com/wang-bin/mdk-sdk/wiki/Decoders), pass options like this
 ```dart
-registerWith(options: {
+fvp.registerWith(options: {
     'video.decoders': ['D3D11', 'NVDEC', 'FFmpeg']
     //'lowLatency': 1, // optional for network streams
     }); // windows
