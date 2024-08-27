@@ -641,7 +641,6 @@ class Player {
       _snapshot?.complete(null);
     }
     _snapshot = Completer<Uint8List?>();
-    Libfvp.registerType(nativeHandle, 8, true);
     if (!Libfvp.snapshot(nativeHandle, width ?? 0, height ?? 0,
         NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort)) {
       _snapshot!.complete(null);
