@@ -345,9 +345,9 @@ class Player {
   Future<int> prepare(
       {int position = 0,
       SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags),
-      Future<bool> Function()? callback}) async {
+      Future<bool> Function()? callback, bool reply = false}) async {
     _prepared = Completer<int>();
-    Libfvp.registerType(nativeHandle, 3, true);
+    Libfvp.registerType(nativeHandle, 3, reply);
     _prepareCb = callback;
     if (!Libfvp.prepare(nativeHandle, position, flags.rawValue,
         NativeApi.postCObject.cast(), _receivePort.sendPort.nativePort)) {

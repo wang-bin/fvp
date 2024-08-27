@@ -34,8 +34,8 @@ enum CallbackType {
     Prepared,
     Sync,
     Log,
-    Seek,
-    Snapshot,
+    Seek,       // no register, one time callback
+    Snapshot,   // no register, one time callback
     Count,
 };
 
