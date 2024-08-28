@@ -73,13 +73,16 @@ class Player {
             }
             rep.ref.prepared.ret = true;
             rep.ref.prepared.boost = true;
+            /*
+            // callback can be late if prepare from pos > 0
+            _videoSize = Completer<ui.Size?>();
             if (!_videoSize.isCompleted) {
               if (pos < 0) {
                 _videoSize.complete(null);
               } else {
                 _setVideoSize();
               }
-            }
+            }*/
             if (_prepareCb != null) {
               rep.ref.prepared.ret = await _prepareCb!();
               _prepareCb = null;
@@ -113,16 +116,24 @@ class Player {
       _state = newValue;
     });
     onMediaStatus((oldValue, newValue) {
-      if (_videoSize.isCompleted) {
-        return true;
-      }
       if (!oldValue.test(MediaStatus.loaded) &&
           newValue.test(MediaStatus.loaded)) {
         _setVideoSize();
       }
+      if (!oldValue.test(MediaStatus.loading) &&
+          newValue.test(MediaStatus.loading)) {
+        _videoSize = Completer<ui.Size?>();
+      }
       if (oldValue.test(MediaStatus.loading) &&
           newValue.test(MediaStatus.invalid | MediaStatus.stalled)) {
         _videoSize.complete(null);
+      }
+      if (oldValue.test(MediaStatus.loaded) &&
+          !newValue.test(MediaStatus.loaded)) {
+// invalid mediaInfo when loaded(small probe size, bad format etc.), then failed to decode
+        if (!_videoSize.isCompleted) {
+          _videoSize.complete(null);
+        }
       }
       return true;
     });
@@ -273,9 +284,6 @@ class Player {
     _state = value;
     _player.ref.setState.asFunction<void Function(Pointer<mdkPlayer>, int)>()(
         _player.ref.object, value.rawValue);
-    if (_state == PlaybackState.stopped) {
-      _videoSize = Completer<ui.Size?>();
-    }
   }
 
   /// Current playback state.
@@ -345,7 +353,8 @@ class Player {
   Future<int> prepare(
       {int position = 0,
       SeekFlag flags = const SeekFlag(SeekFlag.defaultFlags),
-      Future<bool> Function()? callback, bool reply = false}) async {
+      Future<bool> Function()? callback,
+      bool reply = false}) async {
     _prepared = Completer<int>();
     Libfvp.registerType(nativeHandle, 3, reply);
     _prepareCb = callback;
@@ -693,6 +702,10 @@ class Player {
   }
 
   void _setVideoSize() {
+    if (_videoSize.isCompleted) {
+      // loading=>loaded, then frame decoded
+      return;
+    }
     final vc = mediaInfo.video?[0].codec;
     // if no video stream, create a dummy texture of size 16x16
     double w = 16;
