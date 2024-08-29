@@ -55,7 +55,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 21    // lower version error in ndk 26
+        minSdkVersion 21    // lower version error in ndk 26. requires flutter > 3.19
 
         externalNativeBuild {
             cmake {
@@ -85,4 +85,40 @@ android {
             }
         }
     }
+}
+
+def flutterSdkVersion = {
+    def properties = new Properties()
+    file(rootDir.absolutePath + "/local.properties").withInputStream { properties.load(it) }
+    def flutterSdkPath = properties.getProperty("flutter.sdk")
+    if (flutterSdkPath == null) {
+        flutterSdkPath = System.env.FLUTTER_ROOT // from flutter.groovy
+    }
+    assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+    def version = file(flutterSdkPath + "/version")
+    assert version.exists(), "flutter version file not found"
+    return version.text.trim()
+}()
+
+println "flutterSdkVersion: ${flutterSdkVersion}"
+
+def preprocessJava(Map textMap) {
+    def f = file('src/main/java/com/mediadevkit/fvp/FvpPlugin.java')
+    assert f.exists(), path + "not found"
+    def content = f.text
+    def newContent = content
+    textMap.forEach { oldText, newText ->
+        newContent = newContent.replaceAll(oldText, newText)
+    }
+    if (content != newContent) {
+        println "rewrite " + f.path
+        f.write(newContent)
+    }
+}
+// VersionNumber is deprecated
+if (Float.parseFloat(flutterSdkVersion.replaceAll('\\.[0-9]*$', '')) < 3.24) {
+    println 'Impeller is not perfect for flutter < 3.24'
+    preprocessJava(['//// FLUTTER_3.24_BEGIN': '/\\*// FLUTTER_3.24_BEGIN-', '//// FLUTTER_3.24_END': '\\*/// FLUTTER_3.24_END-'])
+} else {
+    preprocessJava(['/\\*// FLUTTER_3.24_BEGIN-': '//// FLUTTER_3.24_BEGIN', '\\*/// FLUTTER_3.24_END-': '//// FLUTTER_3.24_END'])
 }

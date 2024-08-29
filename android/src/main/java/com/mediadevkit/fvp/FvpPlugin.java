@@ -87,6 +87,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       textures.put(texId, te);
       surfaces.put(texId, surface);
       result.success(texId);
+//// FLUTTER_3.24_BEGIN
       if (sp != null) { // FIXME: requires 3.24. how to build conditionally?
         // 3.24: https://docs.flutter.dev/release/breaking-changes/android-surface-plugins
         sp.setCallback(
@@ -109,6 +110,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
                 }
         );
       }
+//// FLUTTER_3.24_END
     } else if (call.method.equals("ReleaseRT")) {
       final int texId = call.argument("texture"); // 32bit int, 0, 1, 2 .... but SurfaceTexture.id() is long
       final long texId64 = texId; // MUST cast texId to long, otherwise remove() error

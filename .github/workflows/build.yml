@@ -164,12 +164,14 @@ jobs:
       fail-fast: false
       matrix:
         host: [ubuntu]
+        version: ['3.22.x', 'any']
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
     - uses: subosito/flutter-action@v2
       with:
+        flutter-version: ${{ matrix.version }}
         channel: 'stable'
         cache: true
     - uses: actions/setup-java@v4
@@ -183,7 +185,7 @@ jobs:
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: fvp-example-android-${{ matrix.host }}
+        name: fvp-example-android-${{ matrix.host }}-${{ matrix.version }}
         path: example/fvp_example_android.apk
 
 
