@@ -43,24 +43,19 @@ class MdkVideoPlayer extends mdk.Player {
           return true;
         }
         _initialized = true;
-        final info = mediaInfo;
-        var size = const Size(0, 0);
-        if (info.video != null) {
-          final vc = info.video![0].codec;
-          size = Size(vc.width.toDouble(),
-              (vc.height.toDouble() / vc.par).roundToDouble());
-          if (info.video![0].rotation % 180 == 90) {
-            size = Size(size.height, size.width);
+        textureSize.then((size) {
+          if (size == null) {
+            return;
           }
-        }
-        streamCtl.add(VideoEvent(
-            eventType: VideoEventType.initialized,
-            duration: Duration(
-                microseconds: isLive
+          streamCtl.add(VideoEvent(
+              eventType: VideoEventType.initialized,
+              duration: Duration(
+                  microseconds: isLive
 // int max for live streams, duration.inMicroseconds == 9223372036854775807
-                    ? double.maxFinite.toInt()
-                    : info.duration * 1000),
-            size: size));
+                      ? double.maxFinite.toInt()
+                      : mediaInfo.duration * 1000),
+              size: size));
+        });
       } else if (!oldValue.test(mdk.MediaStatus.buffering) &&
           newValue.test(mdk.MediaStatus.buffering)) {
         streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingStart));
@@ -281,7 +276,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _players[-hashCode] = player;
       player.streamCtl.addError(PlatformException(
         code: 'video size error',
-        message: 'invalid or unsupported media',
+        message: 'invalid or unsupported media with invalid video size',
       ));
       //player.dispose();
       return -hashCode;

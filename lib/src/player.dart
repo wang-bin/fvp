@@ -199,6 +199,8 @@ class Player {
     return _texId;
   }
 
+  Future<ui.Size?> get textureSize => _videoSize.future;
+
   /// Mute the audio or not
   set mute(bool value) {
     _mute = value;
