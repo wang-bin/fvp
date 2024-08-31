@@ -9,7 +9,7 @@ Prebuilt example can be download from artifacts of [github actions](https://gith
 project is create with `flutter create -t plugin --platforms=linux,macos,windows,android,ios -i objc -a java fvp`
 
 ## Features
-- All platforms: Windows x64(including win7) and arm64, Linux x64 and arm64, macOS, iOS, Android.
+- All platforms: Windows x64(including win7) and arm64, Linux x64 and arm64, macOS, iOS, Android(requires flutter > 3.19 because of minSdk 21).
 - You can choose official implementation or this plugin's
 - Optimal render api: d3d11 for windows, metal for macOS/iOS, OpenGL for Linux and Android(Impeller support)
 - Hardware decoders are enabled by default
@@ -47,6 +47,14 @@ fvp.registerWith(options: {
 ```
 
 [The document](https://pub.dev/documentation/fvp/latest/fvp/registerWith.html) lists all options for `registerWith()`
+
+### Error Handling
+Errors are usually produced when loading a media.
+```dart
+_controller.addListener(() {
+  if (_controller.value.hasError && !_controller.value.isCompleted) {
+    ...
+```
 
 ### Backend Player API
 

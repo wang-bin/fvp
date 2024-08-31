@@ -1,3 +1,10 @@
+## 0.26.0
+
+* improve android impeller, support surface changes. requires flutter 3.24+. for 3.22, impeller is not perfect
+* fix no responding in prepare() using backend api
+* fix hang in updateTexture()
+* ensure texture size is available when initialized
+
 ## 0.25.0
 
 * replace exceptions with error events
@@ -22,7 +29,7 @@
 ## 0.22.0
 
 * windows: fix d3d11 sync issue
-* android: min api level is 21, target sdk 34
+* android: min api level is 21, target sdk 34. this requires flutter > 3.19
 
 ## 0.21.0
 
