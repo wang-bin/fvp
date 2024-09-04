@@ -177,10 +177,9 @@ class Player {
   /// If both [width] and [height] are null, texture size is video frame size, otherwise is requested size.
   Future<int> updateTexture(
       {int? width, int? height, bool? tunnel, bool? fit}) async {
-    if (_texId >= 0) {
+    if ((textureId.value ?? -1) >= 0) {
+      await FvpPlatform.instance.releaseTexture(nativeHandle, textureId.value!);
       textureId.value = null;
-      await FvpPlatform.instance.releaseTexture(nativeHandle, _texId);
-      _texId = -1;
     }
     if (width == null && height == null) {
       // original size
@@ -188,19 +187,17 @@ class Player {
       if (size == null) {
         return -1;
       }
-      _texId = await FvpPlatform.instance.createTexture(nativeHandle,
+      textureId.value = await FvpPlatform.instance.createTexture(nativeHandle,
           size.width.toInt(), size.height.toInt(), tunnel ?? false);
-      textureId.value = _texId;
-      return _texId;
+      return textureId.value!;
     }
     if (width != null && height != null && width > 0 && height > 0) {
-      _texId = await FvpPlatform.instance
+      textureId.value = await FvpPlatform.instance
           .createTexture(nativeHandle, width, height, tunnel ?? false);
-      textureId.value = _texId;
-      return _texId;
+      return textureId.value!;
     }
     // release texture if width or height <= 0
-    return _texId;
+    return -1;
   }
 
   Future<ui.Size?> get textureSize => _videoSize.future;
@@ -741,7 +738,6 @@ class Player {
   var _pp = calloc<Pointer<mdkPlayerAPI>>();
 
   bool _live = false;
-  int _texId = -1;
   var _videoSize = Completer<ui.Size?>();
   var _prepared = Completer<int>();
   Completer<Uint8List?>? _snapshot;
