@@ -75,7 +75,8 @@ class Player {
             rep.ref.prepared.boost = true;
             /*
             // callback can be late if prepare from pos > 0
-            _videoSize = Completer<ui.Size?>();
+            if (_videoSize.isCompleted)
+              _videoSize = Completer<ui.Size?>();
             if (!_videoSize.isCompleted) {
               if (pos < 0) {
                 _videoSize.complete(null);
@@ -122,7 +123,10 @@ class Player {
       }
       if (!oldValue.test(MediaStatus.loading) &&
           newValue.test(MediaStatus.loading)) {
-        _videoSize = Completer<ui.Size?>();
+        if (_videoSize.isCompleted) {
+          // updateTexture() may be awaiting and won't wake up if reset to a new object here
+          _videoSize = Completer<ui.Size?>();
+        }
       }
       if (oldValue.test(MediaStatus.loading) &&
           newValue.test(MediaStatus.invalid | MediaStatus.stalled)) {
@@ -233,6 +237,12 @@ class Player {
 
   /// Set media, can be url, file path, assets://path etc.
   set media(String value) {
+    if (_media != value) {
+      if (!_videoSize.isCompleted) {
+        _videoSize.complete(null);
+      }
+      _videoSize = Completer<ui.Size?>();
+    }
     _media = value;
     final cs = value.toNativeUtf8();
     _player.ref.setMedia
