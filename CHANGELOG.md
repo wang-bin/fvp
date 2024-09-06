@@ -1,3 +1,7 @@
+## 0.26.1
+
+* backend api: fix updateTexture() never complete without prepare
+
 ## 0.26.0
 
 * improve android impeller, support surface changes. requires flutter 3.24+. for 3.22, impeller is not perfect
