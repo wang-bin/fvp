@@ -181,17 +181,26 @@ class Player {
       await FvpPlatform.instance.releaseTexture(nativeHandle, textureId.value!);
       textureId.value = null;
     }
+    final size = await _videoSize.future;
+    if (size == null) {
+      return -1;
+    }
     if (width == null && height == null) {
       // original size
-      final size = await _videoSize.future;
-      if (size == null) {
-        return -1;
-      }
       textureId.value = await FvpPlatform.instance.createTexture(nativeHandle,
           size.width.toInt(), size.height.toInt(), tunnel ?? false);
       return textureId.value!;
     }
     if (width != null && height != null && width > 0 && height > 0) {
+      if (fit ?? true) {
+        final r = size.width / size.height;
+        final w = (height * r).toInt();
+        if (w <= width) {
+          width = w;
+        } else {
+          height = (width / r).toInt();
+        }
+      }
       textureId.value = await FvpPlatform.instance
           .createTexture(nativeHandle, width, height, tunnel ?? false);
       return textureId.value!;
