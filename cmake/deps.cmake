@@ -18,6 +18,7 @@ macro(fvp_setup_deps)
 
   set(DOWNLOAD_MDK_SDK OFF)
   message("FVP_DEPS_LATEST=$ENV{FVP_DEPS_LATEST}")
+  # TODO: download from github option FVP_DEPS_LATEST_RELEASE=1
   if($ENV{FVP_DEPS_LATEST})
     if(EXISTS ${MDK_SDK_SAVE})
       message("Downloading latest md5")
@@ -47,7 +48,8 @@ macro(fvp_setup_deps)
       OUTPUT_STRIP_TRAILING_WHITESPACE
       RESULT_VARIABLE EXTRACT_RET
     )
-    if(NOT EXTRACT_RET EQUAL 0)
+    # EXTRACT_RET is 0 even for empty files
+    if(NOT EXTRACT_RET EQUAL 0 OR NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mdk-sdk/lib/cmake/FindMDK.cmake)
       file(REMOVE ${MDK_SDK_SAVE})
       message(FATAL_ERROR "Failed to extract mdk-sdk. You can download manually from ${MDK_SDK_URL} and extract to ${CMAKE_CURRENT_SOURCE_DIR}")
     endif()
