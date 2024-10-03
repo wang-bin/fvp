@@ -1,4 +1,51 @@
+import 'dart:typed_data';
+
 /// A dummy class for web
 class MdkVideoPlayerPlatform {
   static void registerVideoPlayerPlatformsWith({dynamic options}) {}
+
+  // for FVPController
+  bool isLive(int textureId) {
+    return false;
+  }
+
+  void setProperty(int textureId, String name, String value) {}
+
+  void setAudioDecoders(int textureId, List<String> value) {}
+
+  void setVideoDecoders(int textureId, List<String> value) {}
+
+  void record(int textureId, {String? to, String? format}) {}
+
+  Future<Uint8List?> snapshot(int textureId, {int? width, int? height}) async {
+    return null;
+  }
+
+  void setRange(int textureId, {required int from, int to = -1}) {}
+
+  void setBufferRange(int textureId,
+      {int min = -1, int max = -1, bool drop = false}) {}
+
+  Future<void> fastSeekTo(int textureId, Duration position) async {}
+
+  Future<void> step(int textureId, int frames) async {}
+
+  void setBrightness(int textureId, double value) {}
+
+  void setContrast(int textureId, double value) {}
+
+  void setHue(int textureId, double value) {}
+
+  void setSaturation(int textureId, double value) {}
+  void setAudioTracks(int textureId, List<int> value) {}
+
+  void setVideoTracks(int textureId, List<int> value) {}
+
+  void setSubtitleTracks(int textureId, List<int> value) {}
+
+  void setExternalAudio(int textureId, String uri) {}
+
+  void setExternalVideo(int textureId, String uri) {}
+
+  void setExternalSubtitle(int textureId, String uri) {}
 }

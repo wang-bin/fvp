@@ -200,22 +200,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<int?> create(DataSource dataSource) async {
-    String? uri;
-    switch (dataSource.sourceType) {
-      case DataSourceType.asset:
-        uri =
-            PlatformEx.assetUri(dataSource.asset!, package: dataSource.package);
-        break;
-      case DataSourceType.network:
-        uri = dataSource.uri;
-        break;
-      case DataSourceType.file:
-        uri = Uri.decodeComponent(dataSource.uri!);
-        break;
-      case DataSourceType.contentUri:
-        uri = dataSource.uri;
-        break;
-    }
+    final uri = _toUri(dataSource);
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
 
@@ -253,7 +238,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       });
       player.setProperty('avio.headers', headers);
     }
-    player.media = uri!;
+    player.media = uri;
     int ret = await player.prepare(); // required!
     if (ret < 0) {
       // no throw, handle error in controller.addListener
@@ -316,22 +301,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> seekTo(int textureId, Duration position) async {
-    final player = _players[textureId];
-    if (player == null) {
-      return;
-    }
-    if (player.isLive) {
-      final bufMax = player.buffered();
-      final pos = player.position;
-      if (position.inMilliseconds <= pos ||
-          position.inMilliseconds > pos + bufMax) {
-        _log.fine(
-            'seekTo: $position out of live stream buffered range [$pos, ${pos + bufMax}]');
-        return;
-      }
-    }
-    player.seek(
-        position: position.inMilliseconds, flags: mdk.SeekFlag(_seekFlags));
+    return _seekToWithFlags(textureId, position, mdk.SeekFlag(_seekFlags));
   }
 
   @override
@@ -369,4 +339,136 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> setMixWithOthers(bool mixWithOthers) async {}
+
+  // more apis for fvp controller
+  bool isLive(int textureId) {
+    return _players[textureId]?.isLive ?? false;
+  }
+
+  //MediaInfo getMediaInfo() {
+  //
+  //}
+  void setProperty(int textureId, String name, String value) {
+    _players[textureId]?.setProperty(name, value);
+  }
+
+  void setAudioDecoders(int textureId, List<String> value) {
+    _players[textureId]?.audioDecoders = value;
+  }
+
+  void setVideoDecoders(int textureId, List<String> value) {
+    _players[textureId]?.videoDecoders = value;
+  }
+
+  void record(int textureId, {String? to, String? format}) {
+    _players[textureId]?.record(to: to, format: format);
+  }
+
+  Future<Uint8List?> snapshot(int textureId, {int? width, int? height}) async {
+    Uint8List? data;
+    final player = _players[textureId];
+    if (player == null) {
+      return data;
+    }
+    return _players[textureId]?.snapshot(width: width, height: height);
+  }
+
+  void setRange(int textureId, {required int from, int to = -1}) {
+    _players[textureId]?.setRange(from: from, to: to);
+  }
+
+  void setBufferRange(int textureId,
+      {int min = -1, int max = -1, bool drop = false}) {
+    _players[textureId]?.setBufferRange(min: min, max: max, drop: drop);
+  }
+
+  Future<void> fastSeekTo(int textureId, Duration position) async {
+    return _seekToWithFlags(
+        textureId, position, mdk.SeekFlag(_seekFlags | mdk.SeekFlag.keyFrame));
+  }
+
+  Future<void> step(int textureId, int frames) async {
+    final player = _players[textureId];
+    if (player == null) {
+      return;
+    }
+    player.seek(
+        position: frames,
+        flags: const mdk.SeekFlag(mdk.SeekFlag.frame | mdk.SeekFlag.fromNow));
+  }
+
+  void setBrightness(int textureId, double value) {
+    _players[textureId]?.setVideoEffect(mdk.VideoEffect.brightness, [value]);
+  }
+
+  void setContrast(int textureId, double value) {
+    _players[textureId]?.setVideoEffect(mdk.VideoEffect.contrast, [value]);
+  }
+
+  void setHue(int textureId, double value) {
+    _players[textureId]?.setVideoEffect(mdk.VideoEffect.hue, [value]);
+  }
+
+  void setSaturation(int textureId, double value) {
+    _players[textureId]?.setVideoEffect(mdk.VideoEffect.saturation, [value]);
+  }
+
+// embedded tracks, can be main data source from create(), or external media source via setExternalAudio
+  void setAudioTracks(int textureId, List<int> value) {
+    _players[textureId]?.activeAudioTracks = value;
+  }
+
+  void setVideoTracks(int textureId, List<int> value) {
+    _players[textureId]?.activeVideoTracks = value;
+  }
+
+  void setSubtitleTracks(int textureId, List<int> value) {
+    _players[textureId]?.activeSubtitleTracks = value;
+  }
+
+// external track. can select external tracks via setAudioTracks()
+  void setExternalAudio(int textureId, String uri) {
+    _players[textureId]?.setMedia(uri, mdk.MediaType.audio);
+  }
+
+  void setExternalVideo(int textureId, String uri) {
+    _players[textureId]?.setMedia(uri, mdk.MediaType.video);
+  }
+
+  void setExternalSubtitle(int textureId, String uri) {
+    _players[textureId]?.setMedia(uri, mdk.MediaType.subtitle);
+  }
+
+  Future<void> _seekToWithFlags(
+      int textureId, Duration position, mdk.SeekFlag flags) async {
+    final player = _players[textureId];
+    if (player == null) {
+      return;
+    }
+    if (player.isLive) {
+      final bufMax = player.buffered();
+      final pos = player.position;
+      if (position.inMilliseconds <= pos ||
+          position.inMilliseconds > pos + bufMax) {
+        _log.fine(
+            '_seekToWithFlags: $position out of live stream buffered range [$pos, ${pos + bufMax}]');
+        return;
+      }
+    }
+    player.seek(position: position.inMilliseconds, flags: flags);
+  }
+
+  String _toUri(DataSource dataSource) {
+    switch (dataSource.sourceType) {
+      case DataSourceType.asset:
+        return PlatformEx.assetUri(dataSource.asset!,
+            package: dataSource.package);
+      case DataSourceType.network:
+        return dataSource.uri!;
+      case DataSourceType.file:
+        return Uri.decodeComponent(dataSource.uri!);
+      case DataSourceType.contentUri:
+        return dataSource.uri!;
+    }
+  }
 }

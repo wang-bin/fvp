@@ -24,7 +24,7 @@ project is create with `flutter create -t plugin --platforms=linux,macos,windows
 ## How to Use
 
 - Add [fvp](https://pub.dev/packages/fvp) in your pubspec.yaml dependencies: `flutter pub add fvp`
-- **(Optional)** Add 2 lines in your video_player examples. Without this step, this plugin will be used for video_player unsupported platforms(windows, linux), official implementation will be used for other platform.
+- **(Optional)** Add 2 lines in your video_player examples. Without this step, this plugin will be used for video_player unsupported platforms(windows, linux), official implementation will be used otherwise.
 
 ```dart
 import 'package:fvp/fvp.dart' as fvp;
@@ -67,6 +67,19 @@ The plugin implements [VideoPlayerPlatform](https://pub.dev/packages/video_playe
 Now we also expose this backend player api so you can create your own players easily, and gain more features than official [video_player](https://pub.dev/packages/video_player), for example, play from a given position, loop in a range, decoder selection, media information detail etc. You can also reuse the Player instance without unconditionally create and dispose, changing the `Player.media` is enough.
 [This is an example](https://github.com/wang-bin/mdk-examples/blob/master/flutter/simple/lib/multi_textures.dart)
 
+### VideoPlayerController Extensions
+
+With this extension, we can leverage mature `video_player` code without rewriting a new one via backend player api, but gain more features, for example `snapshot()`, `record()`, `fastSeekTo()`, `setExternalSubtitle()`.
+
+
+```dart
+import 'package:fvp/fvp.dart' as fvp;
+
+fvp.registerWith(); // in main() or anywhere before creating a player. use fvp for all platforms.
+
+// somewhere after controller is initialized
+_controller.record('rtmp://127.0.0.1/live/test');
+```
 
 # Upgrade Dependencies Manually
 Upgrading binary dependencies can bring new features and backend bug fixes. For macOS and iOS, in your project dir, run

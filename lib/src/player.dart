@@ -273,6 +273,7 @@ class Player {
   List<String> get videoDecoders => _vdec;
 
   /// Set active audio tracks. Other tracks will be disabled.
+  /// The tracks can be from [media], or an external audio source set by [setMedia] with [MediaType.audio].
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setactivetracksmediatype-type-const-stdsetint-tracks
   set activeAudioTracks(List<int> value) =>
       setActiveTracks(MediaType.audio, value);
@@ -281,6 +282,7 @@ class Player {
   List<int> get activeAudioTracks => _activeAT;
 
   /// Set active video tracks. Other tracks will be disabled.
+  /// The tracks can be from [media], or an external video source set by [setMedia] with [MediaType.video].
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setactivetracksmediatype-type-const-stdsetint-tracks
   set activeVideoTracks(List<int> value) =>
       setActiveTracks(MediaType.video, value);
@@ -289,6 +291,7 @@ class Player {
   List<int> get activeVideoTracks => _activeVT;
 
   /// Set active subtitle tracks. Other tracks will be disabled.
+  /// The tracks can be from [media], or an external video source set by [setMedia] with [MediaType.subtitle].
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setactivetracksmediatype-type-const-stdsetint-tracks
   set activeSubtitleTracks(List<int> value) =>
       setActiveTracks(MediaType.subtitle, value);
@@ -424,6 +427,7 @@ class Player {
   }
 
   /// Set media of [type]. Can be used to load external audio track and subtitle file.
+  /// An external media can contains other [MediaType] tracks although they will not be used.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setmediaconst-char-url-mediatype-type
   void setMedia(String uri, MediaType type) {
     final cs = uri.toNativeUtf8();
@@ -502,15 +506,15 @@ class Player {
     return ret;
   }
 
-  /// Set duration range of buffered data.
+  /// Set duration range(milliseconds) of buffered data.
   ///
-  /// [minMs] default 1000. wait for buffered duration >= [minMs]
-  ///   If [minMs] < 0, then [minMs], [maxMs] and [drop] will be reset to the default value
-  /// [maxMs] default 4000. max buffered duration.
-  ///   If [maxMs] < 0, then [maxMs] and drop will be reset to the default value
-  ///   If [maxMs] == 0, same as INT64_MAX
-  /// [drop] = true: drop old non-key frame packets to reduce buffered duration until < [maxMs].
-  /// [drop] = false: wait for buffered duration < maxMs before pushing packets
+  /// [min] default 1000. wait for buffered duration >= [min]
+  ///   If [min] < 0, then [min], [max] and [drop] will be reset to the default value
+  /// [max] default 4000. max buffered duration.
+  ///   If [max] < 0, then [max] and drop will be reset to the default value
+  ///   If [max] == 0, same as INT64_MAX
+  /// [drop] = true: drop old non-key frame packets to reduce buffered duration until < [max].
+  /// [drop] = false: wait for buffered duration < max before pushing packets
   ///
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setbufferrangeint64_t-minms-int64_t-maxms-bool-drop--false
   void setBufferRange({int min = -1, int max = -1, bool drop = false}) =>
