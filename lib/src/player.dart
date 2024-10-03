@@ -570,66 +570,57 @@ class Player {
   /// Set video renderer size or destroy renderer.
   /// Usually NOT used in dart.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setvideosurfacesizeint-width-int-height-void-vo_opaque--nullptr
-  void setVideoSurfaceSize(int width, int height, {Object? vid}) =>
+  void setVideoSurfaceSize(int width, int height) =>
       _player.ref.setVideoSurfaceSize.asFunction<
               void Function(Pointer<mdkPlayer>, int, int, Pointer<Void>)>()(
-          _player.ref.object, width, height, Pointer.fromAddress(vid.hashCode));
+          _player.ref.object, width, height, Pointer.fromAddress(0));
 
-  void setVideoViewport(double x, double y, double width, double height,
-          {Object? vid}) =>
+  void setVideoViewport(double x, double y, double width, double height) =>
       _player.ref.setVideoViewport.asFunction<
               void Function(Pointer<mdkPlayer>, double, double, double, double,
-                  Pointer<Void>)>()(_player.ref.object, x, y, width, height,
-          Pointer.fromAddress(vid.hashCode));
+                  Pointer<Void>)>()(
+          _player.ref.object, x, y, width, height, Pointer.fromAddress(0));
 
   /// Set video content aspect ratio. No effect if texture width/height == original video frame width/height.
   /// [value] can be [ignoreAspectRatio], [keepAspectRatio], [keepAspectRatioCrop] and other desired ratio = width/height
   ///
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setaspectratiofloat-value-void-vo_opaque--nullptr
-  void setAspectRatio(double value, {Object? vid}) =>
-      _player.ref.setAspectRatio.asFunction<
-              void Function(Pointer<mdkPlayer>, double, Pointer<Void>)>()(
-          _player.ref.object, value, Pointer.fromAddress(vid.hashCode));
+  void setAspectRatio(double value) => _player.ref.setAspectRatio.asFunction<
+          void Function(Pointer<mdkPlayer>, double, Pointer<Void>)>()(
+      _player.ref.object, value, Pointer.fromAddress(0));
 
   // TODO: mapPoint( List<double>)
 
   /// rotate video content around the center. [degree] can be 0, 90, 180, 270 in counterclockwise.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-rotateint-degree-void-vo_opaque--nullptr
-  void rotate(int degree, {Object? vid}) => _player.ref.rotate
+  void rotate(int degree) => _player.ref.rotate
           .asFunction<void Function(Pointer<mdkPlayer>, int, Pointer<Void>)>()(
-      _player.ref.object, degree, Pointer.fromAddress(vid.hashCode));
+      _player.ref.object, degree, Pointer.fromAddress(0));
 
   /// scale video content. 1.0 is no scale.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-scalefloat-x-float-y-void-vo_opaque--nullptr
-  void scale(double x, double y, {Object? vid}) => _player.ref.scale.asFunction<
+  void scale(double x, double y) => _player.ref.scale.asFunction<
           void Function(Pointer<mdkPlayer>, double, double, Pointer<Void>)>()(
-      _player.ref.object, x, y, Pointer.fromAddress(vid.hashCode));
+      _player.ref.object, x, y, Pointer.fromAddress(0));
 
   /// Set background color.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setbackgroundcolorfloat-r-float-g-float-b-float-a-void-vo_opaque--nullptr
-  void setBackgroundColor(double r, double g, double b, double a,
-          {Object? vid}) =>
+  void setBackgroundColor(double r, double g, double b, double a) =>
       _player.ref.setBackgroundColor.asFunction<
               void Function(Pointer<mdkPlayer>, double, double, double, double,
                   Pointer<Void>)>()(
-          _player.ref.object, r, g, b, a, Pointer.fromAddress(vid.hashCode));
+          _player.ref.object, r, g, b, a, Pointer.fromAddress(0));
 
   /// Set background color.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setbackgroundcolorfloat-r-float-g-float-b-float-a-void-vo_opaque--nullptr
-  void setBackground(ui.Color c, {Object? vid}) =>
-      _player.ref.setBackgroundColor.asFunction<
-              void Function(Pointer<mdkPlayer>, double, double, double, double,
-                  Pointer<Void>)>()(
-          _player.ref.object,
-          c.red / 255,
-          c.green / 255,
-          c.blue / 255,
-          c.alpha / 255,
-          Pointer.fromAddress(vid.hashCode));
+  void setBackground(ui.Color c) => _player.ref.setBackgroundColor.asFunction<
+          void Function(Pointer<mdkPlayer>, double, double, double, double,
+              Pointer<Void>)>()(_player.ref.object, c.red / 255, c.green / 255,
+      c.blue / 255, c.alpha / 255, Pointer.fromAddress(0));
 
   /// Set a built-in video effect.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#player-setvideoeffect-effect-const-float-values-void-vo_opaque--nullptr
-  void setVideoEffect(VideoEffect effect, List<double> value, {Object? vid}) {
+  void setVideoEffect(VideoEffect effect, List<double> value) {
     final cv = calloc<Float>(value.length);
     for (int i = 0; i < value.length; ++i) {
       cv[i] = value[i];
@@ -637,26 +628,22 @@ class Player {
     _player.ref.setVideoEffect.asFunction<
             void Function(
                 Pointer<mdkPlayer>, int, Pointer<Float>, Pointer<Void>)>()(
-        _player.ref.object,
-        effect.rawValue,
-        cv.cast(),
-        Pointer.fromAddress(vid.hashCode));
+        _player.ref.object, effect.rawValue, cv.cast(), Pointer.fromAddress(0));
     calloc.free(cv);
   }
 
   /// Set target color space.
   /// Usually NOT used by dart because flutter only supports SDR output.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#player-setcolorspace-value-void-vo_opaque--nullptr
-  void setColorSpace(ColorSpace value, {Object? vid}) => _player
-          .ref.setColorSpace
+  void setColorSpace(ColorSpace value) => _player.ref.setColorSpace
           .asFunction<void Function(Pointer<mdkPlayer>, int, Pointer<Void>)>()(
-      _player.ref.object, value.rawValue, Pointer.fromAddress(vid.hashCode));
+      _player.ref.object, value.rawValue, Pointer.fromAddress(0));
 
   /// Draw the current video frame and return frame timestamp in seconds.
   /// Usually NOT used in dart.
-  double renderVideo({Object? vid}) => _player.ref.renderVideo
+  double renderVideo() => _player.ref.renderVideo
           .asFunction<double Function(Pointer<mdkPlayer>, Pointer<Void>)>()(
-      _player.ref.object, Pointer.fromAddress(vid.hashCode));
+      _player.ref.object, Pointer.fromAddress(0));
 
   /// Take a snapshot for current rendered frame.
   ///
