@@ -22,7 +22,7 @@ MdkVideoPlayerPlatform get _platform {
 /// Advanced features for [VideoPlayerController].
 ///
 /// All methods in this extension must be called after initialized, otherwise no effect.
-extension FVPController on VideoPlayerController {
+extension FVPControllerExtensions on VideoPlayerController {
   /// Indicates whether current media is a live stream or not
   bool isLive() {
     return _platform.isLive(textureId);
