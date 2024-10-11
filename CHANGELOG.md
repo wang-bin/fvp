@@ -1,3 +1,9 @@
+## 0.27.0
+
+* keep video aspect ratio for user specified texture size
+* improve dependency download error check
+* Add VideoPlayerController extension, support adavanced features without using backend api directly
+
 ## 0.26.1
 
 * backend api: fix updateTexture() never complete without prepare
