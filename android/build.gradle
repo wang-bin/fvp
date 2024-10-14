@@ -92,7 +92,12 @@ def flutterSdkVersion = {
     file(rootDir.absolutePath + "/local.properties").withInputStream { properties.load(it) }
     def flutterSdkPath = properties.getProperty("flutter.sdk")
     if (flutterSdkPath == null) {
-        flutterSdkPath = System.env.FLUTTER_ROOT // from flutter.groovy
+        // add-to-app local.properties file located at <modulePath>/.android/local.properties
+        file(project(":flutter").getProjectDir().getParent() + "/local.properties").withInputStream { properties.load(it) }
+        flutterSdkPath = properties.getProperty("flutter.sdk")
+        if (flutterSdkPath == null) {
+            flutterSdkPath = System.env.FLUTTER_ROOT // from flutter.groovy
+        }
     }
     assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
     def version = file(flutterSdkPath + "/version")
