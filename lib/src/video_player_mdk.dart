@@ -149,7 +149,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
       // prefer hardware decoders
       const vd = {
-        'windows': ['MFT:d3d=11', "D3D11", 'CUDA', 'FFmpeg'],
+        'windows': ['MFT:d3d=11', "D3D11", "DXVA", 'CUDA', 'FFmpeg'],
         'macos': ['VT', 'FFmpeg'],
         'ios': ['VT', 'FFmpeg'],
         'linux': ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'],
@@ -178,6 +178,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       }
     });
     // mdk.setGlobalOptions('plugins', 'mdk-braw');
+    mdk.setGlobalOption("log", "all");
     mdk.setGlobalOption('d3d11.sync.cpu', 1);
     mdk.setGlobalOption('subtitle.fonts.file',
         PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
