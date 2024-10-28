@@ -5,10 +5,11 @@
 #define USE_TEXCACHE 0
 
 #import "FvpPlugin.h"
-#import "Metal/Metal.h"
-#import "CoreVideo/CoreVideo.h"
 #include "mdk/RenderAPI.h"
 #include "mdk/Player.h"
+#import <AVFoundation/AVFoundation.h>
+#import <CoreVideo/CoreVideo.h>
+#import <Metal/Metal.h>
 #include <mutex>
 #include <unordered_map>
 #include <iostream>
@@ -149,8 +150,8 @@ private:
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
     if ([call.method isEqualToString:@"CreateRT"]) {
         const auto handle = ((NSNumber*)call.arguments[@"player"]).longLongValue;
-        const auto width = (int)((NSNumber*)call.arguments[@"width"]).longLongValue;
-        const auto height = (int)((NSNumber*)call.arguments[@"height"]).longLongValue;
+        const auto width = ((NSNumber*)call.arguments[@"width"]).intValue;
+        const auto height = ((NSNumber*)call.arguments[@"height"]).intValue;
         auto player = make_shared<TexturePlayer>(handle, width, height, _texRegistry);
         players[player->textureId()] = player;
         result(@(player->textureId()));
@@ -159,6 +160,16 @@ private:
         [_texRegistry unregisterTexture:texId];
         players.erase(texId);
         result(nil);
+    } else if ([call.method isEqualToString:@"MixWithOthers"]) {
+        [[maybe_unused]] const auto value = ((NSNumber*)call.arguments[@"value"]).boolValue;
+#if TARGET_OS_OSX
+#else
+        if (value) {
+            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
+        } else {
+            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+        }
+#endif
     } else {
         result(FlutterMethodNotImplemented);
     }

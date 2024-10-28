@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:logging/logging.dart';
+import 'fvp_platform_interface.dart';
 import 'extensions.dart';
 
 import '../mdk.dart' as mdk;
@@ -339,7 +340,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> setMixWithOthers(bool mixWithOthers) async {}
+  Future<void> setMixWithOthers(bool mixWithOthers) async {
+    FvpPlatform.instance.setMixWithOthers(mixWithOthers);
+  }
 
   // more apis for fvp controller
   bool isLive(int textureId) {
