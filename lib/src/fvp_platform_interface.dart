@@ -40,4 +40,8 @@ abstract class FvpPlatform extends PlatformInterface {
   Future<void> releaseTexture(int playerHandle, int textureId) {
     throw UnimplementedError('releaseTexture() has not been implemented.');
   }
+
+  Future<void> setMixWithOthers(bool mixWithOthers) async {
+    throw UnimplementedError('setMixWithOthers() has not been implemented.');
+  }
 }

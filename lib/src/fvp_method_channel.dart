@@ -40,4 +40,11 @@ class MethodChannelFvp extends FvpPlatform {
       "texture": textureId,
     });
   }
+
+  @override
+  Future<void> setMixWithOthers(bool mixWithOthers) async {
+    await methodChannel.invokeMethod('MixWithOthers', {
+      "value": mixWithOthers,
+    });
+  }
 }
