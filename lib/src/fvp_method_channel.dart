@@ -16,14 +16,19 @@ class MethodChannelFvp extends FvpPlatform {
 
   @override
   Future<String?> getPlatformVersion() async {
-    final version =
-        await methodChannel.invokeMethod<String>('getPlatformVersion');
+    final version = await methodChannel.invokeMethod<String>(
+      'getPlatformVersion',
+    );
     return version;
   }
 
   @override
   Future<int> createTexture(
-      int playerHandle, int width, int height, bool tunnel) async {
+    int playerHandle,
+    int width,
+    int height,
+    bool tunnel,
+  ) async {
     final tex = await methodChannel.invokeMethod('CreateRT', {
       "player": playerHandle,
       "width": width,
@@ -38,6 +43,13 @@ class MethodChannelFvp extends FvpPlatform {
     await methodChannel.invokeMethod('ReleaseRT', {
       "player": playerHandle,
       "texture": textureId,
+    });
+  }
+
+  @override
+  Future<void> setMixWithOthers(bool mixWithOthers) async {
+    await methodChannel.invokeMethod('MixWithOthers', {
+      "value": mixWithOthers,
     });
   }
 }
