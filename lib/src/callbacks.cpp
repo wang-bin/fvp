@@ -268,9 +268,6 @@ FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle)
         sp->cv[i].notify_one();
     }
 
-    sp->onEvent(nullptr);
-    sp->onStateChanged(nullptr);
-    sp->onMediaStatus(nullptr);
     players.erase(it);
 }
 
