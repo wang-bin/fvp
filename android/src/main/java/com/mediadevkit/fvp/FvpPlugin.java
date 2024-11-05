@@ -129,6 +129,9 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       }
       Log.i("FvpPlugin", "onMethodCall: ReleaseRT texId: " + texId + ", surfaces: " + surfaces.size() + " textures: " + textures.size());
       result.success(null);
+    } else if (call.method.equals("MixWithOthers")) {
+      // TODO: Implement actual business.
+      result.success(null);
     } else {
       result.notImplemented();
     }
