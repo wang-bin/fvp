@@ -170,6 +170,7 @@ private:
             [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
         }
 #endif
+        result(nil);
     } else {
         result(FlutterMethodNotImplemented);
     }
