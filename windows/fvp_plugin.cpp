@@ -183,6 +183,8 @@ void FvpPlugin::HandleMethodCall(
         players_.erase(it);
     }
     result->Success();
+  } else if (method_call.method_name() == "MixWithOthers") {
+    result->Success();
   } else {
     result->NotImplemented();
   }
