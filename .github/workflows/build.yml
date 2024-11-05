@@ -1,6 +1,19 @@
 name: Build
 on:
   push:
+    paths-ignore:
+      - '.editorconfig'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE'
+      - '.gitignore'
+      - '*.md'
+  pull_request:
+    paths-ignore:
+      - '.editorconfig'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE'
+      - '.gitignore'
+      - '*.md'
   schedule:
     - cron: '0 6 * * 0'
 
@@ -69,26 +82,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        version: ['3.19.x', 'any']      # 3.19 for win7
         channel: ['stable', 'master']
+        exclude:
+          - version: '3.19.x'
+            channel: 'master'
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
     - uses: subosito/flutter-action@v2
       with:
+        flutter-version: ${{ matrix.version }}
         channel: ${{ matrix.channel }}
         cache: true
     - run: flutter doctor --verbose
     - run: flutter pub get
     - run: flutter build windows --verbose
     - run: mv build/windows/x64/runner/Release .
-    - run: cmake -E tar cvf fvp_example_windows-${{ matrix.channel }}.7z --format=7zip Release
+    - run: cmake -E tar cvf fvp_example_windows-flutter-${{ matrix.version }}-${{ matrix.channel }}.7z --format=7zip Release
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: fvp-example-windows-${{ matrix.channel }}
+        name: fvp-example-windows-flutter-${{ matrix.version }}-${{ matrix.channel }}
         path: |
-          example/fvp_example_windows-${{ matrix.channel }}.7z
+          example/fvp_example_windows-flutter-${{ matrix.version }}-${{ matrix.channel }}.7z
           example/build/windows/CMakeFiles/CMakeConfigureLog.yaml
 
   Linux:
