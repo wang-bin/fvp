@@ -1,3 +1,10 @@
+## 0.28.0
+
+* mixWithOthers for iOS
+* privacy manifest for apple
+* enable DXVA decoder for win, used by some win7 devices
+* crash fix
+
 ## 0.27.0
 
 * keep video aspect ratio for user specified texture size

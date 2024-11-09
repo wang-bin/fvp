@@ -25,7 +25,7 @@ Flutter video player plugin.
   s.osx.dependency 'FlutterMacOS'
   s.ios.deployment_target = '12.0'
   s.osx.deployment_target = '10.13'
-  s.dependency 'mdk', '~> 0.29.1'
+  s.dependency 'mdk', '~> 0.30.0'
 
 #  s.platform = :osx, '10.11'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
