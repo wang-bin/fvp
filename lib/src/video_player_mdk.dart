@@ -10,8 +10,10 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 import 'package:logging/logging.dart';
 import 'fvp_platform_interface.dart';
 import 'extensions.dart';
+import 'media_info.dart';
 
 import '../mdk.dart' as mdk;
+
 
 final _log = Logger('fvp');
 
@@ -349,9 +351,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     return _players[textureId]?.isLive ?? false;
   }
 
-  //MediaInfo getMediaInfo() {
-  //
-  //}
+  MediaInfo? getMediaInfo(int textureId) {
+    return _players[textureId]?.mediaInfo;
+  }
+
   void setProperty(int textureId, String name, String value) {
     _players[textureId]?.setProperty(name, value);
   }
@@ -422,12 +425,24 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     _players[textureId]?.activeAudioTracks = value;
   }
 
+  List<int>? getActiveAudioTracks(int textureId) {
+    return _players[textureId]?.activeAudioTracks;
+  }
+
   void setVideoTracks(int textureId, List<int> value) {
     _players[textureId]?.activeVideoTracks = value;
   }
 
+  List<int>? getActiveVideoTracks(int textureId) {
+    return _players[textureId]?.activeVideoTracks;
+  }
+
   void setSubtitleTracks(int textureId, List<int> value) {
     _players[textureId]?.activeSubtitleTracks = value;
+  }
+
+  List<int>? getActiveSubtitleTracks(int textureId) {
+    return _players[textureId]?.activeSubtitleTracks;
   }
 
 // external track. can select external tracks via setAudioTracks()
