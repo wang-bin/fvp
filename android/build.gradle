@@ -122,4 +122,10 @@ if (flutterSdkVersionInt < 32400) {
     preprocessJava(['//// FLUTTER_3.24_BEGIN': '/\\*// FLUTTER_3.24_BEGIN-', '//// FLUTTER_3.24_END': '\\*/// FLUTTER_3.24_END-'])
 } else {
     preprocessJava(['/\\*// FLUTTER_3.24_BEGIN-': '//// FLUTTER_3.24_BEGIN', '\\*/// FLUTTER_3.24_END-': '//// FLUTTER_3.24_END'])
+    /// rename onSurfaceAvailable to onSurfaceCreated if flutterSdkVersionInt < 32700
+    if (flutterSdkVersionInt < 32700) {
+        println 'rename onSurfaceAvailable to onSurfaceCreated'
+        preprocessJava(['onSurfaceAvailable': 'onSurfaceCreated'])
+    }
 }
+
