@@ -93,8 +93,8 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
         sp.setCallback(
                 new TextureRegistry.SurfaceProducer.Callback() {
                   @Override
-                  public void onSurfaceCreated() {
-                    Log.d("FvpPlugin", "SurfaceProducer.onSurfaceCreated for textureId " + texId);
+                  public void onSurfaceAvailable() {
+                    Log.d("FvpPlugin", "SurfaceProducer.onSurfaceAvailable for textureId " + texId);
                     final Surface newSurface = sp.getSurface();
                     surfaces.put(texId, newSurface);
                     // will do nothing if same surface
