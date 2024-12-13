@@ -173,7 +173,7 @@ class Player {
 
   /// Release current texture then create a new one for current [media], and update [textureId].
   ///
-  /// Texture will be created when media is loaded and [mediaInfo.video] is not empty.
+  /// Texture will be created when media is loaded and mediaInfo.video is not empty.
   /// If both [width] and [height] are null, texture size is video frame size, otherwise is requested size.
   Future<int> updateTexture(
       {int? width, int? height, bool? tunnel, bool? fit}) async {
@@ -614,13 +614,6 @@ class Player {
               void Function(Pointer<mdkPlayer>, double, double, double, double,
                   Pointer<Void>)>()(
           _player.ref.object, r, g, b, a, Pointer.fromAddress(0));
-
-  /// Set background color.
-  /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setbackgroundcolorfloat-r-float-g-float-b-float-a-void-vo_opaque--nullptr
-  void setBackground(ui.Color c) => _player.ref.setBackgroundColor.asFunction<
-          void Function(Pointer<mdkPlayer>, double, double, double, double,
-              Pointer<Void>)>()(_player.ref.object, c.red / 255, c.green / 255,
-      c.blue / 255, c.alpha / 255, Pointer.fromAddress(0));
 
   /// Set a built-in video effect.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#player-setvideoeffect-effect-const-float-values-void-vo_opaque--nullptr

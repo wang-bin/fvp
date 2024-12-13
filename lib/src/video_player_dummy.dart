@@ -11,7 +11,9 @@ class MdkVideoPlayerPlatform {
     return false;
   }
 
-  MediaInfo? getMediaInfo(int textureId) { return null; }
+  MediaInfo? getMediaInfo(int textureId) {
+    return null;
+  }
 
   void setProperty(int textureId, String name, String value) {}
 

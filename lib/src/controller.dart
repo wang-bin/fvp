@@ -94,7 +94,7 @@ extension FVPControllerExtensions on VideoPlayerController {
   }
 
   /// Step forward or backward.
-  /// Step forward if [frame] > 0, backward otherwise.
+  /// Step forward if [frames] > 0, backward otherwise.
   Future<void> step({int frames = 1}) async {
     return _platform.step(textureId, frames);
   }

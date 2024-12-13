@@ -14,7 +14,6 @@ import 'media_info.dart';
 
 import '../mdk.dart' as mdk;
 
-
 final _log = Logger('fvp');
 
 class MdkVideoPlayer extends mdk.Player {
