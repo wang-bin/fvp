@@ -19,7 +19,7 @@ on:
 
 jobs:
   macOS:
-    runs-on: macos-14
+    runs-on: macos-15
     defaults:
       run:
         working-directory: example
@@ -47,7 +47,7 @@ jobs:
         path: example/fvp_example_macos.7z
 
   iOS:
-    runs-on: macos-14
+    runs-on: macos-15
     defaults:
       run:
         working-directory: example
@@ -83,10 +83,10 @@ jobs:
       fail-fast: false
       matrix:
         version: ['3.19.x', 'any']      # 3.19 for win7
-        channel: ['stable', 'master']
+        channel: ['stable', 'beta']
         exclude:
           - version: '3.19.x'
-            channel: 'master'
+            channel: 'beta'
     steps:
     - uses: actions/checkout@v4
       with:
@@ -118,10 +118,10 @@ jobs:
       fail-fast: false
       matrix:
         version: ['3.10.x', 'any']
-        channel: ['stable', 'master']
+        channel: ['stable', 'beta']
         exclude:
           - version: '3.10.x'
-            channel: 'master'
+            channel: 'beta'
     steps:
     - uses: actions/checkout@v4
       with:
