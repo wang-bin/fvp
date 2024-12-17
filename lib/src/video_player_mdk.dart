@@ -51,6 +51,7 @@ class MdkVideoPlayer extends mdk.Player {
           }
           streamCtl.add(VideoEvent(
               eventType: VideoEventType.initialized,
+              rotationCorrection: mediaInfo.video?.firstOrNull?.rotation,
               duration: Duration(
                   microseconds: isLive
 // int max for live streams, duration.inMicroseconds == 9223372036854775807
