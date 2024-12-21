@@ -126,8 +126,11 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       final platforms = options['platforms'];
       if (platforms is List<String>) {
         if (!platforms.contains(Platform.operatingSystem)) {
-          if (_prevImpl != null) {
+          if (_prevImpl != null &&
+              VideoPlayerPlatform.instance is MdkVideoPlayerPlatform) {
             // null if it's the 1st time to call registerWith() including current platform
+            // if current is not MdkVideoPlayerPlatform, another plugin may set instance
+            // if current is MdkVideoPlayerPlatform, we have to restore instance,  _prevImpl is correct and no one changed instance
             VideoPlayerPlatform.instance = _prevImpl!;
           }
           return;

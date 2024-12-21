@@ -55,7 +55,7 @@ flutter:
         pluginClass: FvpPlugin
         sharedDarwinSource: true
       linux:
-        dartPluginClass: VideoPlayerRegistrant
+        dartPluginClass: VideoPlayerRegistrant # auto registered in .dart_tool/flutter_build/dart_plugin_registrant.dart
         pluginClass: FvpPlugin
       macos:
         pluginClass: FvpPlugin
