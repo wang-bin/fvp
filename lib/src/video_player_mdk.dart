@@ -163,6 +163,17 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _decoders = vd[Platform.operatingSystem];
     }
 
+// delay: ensure log handler is set in main(), blank window if run with debugger.
+// registerWith() can be invoked by dart_plugin_registrant.dart before main. when debugging, won't enter main if posting message from native to dart(new native log message) before main?
+    Future.delayed(const Duration(milliseconds: 0), () {
+      _setupMdk();
+    });
+
+    _prevImpl ??= VideoPlayerPlatform.instance;
+    VideoPlayerPlatform.instance = MdkVideoPlayerPlatform();
+  }
+
+  static void _setupMdk() {
     mdk.setLogHandler((level, msg) {
       if (msg.endsWith('\n')) {
         msg = msg.substring(0, msg.length - 1);
@@ -190,10 +201,6 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     _globalOpts?.forEach((key, value) {
       mdk.setGlobalOption(key, value);
     });
-
-    // if VideoPlayerPlatform.instance.runtimeType.toString() != '_PlaceholderImplementation' ?
-    _prevImpl ??= VideoPlayerPlatform.instance;
-    VideoPlayerPlatform.instance = MdkVideoPlayerPlatform();
   }
 
   @override
