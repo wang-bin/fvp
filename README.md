@@ -24,7 +24,7 @@ project is create with `flutter create -t plugin --platforms=linux,macos,windows
 ## How to Use
 
 - Add [fvp](https://pub.dev/packages/fvp) in your pubspec.yaml dependencies: `flutter pub add fvp`. Since flutter 3.27, fvp must be a direct dependency in your app's pubspec.yaml.
-- **(Optional for flutter < 3.27 and fvp <= 0.28)** Add 2 lines in your video_player examples. Without this step, this plugin will be used for video_player unsupported platforms(windows, linux), official implementation will be used otherwise.
+- **(Optional)** Add 2 lines in your video_player examples. Without this step, this plugin will be used for video_player unsupported platforms(windows, linux), official implementation will be used otherwise.
 
 ```dart
 import 'package:fvp/fvp.dart' as fvp;
