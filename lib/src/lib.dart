@@ -78,8 +78,10 @@ abstract class Libfvp {
       Bool Function(Int64, Int64, Int64, Pointer<Void>, Int64),
       bool Function(int, int, int, Pointer<Void>, int)>('MdkSeek');
   static final snapshot = instance.lookupFunction<
-      Bool Function(Int64, Int, Int, Pointer<Void>, Int64),
-      bool Function(int, int, int, Pointer<Void>, int)>('MdkSnapshot');
+      Bool Function(Int64, Int64, Int, Int, Pointer<Void>, Int64),
+      bool Function(int, int, int, int, Pointer<Void>, int)>('MdkSnapshot');
   static final isEmulator = instance
       .lookupFunction<Bool Function(), bool Function()>('MdkIsEmulator');
+  static final getVid = instance.lookupFunction<Pointer<Void> Function(Int64),
+      Pointer<Void> Function(int)>('MdkGetPlayerVid');
 }
