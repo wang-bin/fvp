@@ -1,4 +1,4 @@
-// Copyright 2023-2024 Wang Bin. All rights reserved.
+// Copyright 2023-2025 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -130,6 +130,8 @@ private:
     auto messenger = registrar.messenger;
 #else
     auto messenger = [registrar messenger];
+  // Allow audio playback when the Ring/Silent switch is set to silent
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
 #endif
     FlutterMethodChannel* channel = [FlutterMethodChannel methodChannelWithName:@"fvp" binaryMessenger:messenger];
     FvpPlugin* instance = [[FvpPlugin alloc] initWithRegistrar:registrar];
