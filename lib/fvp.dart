@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Wang Bin. All rights reserved.
+// Copyright 2022-2025 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -23,13 +23,13 @@ export 'src/controller.dart';
 ///
 /// 'lowLatency': int. default is 0. reduce network stream latency. 1: for vod. 2: for live stream, may drop frames to ensure the latest content is displayed
 ///
-/// "player": backend player properties of type Map<String, String>. See https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setpropertyconst-stdstring-key-const-stdstring-value
+/// "player": backend player properties of type [Map<String, String>]. See https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setpropertyconst-stdstring-key-const-stdstring-value
 ///
-/// "global": backend global options of type Map<String, Object>. See https://github.com/wang-bin/mdk-sdk/wiki/Global-Options
+/// "global": backend global options of type [Map<String, Object>]. See https://github.com/wang-bin/mdk-sdk/wiki/Global-Options
 ///
 /// "tunnel": android only, default is false. AMediacodec/MediaCodec decoder output to a SurfaceTexture surface directly without OpenGL. Maybe more efficient, but some features are not supported, e.g. HDR tone mapping, less codecs.
 ///
-/// 'subtitleFontFile': default subtitle font file as the fallback. If not set, 'assets/subfont.ttf' will be used, you can add it in pubspec.yaml if you need it.
+/// 'subtitleFontFile': default subtitle font file as the fallback, can be an http url. If not set, 'assets/subfont.ttf' will be used, you can add it in pubspec.yaml if you need it.
 /// subfont.ttf can be downloaded from https://github.com/mpv-android/mpv-android/raw/master/app/src/main/assets/subfont.ttf
 ///
 /// Example:
@@ -53,6 +53,7 @@ class VideoPlayerRegistrant {
     MdkVideoPlayerPlatform.registerVideoPlayerPlatformsWith();
   }
 }
+
 /*
 bool isRegistered() {
   return VideoPlayerPlatform.instance.runtimeType == MdkVideoPlayerPlatform;

@@ -10,8 +10,8 @@ topics:
   - videoplayer
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  flutter: ">=3.0.0"
+  sdk: ^3.0.0
+  flutter: ^3.0.0
 
 dependencies:
   ffi: ^2.1.0
@@ -22,6 +22,8 @@ dependencies:
   plugin_platform_interface: ^2.0.0
   video_player: ^2.6.0
   video_player_platform_interface: ^6.2.0
+  path_provider: ^2.1.2
+  http: ^1.0.0
 
 dev_dependencies:
   flutter_test:
@@ -46,7 +48,7 @@ flutter:
   # All these are used by the tooling to maintain consistency when
   # adding or updating assets for this project.
   plugin:
-    #implements: video_player # flutter 3.27+ can only select 1 implementation
+    #implements: video_player #  endorsed. flutter 3.27+ can only select 1 implementation
     platforms:
       android:
         package: com.mediadevkit.fvp
@@ -70,10 +72,10 @@ flutter:
   #   - images/a_dot_ham.jpeg
   #
   # For details regarding assets in packages, see
-  # https://flutter.dev/assets-and-images/#from-packages
+  # https://flutter.dev/to/asset-from-package
   #
   # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/assets-and-images/#resolution-aware
+  # https://flutter.dev/to/resolution-aware-images
 
   # To add custom fonts to your plugin package, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
@@ -93,4 +95,4 @@ flutter:
   #         weight: 700
   #
   # For details regarding fonts in packages, see
-  # https://flutter.dev/custom-fonts/#from-packages
+  # https://flutter.dev/to/font-from-package

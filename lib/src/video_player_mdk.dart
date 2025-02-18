@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Wang Bin. All rights reserved.
+// Copyright 2022-2025 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,6 +8,8 @@ import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:logging/logging.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'fvp_platform_interface.dart';
 import 'extensions.dart';
 import 'media_info.dart';
@@ -147,6 +149,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _tunnel = options["tunnel"];
       _playerOpts = options['player'];
       _globalOpts = options['global'];
+      // TODO: _env => putenv
       _decoders = options['video.decoders'];
       _subtitleFontFile = options['subtitleFontFile'];
     }
@@ -196,8 +199,28 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     // mdk.setGlobalOptions('plugins', 'mdk-braw');
     mdk.setGlobalOption("log", "all");
     mdk.setGlobalOption('d3d11.sync.cpu', 1);
-    mdk.setGlobalOption('subtitle.fonts.file',
-        PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
+    if (_subtitleFontFile?.startsWith('http') ?? false) {
+      final fileName = _subtitleFontFile!.split('/').last;
+      getApplicationCacheDirectory().then((dir) {
+        final fontPath = '${dir.path}/$fileName';
+        _log.fine('check font path: $fontPath');
+        if (File(fontPath).existsSync()) {
+          mdk.setGlobalOption('subtitle.fonts.file', fontPath);
+          return;
+        }
+        _log.fine('downloading font file: $_subtitleFontFile');
+        http.get(Uri.parse(_subtitleFontFile!)).then((response) {
+          if (response.statusCode == 200) {
+            _log.fine('save font file: $fontPath');
+            File(fontPath).writeAsBytes(response.bodyBytes).then((_) {
+              mdk.setGlobalOption('subtitle.fonts.file', fontPath);
+            });
+          }
+        });
+      });
+    } else {
+      mdk.setGlobalOption('subtitle.fonts.file', PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
+    }
     _globalOpts?.forEach((key, value) {
       mdk.setGlobalOption(key, value);
     });
