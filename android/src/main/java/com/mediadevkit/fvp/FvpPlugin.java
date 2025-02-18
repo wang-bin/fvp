@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2023-2025 WangBin <wbsecg1 at gmail.com>
  */
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -102,8 +102,8 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
                   }
 
                   @Override
-                  public void onSurfaceDestroyed() {
-                    Log.d("FvpPlugin", "SurfaceProducer.onSurfaceDestroyed for textureId " + texId);
+                  public void onSurfaceCleanup() {
+                    Log.d("FvpPlugin", "SurfaceProducer.onSurfaceCleanup for textureId " + texId);
                     textures.remove(texId);
                     nativeSetSurface(handle, texId, null, 0, 0, tunnel);
                   }
