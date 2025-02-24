@@ -16,8 +16,9 @@ import 'video_player_mdk.dart'
 MdkVideoPlayerPlatform get _platform {
   if (VideoPlayerPlatform.instance is! MdkVideoPlayerPlatform) {
     throw StateError(
-        '`VideoPlayerPlatform.instance` have to be of `MdkVideoPlayerPlatform` to use advanced video player features.'
-        'Make sure you\'ve called `fvp.registerWith()`');
+      '`VideoPlayerPlatform.instance` have to be of `MdkVideoPlayerPlatform` to use advanced video player features.'
+      'Make sure you\'ve called `fvp.registerWith()`',
+    );
   }
   return VideoPlayerPlatform.instance as MdkVideoPlayerPlatform;
 }

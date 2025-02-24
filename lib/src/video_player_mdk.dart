@@ -219,7 +219,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         });
       });
     } else {
-      mdk.setGlobalOption('subtitle.fonts.file', PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
+      mdk.setGlobalOption('subtitle.fonts.file',
+          PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
     }
     _globalOpts?.forEach((key, value) {
       mdk.setGlobalOption(key, value);
