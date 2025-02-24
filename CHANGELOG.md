@@ -1,3 +1,10 @@
+## 0.30.0
+
+* `subtitleFontFile` option can be an http url
+* ios: fix no sound in silent mode
+* android: fix snapshot result is empty
+* android: use `onSurfaceCleanup` for flutter >= 3.28
+
 ## 0.29.0
 
 * not declared as video_player implementation in pubdec.yaml, fix conflicting with other implementations

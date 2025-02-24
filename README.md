@@ -15,9 +15,10 @@ project is create with `flutter create -t plugin --platforms=linux,macos,windows
 - Hardware decoders are enabled by default
 - Dolby Vision support on all platforms
 - Minimal code change for existing [Video Player](https://pub.dev/packages/video_player) apps
-- Support most formats via FFmpeg demuxer and software decoders if not supported by gpu. You can use your own ffmpeg 4.0~7.0(or master branch) by removing bundled ffmpeg dynamic library.
+- Support most formats via FFmpeg demuxer and software decoders if not supported by gpu. You can use your own ffmpeg 4.0~7.1(or master branch) by removing bundled ffmpeg dynamic library.
 - High performance. Lower cpu, gpu and memory load than libmpv based players.
 - Support audio without video
+- HEVC(ios, mac only), VP8 and VP9 transparent video
 - Small footprint. Only about 10MB size increase per cpu architecture(platform dependent).
 
 
@@ -103,7 +104,12 @@ For other platforms, set environment var `FVP_DEPS_LATEST=1` and rebuilt, will u
 
 libass is required, and it's added to your app automatically for windows, macOS and android(remove ass.dll, libass.dylib and libass.so from mdk-sdk if you don't need it). For iOS, [download](https://sourceforge.net/projects/mdk-sdk/files/deps/dep.7z/download) and add `ass.framework` to your xcode project. For linux, system libass can be used, you may have to install manually via system package manager.
 
-If required subtitle font is not found in the system(e.g. android), you can add [assets/subfont.ttf](https://github.com/mpv-android/mpv-android/raw/master/app/src/main/assets/subfont.ttf) in pubspec.yaml as the fallback.
+If required subtitle font is not found in the system(e.g. android), you can add [assets/subfont.ttf](https://github.com/mpv-android/mpv-android/raw/master/app/src/main/assets/subfont.ttf) in pubspec.yaml assets as the fallback. Optionally you can also download the font file by fvp like this
+```dart
+  fvp.registerWith(options: {
+    'subtitleFontFile': 'https://github.com/mpv-android/mpv-android/raw/master/app/src/main/assets/subfont.ttf'
+  });
+```
 
 # DO NOT use flutter-snap
 Flutter can be installed by snap, but it will add some [enviroment vars(`CPLUS_INCLUDE_PATH` and `LIBRARY_PATH`) which may break C++ compiler](https://github.com/canonical/flutter-snap/blob/main/env.sh#L15-L18). It's not recommended to use snap, althrough building for linux is [fixed](https://github.com/wang-bin/fvp/commit/567c68270ba16b95b1198ae58850707ae4ad7b22), but it's not possible for android.
