@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Wang Bin. All rights reserved.
+// Copyright 2022-2025 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,6 +8,8 @@ import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:logging/logging.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'fvp_platform_interface.dart';
 import 'extensions.dart';
 import 'media_info.dart';
@@ -127,8 +129,11 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       final platforms = options['platforms'];
       if (platforms is List<String>) {
         if (!platforms.contains(Platform.operatingSystem)) {
-          if (_prevImpl != null) {
+          if (_prevImpl != null &&
+              VideoPlayerPlatform.instance is MdkVideoPlayerPlatform) {
             // null if it's the 1st time to call registerWith() including current platform
+            // if current is not MdkVideoPlayerPlatform, another plugin may set instance
+            // if current is MdkVideoPlayerPlatform, we have to restore instance,  _prevImpl is correct and no one changed instance
             VideoPlayerPlatform.instance = _prevImpl!;
           }
           return;
@@ -145,6 +150,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _tunnel = options["tunnel"];
       _playerOpts = options['player'];
       _globalOpts = options['global'];
+      // TODO: _env => putenv
       _decoders = options['video.decoders'];
       _subtitleFontFile = options['subtitleFontFile'];
     }
@@ -161,6 +167,17 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _decoders = vd[Platform.operatingSystem];
     }
 
+// delay: ensure log handler is set in main(), blank window if run with debugger.
+// registerWith() can be invoked by dart_plugin_registrant.dart before main. when debugging, won't enter main if posting message from native to dart(new native log message) before main?
+    Future.delayed(const Duration(milliseconds: 0), () {
+      _setupMdk();
+    });
+
+    _prevImpl ??= VideoPlayerPlatform.instance;
+    VideoPlayerPlatform.instance = MdkVideoPlayerPlatform();
+  }
+
+  static void _setupMdk() {
     mdk.setLogHandler((level, msg) {
       if (msg.endsWith('\n')) {
         msg = msg.substring(0, msg.length - 1);
@@ -183,15 +200,32 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     // mdk.setGlobalOptions('plugins', 'mdk-braw');
     mdk.setGlobalOption("log", "all");
     mdk.setGlobalOption('d3d11.sync.cpu', 1);
-    mdk.setGlobalOption('subtitle.fonts.file',
-        PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
+    if (_subtitleFontFile?.startsWith('http') ?? false) {
+      final fileName = _subtitleFontFile!.split('/').last;
+      getApplicationCacheDirectory().then((dir) {
+        final fontPath = '${dir.path}/$fileName';
+        _log.fine('check font path: $fontPath');
+        if (File(fontPath).existsSync()) {
+          mdk.setGlobalOption('subtitle.fonts.file', fontPath);
+          return;
+        }
+        _log.fine('downloading font file: $_subtitleFontFile');
+        http.get(Uri.parse(_subtitleFontFile!)).then((response) {
+          if (response.statusCode == 200) {
+            _log.fine('save font file: $fontPath');
+            File(fontPath).writeAsBytes(response.bodyBytes).then((_) {
+              mdk.setGlobalOption('subtitle.fonts.file', fontPath);
+            });
+          }
+        });
+      });
+    } else {
+      mdk.setGlobalOption('subtitle.fonts.file',
+          PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
+    }
     _globalOpts?.forEach((key, value) {
       mdk.setGlobalOption(key, value);
     });
-
-    // if VideoPlayerPlatform.instance.runtimeType.toString() != '_PlaceholderImplementation' ?
-    _prevImpl ??= VideoPlayerPlatform.instance;
-    VideoPlayerPlatform.instance = MdkVideoPlayerPlatform();
   }
 
   @override

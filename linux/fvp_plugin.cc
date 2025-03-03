@@ -83,7 +83,6 @@ private:
   PlayerTexture* flTex; // hold ref
 };
 
-static unordered_map<int64_t, shared_ptr<TexturePlayer>> players;
 
 // called in a current gl context
 static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, uint32_t *name,
@@ -150,10 +149,12 @@ static void player_texture_init(PlayerTexture* self) {
   (G_TYPE_CHECK_INSTANCE_CAST((obj), fvp_plugin_get_type(), \
                               FvpPlugin))
 
+using PlayerMap = unordered_map<int64_t, shared_ptr<TexturePlayer>>;
 struct _FvpPlugin {
   GObject parent_instance;
 
   FlTextureRegistrar* tex_registrar;
+  PlayerMap players;
 };
 
 G_DEFINE_TYPE(FvpPlugin, fvp_plugin, g_object_get_type())
@@ -162,6 +163,7 @@ G_DEFINE_TYPE(FvpPlugin, fvp_plugin, g_object_get_type())
 static void fvp_plugin_handle_method_call(
     FvpPlugin* self,
     FlMethodCall* method_call) {
+  // static PlayerMap players; // here is also fine, will be destroyed earlier than libmdk global objects(Context::current() map)
   g_autoptr(FlMethodResponse) response = nullptr;
 
   const gchar* method = fl_method_call_get_name(method_call);
@@ -173,14 +175,14 @@ static void fvp_plugin_handle_method_call(
     const auto height = (int)fl_value_get_int(fl_value_lookup_string(args, "height"));
     auto tex = PLAYER_TEXTURE(g_object_new(player_texture_get_type(), nullptr));
     auto player = make_shared<TexturePlayer>(handle, tex, width, height, self->tex_registrar);
-    players[player->textureId] = player;
+    self->players[player->textureId] = player;
     g_autoptr(FlValue) result = fl_value_new_int(player->textureId);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
   } else if (strcmp(method, "ReleaseRT") == 0) {
     const auto args = fl_method_call_get_args(method_call);
     const auto texId = fl_value_get_int(fl_value_lookup_string(args, "texture"));
-    if (auto it = players.find(texId); it != players.cend()) {
-        players.erase(it);
+    if (auto it = self->players.find(texId); it != self->players.cend()) {
+        self->players.erase(it);
     }
     g_autoptr(FlValue) result = fl_value_new_null();
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
@@ -194,7 +196,9 @@ static void fvp_plugin_handle_method_call(
   fl_method_call_respond(method_call, response, nullptr);
 }
 
-static void fvp_plugin_dispose(GObject* object) {
+static void fvp_plugin_dispose(GObject* object) { // seems never be invoked
+  auto self = FVP_PLUGIN(object);
+  self->players.~PlayerMap();
   G_OBJECT_CLASS(fvp_plugin_parent_class)->dispose(object);
 }
 
@@ -204,6 +208,7 @@ static void fvp_plugin_class_init(FvpPluginClass* klass) {
 
 static void fvp_plugin_init(FvpPlugin* self) {
   self->tex_registrar = nullptr;
+  new(&self->players) PlayerMap;
 }
 
 static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,

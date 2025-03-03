@@ -428,7 +428,9 @@ FVP_EXPORT bool MdkSeek(int64_t handle, int64_t pos, int64_t seekFlags, void* po
     });
 }
 
-FVP_EXPORT bool MdkSnapshot(int64_t handle, int w, int h, void* post_c_object, int64_t send_port)
+extern "C" void* MdkGetPlayerVid(int64_t texId);
+
+FVP_EXPORT bool MdkSnapshot(int64_t handle, int64_t texId, int w, int h, void* post_c_object, int64_t send_port)
 {
     const auto it = players.find(handle);
     if (it == players.cend()) {
@@ -472,6 +474,10 @@ FVP_EXPORT bool MdkSnapshot(int64_t handle, int w, int h, void* post_c_object, i
             return {};
         }
         return {};
-    });
+    }
+#ifdef __ANDROID__
+        , MdkGetPlayerVid(texId)
+#endif
+    );
     return true;
 }

@@ -1,3 +1,19 @@
+## 0.30.0
+
+* `subtitleFontFile` option can be an http url
+* ios: fix no sound in silent mode
+* android: fix snapshot result is empty
+* android: use `onSurfaceCleanup` for flutter >= 3.28
+
+## 0.29.0
+
+* not declared as video_player implementation in pubdec.yaml, fix conflicting with other implementations
+* fix app does not launch when debugging
+* android: use new onSurfaceAvailable() for flutter 3.27+
+* android: support add-to-app mode
+* more VideoPlayerController extensions
+* ios: cleanup when detaching from engine
+
 ## 0.28.0
 
 * mixWithOthers for iOS

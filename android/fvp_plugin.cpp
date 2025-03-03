@@ -27,6 +27,7 @@ public:
     int width = 0;
     int height = 0;
     jobject surface = nullptr;
+    void* vo_opaque = nullptr; // can change by TextureRegistry.SurfaceProducer.Callback
 private:
 };
 
@@ -82,6 +83,7 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
         player->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)player->surface));
     } else {
         player->updateNativeSurface(surface, w, h);
+        player->vo_opaque = surface;
     }
     players[tex_id] = player;
 }
@@ -111,4 +113,17 @@ MdkIsEmulator()
     if (strstr(v, "emulator"))
         return true;
     return false;
+}
+
+extern "C"
+JNIEXPORT void* JNICALL
+MdkGetPlayerVid(int64_t tex_id)
+{
+    if (tex_id < 0)
+        return nullptr;
+    if (const auto it = players.find(tex_id); it != players.end()) {
+        const auto& player = it->second;
+        return player->vo_opaque;
+    }
+    return nullptr;
 }
