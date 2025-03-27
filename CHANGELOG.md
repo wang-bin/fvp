@@ -1,3 +1,9 @@
+## 0.31.0
+
+* fix crash when killing app on iOS
+* fix crash when exiting app on linux
+
+
 ## 0.30.0
 
 * `subtitleFontFile` option can be an http url

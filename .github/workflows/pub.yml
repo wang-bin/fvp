@@ -24,5 +24,6 @@ jobs:
       - uses: dart-lang/setup-dart@v1
       # Here you can insert custom steps you need
       # - run: dart tool/generate-code.dart
+      - run: dart format lib
       - name: Publish
         run: dart pub publish --force

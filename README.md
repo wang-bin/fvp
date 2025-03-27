@@ -18,7 +18,7 @@ project is create with `flutter create -t plugin --platforms=linux,macos,windows
 - Support most formats via FFmpeg demuxer and software decoders if not supported by gpu. You can use your own ffmpeg 4.0~7.1(or master branch) by removing bundled ffmpeg dynamic library.
 - High performance. Lower cpu, gpu and memory load than libmpv based players.
 - Support audio without video
-- HEVC(ios, mac only), VP8 and VP9 transparent video
+- HEVC, VP8 and VP9 transparent video
 - Small footprint. Only about 10MB size increase per cpu architecture(platform dependent).
 
 
