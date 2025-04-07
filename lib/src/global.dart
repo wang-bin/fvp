@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Wang Bin. All rights reserved.
+// Copyright 2022-2025 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import 'dart:ffi';
@@ -148,10 +148,29 @@ enum ColorSpace {
   unknown(MDK_ColorSpace.MDK_ColorSpace_Unknown),
   bt709(MDK_ColorSpace.MDK_ColorSpace_BT709),
   bt2100PQ(MDK_ColorSpace.MDK_ColorSpace_BT2100_PQ),
+  scrgb(MDK_ColorSpace.MDK_ColorSpace_scRGB),
+  bt2100hlg(MDK_ColorSpace.MDK_ColorSpace_BT2100_HLG),
   ;
 
   final int rawValue;
   const ColorSpace(this.rawValue);
+
+  factory ColorSpace.from(int rawValue) {
+    switch (rawValue) {
+      case MDK_ColorSpace.MDK_ColorSpace_Unknown:
+        return unknown;
+      case MDK_ColorSpace.MDK_ColorSpace_BT709:
+        return bt709;
+      case MDK_ColorSpace.MDK_ColorSpace_BT2100_PQ:
+        return bt2100PQ;
+      case MDK_ColorSpace.MDK_ColorSpace_scRGB:
+        return scrgb;
+      case MDK_ColorSpace.MDK_ColorSpace_BT2100_HLG:
+        return bt2100hlg;
+      default:
+        return unknown;
+    }
+  }
 }
 
 enum LogLevel {

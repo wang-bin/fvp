@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2024 WangBin <wbsecg1 at gmail.com>
+// Copyright (c) 2019-2025 WangBin <wbsecg1 at gmail.com>
 // https://github.com/wang-bin/mdk-sdk
 // AUTO GENERATED FILE, DO NOT EDIT.
 //
@@ -469,6 +469,23 @@ class NativeLibrary {
   late final _mdkPlayerAPI_delete = _mdkPlayerAPI_deletePtr
       .asFunction<void Function(ffi.Pointer<ffi.Pointer<mdkPlayerAPI>>)>();
 
+  void mdkPlayerAPI_reset(
+    ffi.Pointer<ffi.Pointer<mdkPlayerAPI>> arg0,
+    bool release,
+  ) {
+    return _mdkPlayerAPI_reset(
+      arg0,
+      release,
+    );
+  }
+
+  late final _mdkPlayerAPI_resetPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Pointer<mdkPlayerAPI>>,
+              ffi.Bool)>>('mdkPlayerAPI_reset');
+  late final _mdkPlayerAPI_reset = _mdkPlayerAPI_resetPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Pointer<mdkPlayerAPI>>, bool)>();
+
   void MDK_foreignGLContextDestroyed() {
     return _MDK_foreignGLContextDestroyed();
   }
@@ -547,6 +564,7 @@ abstract class MDKSeekFlag {
   static const int MDK_SeekFlag_FromNow = 4;
   static const int MDK_SeekFlag_Frame = 64;
   static const int MDK_SeekFlag_KeyFrame = 256;
+  static const int MDK_SeekFlag_AnyFrame = 512;
   static const int MDK_SeekFlag_Fast = 256;
   static const int MDK_SeekFlag_InCache = 1024;
   static const int MDK_SeekFlag_Backward = 65536;
@@ -556,11 +574,14 @@ abstract class MDKSeekFlag {
 /// !
 /// \brief VideoEffect
 /// per video renderer effect. set via Player.setVideoEffect(MDK_VideoEffect effect, const float*);
+/// Only one(the last call) of ScaleChannels or ShiftChannels will be applied
 abstract class MDK_VideoEffect {
   static const int MDK_VideoEffect_Brightness = 0;
   static const int MDK_VideoEffect_Contrast = 1;
   static const int MDK_VideoEffect_Hue = 2;
   static const int MDK_VideoEffect_Saturation = 3;
+  static const int MDK_VideoEffect_ScaleChannels = 4;
+  static const int MDK_VideoEffect_ShiftChannels = 5;
 }
 
 abstract class MDK_ColorSpace {
@@ -571,6 +592,7 @@ abstract class MDK_ColorSpace {
   static const int MDK_ColorSpace_ExtendedLinearDisplayP3 = 4;
   static const int MDK_ColorSpace_ExtendedSRGB = 5;
   static const int MDK_ColorSpace_ExtendedLinearSRGB = 6;
+  static const int MDK_ColorSpace_BT2100_HLG = 7;
 }
 
 abstract class MDK_LogLevel {
@@ -736,7 +758,13 @@ final class mdkVideoCodecParameters extends ffi.Struct {
   @ffi.Float()
   external double par;
 
-  @ffi.Array.multi([128])
+  @ffi.Int32()
+  external int color_space;
+
+  @ffi.Uint8()
+  external int dovi_profile;
+
+  @ffi.Array.multi([123])
   external ffi.Array<ffi.Char> reserved;
 }
 
@@ -1163,6 +1191,15 @@ final class mdkSnapshotCallback extends ffi.Struct {
 final class mdkSyncCallback extends ffi.Struct {
   external ffi.Pointer<
       ffi.NativeFunction<ffi.Double Function(ffi.Pointer<ffi.Void> opaque)>> cb;
+
+  external ffi.Pointer<ffi.Void> opaque;
+}
+
+final class mdkSubtitleCallback extends ffi.Struct {
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Char> text, ffi.Pointer<ffi.Void> opaque)>> cb;
 
   external ffi.Pointer<ffi.Void> opaque;
 }
@@ -1721,6 +1758,16 @@ final class mdkPlayerAPI extends ffi.Struct {
               ffi.Int Function(
                   ffi.Pointer<mdkPlayer>, ffi.Pointer<ffi.Int64>, ffi.Int)>>
       bufferedTimeRanges;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Bool Function(ffi.Pointer<mdkPlayer>, ffi.Pointer<ffi.Uint8>,
+              ffi.Size, ffi.Int)>> appendBuffer;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<mdkPlayer>, ffi.Double, ffi.Int,
+              mdkSubtitleCallback)>> subtitleText;
 }
 
 final class SwitchBitrateCallback extends ffi.Struct {
@@ -1738,7 +1785,6 @@ final class SwitchBitrateCallback extends ffi.Struct {
 /// Null callback(.opaque == null) + non-null token: can remove the callback of given token.
 /// Null callback(.opaque == null) + null token: clear all callbacks.
 typedef MDK_CallbackToken = ffi.Uint64;
-typedef DartMDK_CallbackToken = int;
 
 /// !
 /// \brief size
@@ -1754,8 +1800,8 @@ final class UnnamedUnion2 extends ffi.Union {
 
 const int MDK_MAJOR = 0;
 
-const int MDK_MINOR = 28;
+const int MDK_MINOR = 31;
 
 const int MDK_MICRO = 0;
 
-const int MDK_VERSION = 7168;
+const int MDK_VERSION = 7936;
