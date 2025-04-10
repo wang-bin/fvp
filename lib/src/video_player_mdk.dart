@@ -166,6 +166,13 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _decoders = vd[Platform.operatingSystem];
     }
 
+    // mdk.setGlobalOptions('plugins', 'mdk-braw');
+    mdk.setGlobalOption("log", "all");
+    mdk.setGlobalOption('d3d11.sync.cpu', 1);
+    _globalOpts?.forEach((key, value) {
+      mdk.setGlobalOption(key, value);
+    });
+
 // delay: ensure log handler is set in main(), blank window if run with debugger.
 // registerWith() can be invoked by dart_plugin_registrant.dart before main. when debugging, won't enter main if posting message from native to dart(new native log message) before main?
     Future.delayed(const Duration(milliseconds: 0), () {
@@ -196,9 +203,6 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
           return;
       }
     });
-    // mdk.setGlobalOptions('plugins', 'mdk-braw');
-    mdk.setGlobalOption("log", "all");
-    mdk.setGlobalOption('d3d11.sync.cpu', 1);
     if (_subtitleFontFile?.startsWith('http') ?? false) {
       final fileName = _subtitleFontFile!.split('/').last;
       getApplicationCacheDirectory().then((dir) {
@@ -222,9 +226,6 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       mdk.setGlobalOption('subtitle.fonts.file',
           PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
     }
-    _globalOpts?.forEach((key, value) {
-      mdk.setGlobalOption(key, value);
-    });
   }
 
   @override
