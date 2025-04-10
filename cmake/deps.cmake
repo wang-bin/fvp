@@ -13,7 +13,12 @@ macro(fvp_setup_deps)
     endif()
   else()
   endif()
-  set(MDK_SDK_URL https://sourceforge.net/projects/mdk-sdk/files/nightly/${MDK_SDK_PKG})
+  if("$ENV{FVP_DEPS_URL}" MATCHES "^http") # github release: https://github.com/wang-bin/mdk-sdk/releases/latest/download
+    set(FVP_DEPS_URL $ENV{FVP_DEPS_URL}) # TODO: md5
+  else()
+    set(FVP_DEPS_URL https://sourceforge.net/projects/mdk-sdk/files/nightly)
+  endif()
+  set(MDK_SDK_URL ${FVP_DEPS_URL}/${MDK_SDK_PKG})
   set(MDK_SDK_SAVE "${CMAKE_CURRENT_SOURCE_DIR}/${MDK_SDK_PKG}")
 
   set(DOWNLOAD_MDK_SDK OFF)
