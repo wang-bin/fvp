@@ -1,3 +1,7 @@
+## 0.31.1
+
+* fix link error if use cmake 4.0 on linux
+
 ## 0.31.0
 
 * fix crash when killing app on iOS
