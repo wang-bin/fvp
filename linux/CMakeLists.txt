@@ -44,7 +44,11 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 target_link_libraries(${PLUGIN_NAME} INTERFACE -Wl,--unresolved-symbols=ignore-in-shared-libs)
 target_link_options(${PLUGIN_NAME} PRIVATE -Wl,--enable-new-dtags -Wl,-z,origin)
 # add runpath, shared libs of a release bundle is in lib dir, plugin must add $ORIGIN to runpath to find libmdk
-set_target_properties(${PLUGIN_NAME} PROPERTIES INSTALL_RPATH "$ORIGIN")
+set_target_properties(${PLUGIN_NAME} PROPERTIES
+  BUILD_RPATH_USE_ORIGIN ON
+  BUILD_RPATH "$ORIGIN"
+  INSTALL_RPATH "$ORIGIN"
+)
 target_compile_options(${PLUGIN_NAME} PRIVATE -fno-rtti -fno-exceptions -ffunction-sections -fdata-sections)
 target_compile_options(${PLUGIN_NAME} PRIVATE -Wno-unused-function) # https://github.com/wang-bin/fvp/issues/49
 target_link_libraries(${PLUGIN_NAME} PRIVATE -Wl,--gc-sections)
