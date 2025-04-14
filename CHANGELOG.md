@@ -1,3 +1,8 @@
+## 0.31.2
+
+* fix rpath on linux
+* cmake: add env var FVP_DEPS_URL to download dependencies from github
+
 ## 0.31.1
 
 * fix link error if use cmake 4.0 on linux
