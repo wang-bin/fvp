@@ -160,7 +160,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         'windows': ['MFT:d3d=11', "D3D11", "DXVA", 'CUDA', 'FFmpeg'],
         'macos': ['VT', 'FFmpeg'],
         'ios': ['VT', 'FFmpeg'],
-        'linux': ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg'],
+        'linux': ['VAAPI', 'CUDA', 'VDPAU', 'rkmpp', 'V4L2M2M', 'FFmpeg:hwcontext=drm', 'FFmpeg'],
         'android': ['AMediaCodec', 'FFmpeg'],
       };
       _decoders = vd[Platform.operatingSystem];
