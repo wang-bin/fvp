@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2023-2025 WangBin <wbsecg1 at gmail.com>
  */
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -92,14 +92,17 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
   if (self->fbo == 0) {
     self->ctx = gdk_gl_context_get_current(); // fbo can not be shared
     glGenFramebuffers(1, &self->fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, self->fbo);
   }
   if (self->texture_id == 0) {
+    GLint prevFbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, self->fbo);
     glGenTextures(1, &self->texture_id);
     glBindTexture(GL_TEXTURE_2D, self->texture_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->player->width, self->player->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + 0, GL_TEXTURE_2D, self->texture_id, 0);
     const GLenum err = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    glBindFramebuffer(GL_FRAMEBUFFER, prevFbo);
     if (err != GL_FRAMEBUFFER_COMPLETE) {
         //glDeleteFramebuffers(1, &fbo);
         clog << "glFramebufferTexture2D error" << endl;
