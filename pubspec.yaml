@@ -65,6 +65,9 @@ flutter:
       windows:
         dartPluginClass: VideoPlayerRegistrant
         pluginClass: FvpPluginCApi
+      elinux:
+        dartPluginClass: VideoPlayerRegistrant # auto registered in .dart_tool/flutter_build/dart_plugin_registrant.dart
+        pluginClass: FvpPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
