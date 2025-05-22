@@ -91,24 +91,15 @@ public:
 
   ~TexturePlayer() override {
     setRenderCallback(nullptr);
-    auto ctx = eglGetCurrentContext();
-    auto r = eglGetCurrentSurface(EGL_READ);
-    auto d = eglGetCurrentSurface(EGL_DRAW);
-    // fbo is not shared, so we need to make fbo context current
-    if (ctx != ctx_)
-        EGL_WARN(eglMakeCurrent(eglGetCurrentDisplay(), draw_, read_, ctx_));
     if (img_ != EGL_NO_IMAGE_KHR) {
         EGL_WARN(eglDestroyImageKHR(disp_, img_));
         img_ = EGL_NO_IMAGE_KHR;
     }
     if (tex_)
-      glDeleteTextures(1, &tex_);
+      GL_WARN(glDeleteTextures(1, &tex_));
     if (fbo_)
-      glDeleteFramebuffers(1, &fbo_);
+      GL_WARN(glDeleteFramebuffers(1, &fbo_));
     setVideoSurfaceSize(-1, -1);
-    if (ctx != ctx_ && ctx != EGL_NO_CONTEXT)
-        EGL_WARN(eglMakeCurrent(eglGetCurrentDisplay(), d, r, ctx));
-    // TODO: unregister tex here?
   }
 
   EGLImageKHR ensureVideo(size_t width, size_t height, EGLDisplay disp, EGLContext c) {
