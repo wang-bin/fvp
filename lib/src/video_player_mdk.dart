@@ -245,6 +245,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     //player.setProperty("keep_open", "1");
     player.setProperty('video.decoder', 'shader_resource=0');
     player.setProperty('avformat.strict', 'experimental');
+    player.setProperty('avformat.safe', '0');
     player.setProperty('avio.reconnect', '1');
     player.setProperty('avio.reconnect_delay_max', '7');
     player.setProperty('avio.protocol_whitelist',
