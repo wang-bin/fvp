@@ -66,6 +66,7 @@ class TexturePlayer final : public mdk::Player
 public:
   TexturePlayer(int64_t handle, int width, int height, flutter::TextureRegistrar* texRegistrar)
     : mdk::Player(reinterpret_cast<mdkPlayerAPI*>(handle))
+    , texture_registrar_(texRegistrar)
   {
     fltImg_->egl_image = EGL_NO_IMAGE_KHR; // TODO:
     fltImg_->width = width;
@@ -89,17 +90,26 @@ public:
     });
   }
 
+  template <typename T> // use template to not instantiate false branch
+  void unregisterIfGoodHeader() {
+    if constexpr (requires(T* t){ t->UnregisterTexture(0, nullptr); }) {
+      auto gfxRelease = [disp = disp_, img = img_, tex = tex_, fbo = fbo_, eglDestroyImageKHR = eglDestroyImageKHR]() { // called in raster thread and gl context is correct
+        if (img != EGL_NO_IMAGE_KHR)
+            EGL_WARN(eglDestroyImageKHR(disp, img));
+        if (tex)
+          GL_WARN(glDeleteTextures(1, &tex));
+        if (fbo)
+          GL_WARN(glDeleteFramebuffers(1, &fbo));
+      };
+      texture_registrar_->UnregisterTexture(textureId, gfxRelease);
+    }
+  }
+
   ~TexturePlayer() override {
     setRenderCallback(nullptr);
-    if (img_ != EGL_NO_IMAGE_KHR) {
-        EGL_WARN(eglDestroyImageKHR(disp_, img_));
-        img_ = EGL_NO_IMAGE_KHR;
-    }
-    if (tex_)
-      GL_WARN(glDeleteTextures(1, &tex_));
-    if (fbo_)
-      GL_WARN(glDeleteFramebuffers(1, &fbo_));
-    setVideoSurfaceSize(-1, -1);
+    // texture_registrar.h in flutter-elinux is outdated and results in crash. https://github.com/sony/flutter-embedded-linux/issues/438
+    unregisterIfGoodHeader<flutter::TextureRegistrar>();
+    setVideoSurfaceSize(-1, -1); // no gl context now, but gl resources will be released in raster thread later in ensureVideo() 
   }
 
   EGLImageKHR ensureVideo(size_t width, size_t height, EGLDisplay disp, EGLContext c) {
@@ -148,6 +158,7 @@ public:
 private:
   unique_ptr<FlutterDesktopEGLImage> fltImg_ = make_unique<FlutterDesktopEGLImage>();
   unique_ptr<flutter::TextureVariant> fltTex_;
+  flutter::TextureRegistrar* texture_registrar_ = nullptr;
 
   PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = nullptr;
   PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR = nullptr;
@@ -213,7 +224,6 @@ void FvpPlugin::HandleMethodCall(
   } else if (method_call.method_name() == "ReleaseRT") {
     auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
     const auto texId = args[flutter::EncodableValue("texture")].LongValue();
-    texture_registrar_->UnregisterTexture(texId);
     if (auto it = players_.find(texId); it != players_.cend()) {
         players_.erase(it);
     }
