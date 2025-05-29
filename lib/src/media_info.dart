@@ -300,6 +300,7 @@ class MediaInfo {
   /// duration in milliseconds. may be 0, for example live stream.
   /// duration may change when playing a stream being recorded
   var duration = 0;
+
   /// when stream is loaded, the value from container. when playing, it's updated to the realtime value
   var bitRate = 0;
 
