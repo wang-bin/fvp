@@ -525,4 +525,11 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         return dataSource.uri!;
     }
   }
+  void setBoxFitToVideo(int textureId, {required BoxFit fit, required double width, required double height}) {
+    final player = _players[textureId];
+    if (player == null) {
+      return;
+    }
+    player.setBoxFitToVideo(fit: fit, width: width, height: height);
+  }
 }
