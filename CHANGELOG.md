@@ -1,3 +1,9 @@
+## 0.32.0
+
+* support [embedded linux](https://github.com/sony/flutter-elinux), tested on x86 and arm, with x11, wayland and gbm.
+* fix an fbo error on linux
+* enable rkmpp decoder for rockchip
+
 ## 0.31.2
 
 * fix rpath on linux

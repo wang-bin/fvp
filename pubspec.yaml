@@ -1,17 +1,17 @@
 name: fvp
 description: video_player plugin and backend APIs. Support all desktop/mobile platforms with hardware decoders, optimal renders. Supports most formats via FFmpeg
-version: 0.31.2
+version: 0.32.0
 homepage: https://github.com/wang-bin/fvp
 topics:
   - video
   - player
   - video-player
   - audio-player
-  - videoplayer
+  - elinux
 
 environment:
   sdk: ^3.0.0
-  flutter: ^3.0.0
+  flutter: ">=3.0.0"
 
 dependencies:
   ffi: ^2.1.0
