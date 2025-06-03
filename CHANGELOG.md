@@ -1,5 +1,9 @@
 ## 0.32.0
 
+* compatible with video_player 2.10.0+
+
+## 0.32.0
+
 * support [embedded linux](https://github.com/sony/flutter-elinux), tested on x86 and arm, with x11, wayland and gbm.
 * fix an fbo error on linux
 * enable rkmpp decoder for rockchip
