@@ -28,26 +28,39 @@ MdkVideoPlayerPlatform get _platform {
 /// All methods in this extension must be called after initialized, otherwise no effect.
 extension FVPControllerExtensions on VideoPlayerController {
   /// Indicates whether current media is a live stream or not
+
+  int _getId() {
+    final dynamic self = this;
+// TODO: prefer playerId in a future version
+    try {
+      // or (this as dynamic).textureId;
+      return self.textureId; // try to get textureId
+    } on NoSuchMethodError {
+      return self
+          .playerId; // since video_player 2.10.0 to support platform view
+    }
+  }
+
   bool isLive() {
-    return _platform.isLive(textureId);
+    return _platform.isLive(_getId());
   }
 
   /// Get current media info.
   MediaInfo? getMediaInfo() {
-    return _platform.getMediaInfo(textureId);
+    return _platform.getMediaInfo(_getId());
   }
 
   /// set additional properties
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setpropertyconst-stdstring-key-const-stdstring-value
   void setProperty(String name, String value) {
-    _platform.setProperty(textureId, name, value);
+    _platform.setProperty(_getId(), name, value);
   }
 
   /// Change video decoder list on the fly.
   /// NOTE: the default decoder list used by [VideoPlayerController] constructor MUST set via [registerWith].
   /// Detail: https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setdecodersmediatype-type-const-stdvectorstdstring-names
   void setVideoDecoders(List<String> value) {
-    _platform.setVideoDecoders(textureId, value);
+    _platform.setVideoDecoders(_getId(), value);
   }
 
   /// Start to record if [to] is not null. Stop recording if [to] is null.
@@ -55,7 +68,7 @@ extension FVPControllerExtensions on VideoPlayerController {
   /// If not stopped by user, recording will be stopped when playback is finished.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-recordconst-char-url--nullptr-const-char-format--nullptr
   void record({String? to, String? format}) {
-    _platform.record(textureId, to: to, format: format);
+    _platform.record(_getId(), to: to, format: format);
   }
 
   /// Take a snapshot for current rendered frame.
@@ -64,13 +77,13 @@ extension FVPControllerExtensions on VideoPlayerController {
   /// [height] snapshot height. if not set, result is `mediaInfo.video[current_track].codec.height`
   /// Return rgba data of image size [width]x[height], stride is `width*4`
   Future<Uint8List?> snapshot({int? width, int? height}) async {
-    return _platform.snapshot(textureId, width: width, height: height);
+    return _platform.snapshot(_getId(), width: width, height: height);
   }
 
   /// Set position range in milliseconds. Can be used by A-B loop.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setrangeint64_t-a-int64_t-b--int64_max
   void setRange({required int from, int to = -1}) {
-    _platform.setRange(textureId, from: from, to: to);
+    _platform.setRange(_getId(), from: from, to: to);
   }
 
   /// Set duration range(milliseconds) of buffered data.
@@ -86,91 +99,91 @@ extension FVPControllerExtensions on VideoPlayerController {
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setbufferrangeint64_t-minms-int64_t-maxms-bool-drop--false
   /// NOTE: default values are set in [VideoPlayerController] constructor if 'lowLatency' is enabled in [registerWith]
   void setBufferRange({int min = -1, int max = -1, bool drop = false}) {
-    _platform.setBufferRange(textureId, min: min, max: max, drop: drop);
+    _platform.setBufferRange(_getId(), min: min, max: max, drop: drop);
   }
 
   /// fast seek to a key frame
   Future<void> fastSeekTo(Duration position) async {
-    return _platform.fastSeekTo(textureId, position);
+    return _platform.fastSeekTo(_getId(), position);
   }
 
   /// Step forward or backward.
   /// Step forward if [frames] > 0, backward otherwise.
   Future<void> step({int frames = 1}) async {
-    return _platform.step(textureId, frames);
+    return _platform.step(_getId(), frames);
   }
 
   /// set brightness. -1 <= [value] <= 1
   void setBrightness(double value) {
-    _platform.setBrightness(textureId, value);
+    _platform.setBrightness(_getId(), value);
   }
 
   /// set contrast. -1 <= [value] <= 1
   void setContrast(double value) {
-    _platform.setContrast(textureId, value);
+    _platform.setContrast(_getId(), value);
   }
 
   /// set hue. -1 <= [value] <= 1
   void setHue(double value) {
-    _platform.setHue(textureId, value);
+    _platform.setHue(_getId(), value);
   }
 
   /// set saturation. -1 <= [value] <= 1
   void setSaturation(double value) {
-    _platform.setSaturation(textureId, value);
+    _platform.setSaturation(_getId(), value);
   }
 
   /// Set active audio tracks. Other tracks will be disabled.
   /// The tracks can be from data source from [VideoPlayerController] constructor, or an external audio data source via [setExternalAudio]
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setactivetracksmediatype-type-const-stdsetint-tracks
   void setAudioTracks(List<int> value) {
-    _platform.setAudioTracks(textureId, value);
+    _platform.setAudioTracks(_getId(), value);
   }
 
   /// Get active audio tracks.
   List<int>? getActiveAudioTracks() {
-    return _platform.getActiveAudioTracks(textureId);
+    return _platform.getActiveAudioTracks(_getId());
   }
 
   /// Set active video tracks. Other tracks will be disabled.
   /// The tracks can be from data source from [VideoPlayerController] constructor, or an external video data source via [setExternalVideo]
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setactivetracksmediatype-type-const-stdsetint-tracks
   void setVideoTracks(List<int> value) {
-    _platform.setVideoTracks(textureId, value);
+    _platform.setVideoTracks(_getId(), value);
   }
 
   /// Get active video tracks.
   List<int>? getActiveVideoTracks() {
-    return _platform.getActiveVideoTracks(textureId);
+    return _platform.getActiveVideoTracks(_getId());
   }
 
   /// Set active subtitle tracks. Other tracks will be disabled.
   /// The tracks can be from data source from [VideoPlayerController] constructor, or an external subtitle data source via [setExternalSubtitle]
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setactivetracksmediatype-type-const-stdsetint-tracks
   void setSubtitleTracks(List<int> value) {
-    _platform.setSubtitleTracks(textureId, value);
+    _platform.setSubtitleTracks(_getId(), value);
   }
 
   /// Get active subtitle tracks.
   List<int>? getActiveSubtitleTracks() {
-    return _platform.getActiveSubtitleTracks(textureId);
+    return _platform.getActiveSubtitleTracks(_getId());
   }
 
   /// set an external audio data source
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setmediaconst-char-url-mediatype-type
   void setExternalAudio(String uri) {
-    _platform.setExternalAudio(textureId, uri);
+    _platform.setExternalAudio(_getId(), uri);
   }
 
   /// set an external video data source
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setmediaconst-char-url-mediatype-type
   void setExternalVideo(String uri) {
-    _platform.setExternalVideo(textureId, uri);
+    _platform.setExternalVideo(_getId(), uri);
   }
 
   /// set an external subtitle data source
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setmediaconst-char-url-mediatype-type
   void setExternalSubtitle(String uri) {
-    _platform.setExternalSubtitle(textureId, uri);
+    _platform.setExternalSubtitle(_getId(), uri);
   }
 }
