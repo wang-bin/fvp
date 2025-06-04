@@ -1,4 +1,4 @@
-## 0.32.0
+## 0.32.1
 
 * compatible with video_player 2.10.0+
 
