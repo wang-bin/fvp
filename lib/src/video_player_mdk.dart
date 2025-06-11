@@ -461,6 +461,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     _players[textureId]?.setVideoEffect(mdk.VideoEffect.saturation, [value]);
   }
 
+  void setProgram(int textureId, int programId) {
+    _players[textureId]?.setActiveTracks(mdk.MediaType.unknown, [programId]);
+  }
+
 // embedded tracks, can be main data source from create(), or external media source via setExternalAudio
   void setAudioTracks(int textureId, List<int> value) {
     _players[textureId]?.activeAudioTracks = value;

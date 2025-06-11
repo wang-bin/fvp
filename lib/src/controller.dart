@@ -151,6 +151,13 @@ extension FVPControllerExtensions on VideoPlayerController {
     _platform.setSaturation(_getId(this), value);
   }
 
+  /// Set a program to play. used by mpegts programs or hls.
+  /// [programId] is the index in [MediaInfo.programs]
+  /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setactivetracksmediatype-type-const-stdsetint-tracks
+  void setProgram(int programId) {
+    _platform.setProgram(_getId(this), programId);
+  }
+
   /// Set active audio tracks. Other tracks will be disabled.
   /// The tracks can be from data source from [VideoPlayerController] constructor, or an external audio data source via [setExternalAudio]
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setactivetracksmediatype-type-const-stdsetint-tracks
