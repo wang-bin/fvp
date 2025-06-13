@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Wang Bin. All rights reserved.
+// Copyright 2022-2025 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import 'dart:async';
@@ -156,6 +156,7 @@ class Player {
   /// Release resources
   void dispose() async {
     if (_pp == nullptr) {
+      textureId.dispose();
       return;
     }
     // await: ensure no player ref in fvp plugin before mdkPlayerAPI_delete() in dart
@@ -171,6 +172,7 @@ class Player {
     Libmdk.instance.mdkPlayerAPI_delete(_pp);
     calloc.free(_pp);
     _pp = nullptr;
+    textureId.dispose();
   }
 
   /// Release current texture then create a new one for current [media], and update [textureId].
@@ -772,10 +774,19 @@ class Player {
       // loading=>loaded, then frame decoded
       return;
     }
-    final vc = mediaInfo.video?[0].codec;
+    var v = mediaInfo.video?[0];
+    // we don't support dynamic texture size change, so use the max video codec width
+    if (v != null) {
+      for (final i in mediaInfo.video!) {
+        if (i.codec.width > v!.codec.width) {
+          v = i;
+        }
+      }
+    }
     // if no video stream, create a dummy texture of size 16x16
     double w = 16;
     double h = 16;
+    final vc = v?.codec;
     if (vc != null) {
       if (vc.width <= 0 || vc.height <= 0) {
         // failed to parse video size, e.g. small probesize
@@ -783,7 +794,7 @@ class Player {
       }
       w = vc.width.toDouble();
       h = (vc.height.toDouble() / vc.par).roundToDouble();
-      if (mediaInfo.video![0].rotation % 180 == 90) {
+      if (v!.rotation % 180 == 90) {
         (w, h) = (h, w);
       }
     }

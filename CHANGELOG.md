@@ -1,3 +1,7 @@
+## 0.32.1
+
+* compatible with video_player 2.10.0+
+
 ## 0.32.0
 
 * support [embedded linux](https://github.com/sony/flutter-elinux), tested on x86 and arm, with x11, wayland and gbm.

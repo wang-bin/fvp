@@ -44,6 +44,8 @@ class MdkVideoPlayerPlatform {
 
   void setSaturation(int textureId, double value) {}
 
+  void setProgram(int textureId, int programId) {}
+
   void setAudioTracks(int textureId, List<int> value) {}
 
   List<int>? getActiveAudioTracks(int textureId) {

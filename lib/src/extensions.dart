@@ -17,6 +17,21 @@ extension PlatformEx on Platform {
     return Libfvp.isEmulator();
   }
 
+  // TODO: check content /proc/device-tree/model?
+  static bool isRockchip() {
+    if (!Platform.isLinux) {
+      return false;
+    }
+    return File('/dev/mpp_service').existsSync();
+  }
+
+  static bool isRaspberryPi() {
+    if (!Platform.isLinux) {
+      return false;
+    }
+    return File('/dev/vchiq').existsSync();
+  }
+
   static String assetUri(String asset, {String? package}) {
     final key = asset;
     switch (Platform.operatingSystem) {

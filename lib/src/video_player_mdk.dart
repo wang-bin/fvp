@@ -156,19 +156,18 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
     if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
       // prefer hardware decoders
-      const vd = {
+      const vdRk = ['rkmpp', 'FFmpeg'];
+      const vdPi = ['V4L2M2M', 'FFmpeg:hwcontext=drm', 'FFmpeg'];
+      final vdLinux = PlatformEx.isRockchip()
+          ? vdRk
+          : (PlatformEx.isRaspberryPi()
+              ? vdPi
+              : ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg']);
+      final vd = {
         'windows': ['MFT:d3d=11', "D3D11", "DXVA", 'CUDA', 'FFmpeg'],
         'macos': ['VT', 'FFmpeg'],
         'ios': ['VT', 'FFmpeg'],
-        'linux': [
-          'VAAPI',
-          'CUDA',
-          'VDPAU',
-          'rkmpp',
-          'V4L2M2M',
-          'FFmpeg:hwcontext=drm',
-          'FFmpeg'
-        ],
+        'linux': vdLinux,
         'android': ['AMediaCodec', 'FFmpeg'],
       };
       _decoders = vd[Platform.operatingSystem];
@@ -460,6 +459,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   void setSaturation(int textureId, double value) {
     _players[textureId]?.setVideoEffect(mdk.VideoEffect.saturation, [value]);
+  }
+
+  void setProgram(int textureId, int programId) {
+    _players[textureId]?.setActiveTracks(mdk.MediaType.unknown, [programId]);
   }
 
 // embedded tracks, can be main data source from create(), or external media source via setExternalAudio
