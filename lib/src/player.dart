@@ -155,6 +155,7 @@ class Player {
   /// Release resources
   void dispose() async {
     if (_pp == nullptr) {
+      textureId.dispose();
       return;
     }
     // await: ensure no player ref in fvp plugin before mdkPlayerAPI_delete() in dart
@@ -170,6 +171,7 @@ class Player {
     Libmdk.instance.mdkPlayerAPI_delete(_pp);
     calloc.free(_pp);
     _pp = nullptr;
+    textureId.dispose();
   }
 
   /// Release current texture then create a new one for current [media], and update [textureId].
