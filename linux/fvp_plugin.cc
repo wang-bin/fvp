@@ -8,6 +8,7 @@
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
+#include <gdk/gdkwayland.h>
 
 #include <cstring>
 #include <iostream>
@@ -239,6 +240,8 @@ void fvp_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
   auto gdisp = gdk_display_get_default();
   if (GDK_IS_X11_DISPLAY(gdisp)) {
     mdk::SetGlobalOption("X11Display", GDK_DISPLAY_XDISPLAY(gdisp));
+  } else if (GDK_IS_WAYLAND_DISPLAY(gdisp)) {
+    mdk::SetGlobalOption("wl_display*", gdk_wayland_display_get_wl_display(gdisp));
   }
   mdk::SetGlobalOption("MDK_KEY", "980B9623276F746C5FBB5EC5120D4A99A0B58B635592EAEE41F6817FDF3B28B96AC4A49866257726C19B246863B5ADAF5D17464E86D72A90634E8AE8418F810967F469DCD8908B93A044A13AEDF2B566E0B5810523E2B59E2D83E616B1B807B66253E1607A79BC86AEDE1AEF46F79AA60F36BE44DDEE47B84E165AF2788F8109");
 }
