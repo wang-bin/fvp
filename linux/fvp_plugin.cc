@@ -12,6 +12,8 @@
 
 #include <cstring>
 #include <iostream>
+#include <list>
+#include <thread>
 #include <unordered_map>
 #include <epoxy/gl.h>
 
@@ -38,6 +40,9 @@ struct _PlayerTexture {
 };
 
 G_DEFINE_TYPE(PlayerTexture, player_texture, fl_texture_gl_get_type())
+
+// will raster thread change?
+static thread_local unordered_map<GdkGLContext*, std::list<function<void()>>> gDelayCleanup;
 
 
 class TexturePlayer final : public mdk::Player
@@ -84,6 +89,25 @@ private:
   PlayerTexture* flTex; // hold ref
 };
 
+static void try_to_cleanup_gl_res(PlayerTexture* self)
+{
+  if (gDelayCleanup.empty())
+    return;
+  clog << gDelayCleanup.size() << " delayed cleanup contexts in this thread " << this_thread::get_id() << ", current gl context: " << self->ctx << endl;
+  for (auto i : gDelayCleanup) {
+    clog << "delayed cleanup context: " << i.first << endl;
+  }
+  for (auto ctx : {self->ctx, (GdkGLContext*)nullptr}) { // nullptr: null context. assume rendering context never changes, so cleanup here
+    if (auto it = gDelayCleanup.find(ctx); it != gDelayCleanup.cend()) {
+      if (!it->second.empty())
+        clog << it->second.size() << " executing delayed tasks for context: " << ctx << endl;
+      for (auto& task : it->second) {
+        task();
+      }
+      gDelayCleanup.erase(it);
+    }
+  }
+}
 
 // called in a current gl context
 static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, uint32_t *name,
@@ -93,6 +117,8 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
   if (self->fbo == 0) {
     self->ctx = gdk_gl_context_get_current(); // fbo can not be shared
     glGenFramebuffers(1, &self->fbo);
+
+    try_to_cleanup_gl_res(self);
   }
   if (self->texture_id == 0) {
     GLint prevFbo = 0;
@@ -128,9 +154,25 @@ static void player_texture_dispose(GObject* obj) {
   G_OBJECT_CLASS(player_texture_parent_class)->dispose(obj);
   auto self = PLAYER_TEXTURE(obj);
   auto ctx = gdk_gl_context_get_current();
-  gdk_gl_context_make_current(self->ctx);
-  glDeleteTextures(1, &self->texture_id);
-  glDeleteFramebuffers(1, &self->fbo);
+  if (self->ctx != ctx) {
+    clog << "gdk gl context change: " << self->ctx << " => " << ctx << endl;
+    if (self->ctx) // null: dispose w/o populate? why?
+      gdk_gl_context_make_current(self->ctx);
+  }
+  const auto newCtx = gdk_gl_context_get_current();
+  auto cleanup = [tex = self->texture_id, fbo = self->fbo]() {
+    glDeleteTextures(1, &tex);
+    glDeleteFramebuffers(1, &fbo);
+  };
+  if (self->ctx == newCtx && newCtx) {
+    cleanup();
+  } else {
+    clog << self->ctx << " self->ctx is gl context: " << GDK_IS_GL_CONTEXT(self->ctx) << endl;
+    // delay cleanup until the context is back
+    gDelayCleanup[self->ctx].push_back(std::move(cleanup));
+    clog << "delay cleanup. dispose w/o a correct gl context: " << ctx << " => " << newCtx << " / " << self->ctx << endl;
+    clog << gDelayCleanup[self->ctx].size() << " context delayed cleanup for this thread " << this_thread::get_id() << endl;
+  }
   if (ctx)
     gdk_gl_context_make_current(ctx);
 }
