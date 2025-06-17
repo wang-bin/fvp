@@ -117,7 +117,7 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
   if (self->fbo == 0) {
     self->ctx = gdk_gl_context_get_current(); // fbo can not be shared
     glGenFramebuffers(1, &self->fbo);
-
+    clog << "created fbo " + std::to_string(self->fbo) << endl;
     try_to_cleanup_gl_res(self);
   }
   if (self->texture_id == 0) {
@@ -153,6 +153,10 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
 static void player_texture_dispose(GObject* obj) {
   G_OBJECT_CLASS(player_texture_parent_class)->dispose(obj);
   auto self = PLAYER_TEXTURE(obj);
+  if (!self->texture_id && !self->fbo) {
+    clog << "texture and fbo are not created yet" << endl;
+    return;
+  }
   auto ctx = gdk_gl_context_get_current();
   if (self->ctx != ctx) {
     clog << "gdk gl context change: " << self->ctx << " => " << ctx << endl;
