@@ -11,6 +11,7 @@
 #include <gdk/gdkwayland.h>
 
 #include <cstring>
+#include <cstdlib>
 #include <iostream>
 #include <list>
 #include <thread>
@@ -157,10 +158,12 @@ static void player_texture_dispose(GObject* obj) {
     clog << "texture and fbo are not created yet" << endl;
     return;
   }
+  static const auto env = std::getenv("FVP_GL_CLEANUP_DELAY");
+  static const bool kDelayCleanup = env && std::atoi(env);
   auto ctx = gdk_gl_context_get_current();
   if (self->ctx != ctx) {
     clog << "gdk gl context change: " << self->ctx << " => " << ctx << endl;
-    if (self->ctx) // null: dispose w/o populate? why?
+    if (self->ctx && !kDelayCleanup) // null: dispose w/o populate. why?
       gdk_gl_context_make_current(self->ctx);
   }
   const auto newCtx = gdk_gl_context_get_current();
@@ -174,10 +177,10 @@ static void player_texture_dispose(GObject* obj) {
     clog << self->ctx << " self->ctx is gl context: " << GDK_IS_GL_CONTEXT(self->ctx) << endl;
     // delay cleanup until the context is back
     gDelayCleanup[self->ctx].push_back(std::move(cleanup));
-    clog << "delay cleanup. dispose w/o a correct gl context: " << ctx << " => " << newCtx << " / " << self->ctx << endl;
+    clog << (kDelayCleanup ? "force " : "") << "delay cleanup. dispose w/o a correct gl context: " << ctx << " => " << newCtx << " / " << self->ctx << endl;
     clog << gDelayCleanup[self->ctx].size() << " context delayed cleanup for this thread " << this_thread::get_id() << endl;
   }
-  if (ctx)
+  if (ctx && ctx != newCtx) // make current was called
     gdk_gl_context_make_current(ctx);
 }
 
