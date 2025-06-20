@@ -5,6 +5,7 @@
 // found in the LICENSE file.
 #include "include/fvp/fvp_plugin.h"
 
+#include <algorithm>
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
@@ -14,6 +15,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <list>
+#include <memory>
+#include <string>
 #include <thread>
 #include <unordered_map>
 #include <epoxy/gl.h>
@@ -30,6 +33,29 @@ G_DECLARE_FINAL_TYPE(PlayerTexture, player_texture, FL, PLAYER_TEXTURE, FlTextur
 #define PLAYER_TEXTURE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), player_texture_get_type(), PlayerTexture))
 
+
+class CleanupTask {
+public:
+  CleanupTask(GdkGLContext* ctx, function<void()>&& callback) : ctx_(ctx), cb_(std::move(callback)) {}
+  ~CleanupTask() {
+    auto ctx = gdk_gl_context_get_current();
+    if (ctx_ != ctx) {
+      clog << "gdk gl context change: " << ctx_ << " => " << ctx << endl;
+      gdk_gl_context_make_current(ctx_);
+    }
+    cb_();
+    if (ctx_ != ctx) {
+      gdk_gl_context_make_current(ctx);
+    }
+  }
+
+  bool disposed = false;
+private:
+  GdkGLContext* ctx_;
+  function<void()> cb_;
+};
+static thread_local list<shared_ptr<CleanupTask>> gCleanupTasks;
+
 struct _PlayerTexture {
   FlTextureGL parent_instance;
 
@@ -38,13 +64,10 @@ struct _PlayerTexture {
   GLuint fbo;
 
   TexturePlayer* player;
+  CleanupTask* cleanup;
 };
 
 G_DEFINE_TYPE(PlayerTexture, player_texture, fl_texture_gl_get_type())
-
-// will raster thread change?
-static thread_local unordered_map<GdkGLContext*, std::list<function<void()>>> gDelayCleanup;
-
 
 class TexturePlayer final : public mdk::Player
 {
@@ -90,42 +113,32 @@ private:
   PlayerTexture* flTex; // hold ref
 };
 
-static void try_to_cleanup_gl_res(PlayerTexture* self)
-{
-  if (gDelayCleanup.empty())
-    return;
-  clog << gDelayCleanup.size() << " delayed cleanup contexts in this thread " << this_thread::get_id() << ", current gl context: " << self->ctx << endl;
-  for (auto i : gDelayCleanup) {
-    clog << "delayed cleanup context: " << i.first << endl;
-  }
-  for (auto ctx : {self->ctx, (GdkGLContext*)nullptr}) { // nullptr: null context. assume rendering context never changes, so cleanup here
-    if (auto it = gDelayCleanup.find(ctx); it != gDelayCleanup.cend()) {
-      if (!it->second.empty())
-        clog << it->second.size() << " executing delayed tasks for context: " << ctx << endl;
-      for (auto& task : it->second) {
-        task();
-      }
-      gDelayCleanup.erase(it);
-    }
-  }
-}
-
 // called in a current gl context
 static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, uint32_t *name,
                         uint32_t *width, uint32_t *height, GError **error) {
+  // cleanup ASAP before drawing the next frame
+  if (auto count = std::erase_if(gCleanupTasks, [](auto task) { return task->disposed; })) {
+    clog << std::to_string(count) + " cleanup tasks executed in raster thread " << this_thread::get_id() << endl;
+  }
   PlayerTexture *self = PLAYER_TEXTURE(texture);
 
   if (self->fbo == 0) {
     self->ctx = gdk_gl_context_get_current(); // fbo can not be shared
     glGenFramebuffers(1, &self->fbo);
-    clog << "created fbo " + std::to_string(self->fbo) << endl;
-    try_to_cleanup_gl_res(self);
-  }
-  if (self->texture_id == 0) {
+    assert(self->texture_id == 0);
     GLint prevFbo = 0;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFbo);
     glBindFramebuffer(GL_FRAMEBUFFER, self->fbo);
     glGenTextures(1, &self->texture_id);
+    clog << "created fbo: " + std::to_string(self->fbo) + " tex: " + std::to_string(self->texture_id) + " in raster thread " << this_thread::get_id() << endl;
+    auto task = make_shared<CleanupTask>(self->ctx, [tex = self->texture_id, fbo = self->fbo]() {
+      clog << "delete fbo: " + std::to_string(fbo) + " tex: " + std::to_string(tex) << endl;
+      glDeleteTextures(1, &tex);
+      glDeleteFramebuffers(1, &fbo);
+    });
+    self->cleanup = task.get();
+    gCleanupTasks.push_back(std::move(task));
+
     glBindTexture(GL_TEXTURE_2D, self->texture_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->player->width, self->player->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + 0, GL_TEXTURE_2D, self->texture_id, 0);
@@ -158,30 +171,13 @@ static void player_texture_dispose(GObject* obj) {
     clog << "texture and fbo are not created yet" << endl;
     return;
   }
-  static const auto env = std::getenv("FVP_GL_CLEANUP_DELAY");
-  static const bool kDelayCleanup = env && std::atoi(env);
-  auto ctx = gdk_gl_context_get_current();
-  if (self->ctx != ctx) {
-    clog << "gdk gl context change: " << self->ctx << " => " << ctx << endl;
-    if (self->ctx && !kDelayCleanup) // null: dispose w/o populate. why?
-      gdk_gl_context_make_current(self->ctx);
+  if (self->cleanup) {
+    self->cleanup->disposed = true;
+    clog << "try to cleanup gl resources in dispose thread " << this_thread::get_id() << endl;
+    if (auto count = std::erase_if(gCleanupTasks, [](auto task) { return task->disposed; })) {
+      clog << std::to_string(count) + " cleanup tasks executed in dispose thread " << this_thread::get_id() << endl;
+    }
   }
-  const auto newCtx = gdk_gl_context_get_current();
-  auto cleanup = [tex = self->texture_id, fbo = self->fbo]() {
-    glDeleteTextures(1, &tex);
-    glDeleteFramebuffers(1, &fbo);
-  };
-  if (self->ctx == newCtx && newCtx) {
-    cleanup();
-  } else {
-    clog << self->ctx << " self->ctx is gl context: " << GDK_IS_GL_CONTEXT(self->ctx) << endl;
-    // delay cleanup until the context is back
-    gDelayCleanup[self->ctx].push_back(std::move(cleanup));
-    clog << (kDelayCleanup ? "force " : "") << "delay cleanup. dispose w/o a correct gl context: " << ctx << " => " << newCtx << " / " << self->ctx << endl;
-    clog << gDelayCleanup[self->ctx].size() << " context delayed cleanup for this thread " << this_thread::get_id() << endl;
-  }
-  if (ctx && ctx != newCtx) // make current was called
-    gdk_gl_context_make_current(ctx);
 }
 
 static void player_texture_class_init(PlayerTextureClass* klass) {
@@ -195,6 +191,7 @@ static void player_texture_init(PlayerTexture* self) {
   self->fbo = 0;
   self->player = nullptr;
   self->ctx = nullptr;
+  self->cleanup = nullptr;
 }
 
 
