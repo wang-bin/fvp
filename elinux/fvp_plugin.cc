@@ -19,6 +19,8 @@
 #include <map>
 #include <memory>
 #include <iostream>
+#include <list>
+#include <thread>
 #include <unordered_map>
 #include "mdk/RenderAPI.h"
 #include "mdk/Player.h"
@@ -61,6 +63,19 @@ using namespace std;
     } while(false)
 
 namespace {
+class CleanupTask {
+public:
+  CleanupTask(function<void()> callback) : cb_(callback) {}
+  ~CleanupTask() {
+    cb_();
+  }
+
+  bool disposed = false;
+private:
+  function<void()> cb_;
+};
+static thread_local list<shared_ptr<CleanupTask>> gCleanupTasks;
+
 class TexturePlayer final : public mdk::Player
 {
 public:
@@ -90,37 +105,41 @@ public:
     });
   }
 
-  template <typename T> // use template to not instantiate false branch
-  void unregisterIfGoodHeader() {
+  template <class T, typename F> // use template to not instantiate false branch
+  bool unregisterIfGoodHeader(F&& f) {
     if constexpr (requires(T* t){ t->UnregisterTexture(0, nullptr); }) {
-      auto gfxRelease = [disp = disp_, img = img_, tex = tex_, fbo = fbo_, eglDestroyImageKHR = eglDestroyImageKHR]() { // called in raster thread and gl context is correct
-        if (img != EGL_NO_IMAGE_KHR)
-            EGL_WARN(eglDestroyImageKHR(disp, img));
-        if (tex)
-          GL_WARN(glDeleteTextures(1, &tex));
-        if (fbo)
-          GL_WARN(glDeleteFramebuffers(1, &fbo));
-      };
-      texture_registrar_->UnregisterTexture(textureId, gfxRelease);
+      texture_registrar_->UnregisterTexture(textureId, std::forward<F>(f));
+      return true;
     }
+    return false;
+  }
+
+  template <class T> // use template to not instantiate false branch
+  bool unregisterCanPostTask() {
+    return requires(T* t){ t->UnregisterTexture(0, nullptr); };
   }
 
   ~TexturePlayer() override {
+    if (task_)
+      task_->disposed = true;
     setRenderCallback(nullptr);
     // texture_registrar.h in flutter-elinux is outdated and results in crash. https://github.com/sony/flutter-embedded-linux/issues/438
-    unregisterIfGoodHeader<flutter::TextureRegistrar>();
-    setVideoSurfaceSize(-1, -1); // no gl context now, but gl resources will be released in raster thread later in ensureVideo() 
+    if (!unregisterIfGoodHeader<flutter::TextureRegistrar>(cleanup_)) {
+      texture_registrar_->UnregisterTexture(textureId);
+    }
+    setVideoSurfaceSize(-1, -1); // no gl context now, but gl resources will be released in raster thread later in ensureVideo()
   }
 
   EGLImageKHR ensureVideo(size_t width, size_t height, EGLDisplay disp, EGLContext c) {
+    if (auto count = std::erase_if(gCleanupTasks, [](auto task) { return task->disposed; })) {
+      clog << std::to_string(count) + " cleanup tasks executed in raster thread " << this_thread::get_id() << endl;
+    }
     if (fbo_ == 0) {
         ctx_ = c; // fbo can not be shared
         disp_ = disp;
         draw_ = eglGetCurrentSurface(EGL_DRAW);
         read_ = eglGetCurrentSurface(EGL_READ);
         GL_WARN(glGenFramebuffers(1, &fbo_));
-    }
-    if (tex_ == 0) {
         GLint prevFbo = 0;
         GL_WARN(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFbo));
         GL_WARN(glBindFramebuffer(GL_FRAMEBUFFER, fbo_));
@@ -148,6 +167,23 @@ public:
         if (img_ == EGL_NO_IMAGE_KHR) {
             clog << "eglCreateImageKHR error" << endl;
         }
+        clog << gCleanupTasks.size() << " tasks. created fbo: " + std::to_string(fbo_) + " tex: " + std::to_string(tex_) + " in raster thread " << this_thread::get_id() << endl;
+
+        cleanup_ = [disp = disp_, img = img_, tex = tex_, fbo = fbo_, eglDestroyImageKHR = eglDestroyImageKHR]() { // called in raster thread and gl context is correct
+          clog << "delete fbo: " + std::to_string(fbo) + " tex: " + std::to_string(tex) << endl;
+          if (img != EGL_NO_IMAGE_KHR)
+              EGL_WARN(eglDestroyImageKHR(disp, img));
+          if (tex)
+            GL_WARN(glDeleteTextures(1, &tex));
+          if (fbo)
+            GL_WARN(glDeleteFramebuffers(1, &fbo));
+        };
+        if (!unregisterCanPostTask<flutter::TextureRegistrar>()) {
+          clog << "incompatible texture_registrar.h, see https://github.com/sony/flutter-embedded-linux/issues/438" << endl;
+          auto task = make_shared<CleanupTask>(cleanup_);
+          task_ = task.get();
+          gCleanupTasks.push_back(std::move(task));
+        }
     }
 
     renderVideo();
@@ -159,6 +195,8 @@ private:
   unique_ptr<FlutterDesktopEGLImage> fltImg_ = make_unique<FlutterDesktopEGLImage>();
   unique_ptr<flutter::TextureVariant> fltTex_;
   flutter::TextureRegistrar* texture_registrar_ = nullptr;
+  CleanupTask* task_ = nullptr;
+  function<void()> cleanup_ = {};
 
   PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = nullptr;
   PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR = nullptr;
