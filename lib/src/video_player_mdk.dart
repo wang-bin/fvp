@@ -10,6 +10,7 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 import 'package:logging/logging.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'fvp_platform_interface.dart';
 import 'extensions.dart';
 import 'media_info.dart';
@@ -171,6 +172,11 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         'android': ['AMediaCodec', 'FFmpeg', 'dav1d'],
       };
       _decoders = vd[Platform.operatingSystem];
+      
+      // Log decoder selection for debugging
+      if (PlatformEx.isRaspberryPi()) {
+        _log.info('Raspberry Pi detected: Using hardware-optimized decoder list: ${_decoders?.join(', ')}');
+      }
     }
 
 // delay: ensure log handler is set in main(), blank window if run with debugger.
@@ -203,6 +209,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
           return;
       }
     });
+    
+    // Check for Pi4 hardware acceleration setup
+    _checkRaspberryPiSetup();
+    
     // mdk.setGlobalOptions('plugins', 'mdk-braw');
     mdk.setGlobalOption("log", "all");
     mdk.setGlobalOption('d3d11.sync.cpu', 1);
@@ -232,6 +242,50 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     _globalOpts?.forEach((key, value) {
       mdk.setGlobalOption(key, value);
     });
+  }
+
+  static void _checkRaspberryPiSetup() {
+    if (!PlatformEx.isRaspberryPi()) return;
+    
+    try {
+      // Check if bundled FFmpeg libraries might interfere with hardware acceleration
+      final execDir = path.dirname(Platform.resolvedExecutable);
+      final possibleLibDirs = [
+        path.join(execDir, 'lib'),
+        path.join(execDir, '..', 'lib'),
+        execDir
+      ];
+      
+      for (final libDir in possibleLibDirs) {
+        final dir = Directory(libDir);
+        if (dir.existsSync()) {
+          final bundledFfmpeg = dir.listSync()
+              .where((entity) => entity is File && 
+                     path.basename(entity.path).startsWith('libffmpeg.so'))
+              .toList();
+          
+          if (bundledFfmpeg.isNotEmpty) {
+            _log.warning('Raspberry Pi detected: Bundled FFmpeg libraries found in $libDir');
+            _log.warning('For hardware acceleration, remove bundled FFmpeg: rm ${bundledFfmpeg.map((f) => f.path).join(' ')}');
+            _log.warning('See: https://github.com/wang-bin/fvp#raspberry-pi-4-setup-for-hardware-acceleration');
+            break;
+          }
+        }
+      }
+      
+      // Check if V4L2M2M support is available
+      final v4l2Devices = Directory('/dev').listSync()
+          .where((entity) => path.basename(entity.path).startsWith('video'))
+          .toList();
+      
+      if (v4l2Devices.isEmpty) {
+        _log.warning('Raspberry Pi: No V4L2 video devices found. Hardware acceleration may not be available.');
+      } else {
+        _log.info('Raspberry Pi: Found ${v4l2Devices.length} V4L2 device(s) for potential hardware acceleration');
+      }
+    } catch (e) {
+      _log.fine('Could not check Raspberry Pi setup: $e');
+    }
   }
 
   @override
@@ -537,5 +591,98 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       case DataSourceType.contentUri:
         return dataSource.uri!;
     }
+  }
+
+  // Utility methods for debugging and performance analysis
+  
+  /// Returns information about the current decoder setup for debugging
+  static Map<String, dynamic> getDecoderInfo() {
+    return {
+      'platform': Platform.operatingSystem,
+      'isRaspberryPi': PlatformEx.isRaspberryPi(),
+      'isRockchip': PlatformEx.isRockchip(),
+      'isAndroidEmulator': PlatformEx.isAndroidEmulator(),
+      'configuredDecoders': _decoders,
+      'globalOptions': _globalOpts,
+      'playerOptions': _playerOpts,
+    };
+  }
+
+  /// Returns hardware acceleration status for a specific player
+  Map<String, dynamic>? getHardwareAccelerationInfo(int textureId) {
+    final player = _players[textureId];
+    if (player == null) return null;
+    
+    final mediaInfo = player.mediaInfo;
+    return {
+      'textureId': textureId,
+      'mediaInfo': {
+        'duration': mediaInfo.duration,
+        'videoCodec': mediaInfo.video.isNotEmpty ? mediaInfo.video[0].codec : null,
+        'videoFormat': mediaInfo.video.isNotEmpty ? mediaInfo.video[0].format : null,
+        'width': mediaInfo.video.isNotEmpty ? mediaInfo.video[0].width : null,
+        'height': mediaInfo.video.isNotEmpty ? mediaInfo.video[0].height : null,
+      },
+      'activeDecoders': player.videoDecoders,
+      'isLive': player.isLive,
+    };
+  }
+
+  /// Checks if system appears to have hardware acceleration available (Pi4 specific)
+  static Future<Map<String, dynamic>> checkSystemHardwareSupport() async {
+    final result = <String, dynamic>{};
+    
+    if (PlatformEx.isRaspberryPi()) {
+      result['platform'] = 'raspberryPi';
+      
+      // Check for V4L2 devices
+      try {
+        final v4l2Devices = Directory('/dev').listSync()
+            .where((entity) => path.basename(entity.path).startsWith('video'))
+            .map((entity) => path.basename(entity.path))
+            .toList();
+        result['v4l2Devices'] = v4l2Devices;
+      } catch (e) {
+        result['v4l2DevicesError'] = e.toString();
+      }
+      
+      // Check for GPU memory
+      try {
+        final vcgencmd = await Process.run('vcgencmd', ['get_mem', 'gpu']);
+        if (vcgencmd.exitCode == 0) {
+          result['gpuMemory'] = vcgencmd.stdout.toString().trim();
+        }
+      } catch (e) {
+        result['gpuMemoryError'] = 'vcgencmd not available: $e';
+      }
+      
+      // Check bundled FFmpeg status
+      final execDir = path.dirname(Platform.resolvedExecutable);
+      final possibleLibDirs = [
+        path.join(execDir, 'lib'),
+        path.join(execDir, '..', 'lib'),
+        execDir
+      ];
+      
+      final bundledFfmpegFound = <String>[];
+      for (final libDir in possibleLibDirs) {
+        final dir = Directory(libDir);
+        if (dir.existsSync()) {
+          final bundledFfmpeg = dir.listSync()
+              .where((entity) => entity is File && 
+                     path.basename(entity.path).startsWith('libffmpeg.so'))
+              .map((entity) => entity.path)
+              .toList();
+          bundledFfmpegFound.addAll(bundledFfmpeg);
+        }
+      }
+      result['bundledFfmpegLibraries'] = bundledFfmpegFound;
+      result['hardwareAccelerationBlocked'] = bundledFfmpegFound.isNotEmpty;
+    } else {
+      result['platform'] = Platform.operatingSystem;
+      result['isSupported'] = false;
+    }
+    
+    return result;
   }
 }

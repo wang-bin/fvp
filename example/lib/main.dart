@@ -24,7 +24,7 @@ class _App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         key: const ValueKey<String>('home_page'),
         appBar: AppBar(
@@ -52,6 +52,7 @@ class _App extends StatelessWidget {
               ),
               Tab(icon: Icon(Icons.insert_drive_file), text: 'Asset'),
               Tab(icon: Icon(Icons.list), text: 'List example'),
+              Tab(icon: Icon(Icons.info), text: 'Debug Info'),
             ],
           ),
         ),
@@ -60,6 +61,7 @@ class _App extends StatelessWidget {
             _BumbleBeeRemoteVideo(),
             _ButterFlyAssetVideo(),
             _ButterFlyAssetVideoInList(),
+            _DebugInfoTab(),
           ],
         ),
       ),
@@ -440,6 +442,174 @@ class _PlayerVideoAndPopPageState extends State<_PlayerVideoAndPopPage> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _DebugInfoTab extends StatefulWidget {
+  @override
+  _DebugInfoTabState createState() => _DebugInfoTabState();
+}
+
+class _DebugInfoTabState extends State<_DebugInfoTab> {
+  Map<String, dynamic>? _systemInfo;
+  Map<String, dynamic>? _decoderInfo;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDebugInfo();
+  }
+
+  Future<void> _loadDebugInfo() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final systemInfo = await fvp.FVPUtils.checkSystemHardwareSupport();
+      final decoderInfo = fvp.FVPUtils.getDecoderInfo();
+      
+      setState(() {
+        _systemInfo = systemInfo;
+        _decoderInfo = decoderInfo;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _systemInfo = {'error': e.toString()};
+        _decoderInfo = {'error': e.toString()};
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.info),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'FVP Debug Information',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'This tab shows hardware acceleration status and decoder information. '
+                            'Especially useful for troubleshooting Raspberry Pi 4 performance issues.',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // System Hardware Support
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'System Hardware Support',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildInfoText(_systemInfo),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Decoder Configuration
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Decoder Configuration',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildInfoText(_decoderInfo),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  ElevatedButton(
+                    onPressed: _loadDebugInfo,
+                    child: const Text('Refresh Debug Info'),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildInfoText(Map<String, dynamic>? info) {
+    if (info == null) {
+      return const Text('Loading...');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: info.entries.map((entry) {
+        final value = entry.value;
+        final displayValue = value is List 
+            ? value.join(', ')
+            : value.toString();
+        
+        Color? textColor;
+        if (entry.key == 'hardwareAccelerationBlocked' && value == true) {
+          textColor = Colors.red;
+        } else if (entry.key == 'isRaspberryPi' && value == true) {
+          textColor = Colors.green;
+        }
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Text(
+            '${entry.key}: $displayValue',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              color: textColor,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

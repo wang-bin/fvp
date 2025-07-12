@@ -13,6 +13,22 @@ import 'package:fvp/fvp.dart' as fvp;
 void main() {
   test('registration', () {
     fvp.registerWith();
-    expect(VideoPlayerPlatform.instance, isA<MdkVideoPlayer>());
+    expect(VideoPlayerPlatform.instance, isA<MdkVideoPlayerPlatform>());
+  });
+
+  test('debug utilities', () {
+    fvp.registerWith();
+    
+    // Test decoder info utility
+    final decoderInfo = fvp.FVPUtils.getDecoderInfo();
+    expect(decoderInfo, isA<Map<String, dynamic>>());
+    expect(decoderInfo.containsKey('platform'), isTrue);
+    expect(decoderInfo.containsKey('configuredDecoders'), isTrue);
+    
+    // Test system hardware support check
+    fvp.FVPUtils.checkSystemHardwareSupport().then((systemInfo) {
+      expect(systemInfo, isA<Map<String, dynamic>>());
+      expect(systemInfo.containsKey('platform'), isTrue);
+    });
   });
 }

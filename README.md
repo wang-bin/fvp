@@ -100,9 +100,75 @@ For other platforms, set environment var `FVP_DEPS_LATEST=1` and rebuilt, will u
 - Function with a one time callback is async and returns a future
 
 # Enable Hardware Decoders for Embedded Linux
-delete libffmpeg.so.* in your app bundle, which is copied from libmdk sdk.
-- Raspberry Pi: install ffmpeg and system ffmpeg libraries with v4l2 acceleration will be used.
-- Rockchip: build and install https://github.com/nyanmisaka/ffmpeg-rockchip . You may also need environment var `export GL_UBO=1` for arm mali driver on linux 6.x kernel to avoid gl driver bug.
+
+For optimal performance on embedded Linux systems, remove the bundled FFmpeg libraries to use system FFmpeg with hardware acceleration.
+
+## Raspberry Pi 4 Setup for Hardware Acceleration
+
+### Step 1: Remove Bundled FFmpeg Libraries
+After building your Flutter app, delete the bundled FFmpeg libraries from your app bundle:
+```bash
+# In your app's build output directory (e.g., build/linux/x64/release/bundle/lib/)
+rm -f libffmpeg.so.*
+```
+
+### Step 2: Install System FFmpeg with Hardware Support
+```bash
+# Install FFmpeg with V4L2 (Video4Linux) support
+sudo apt update
+sudo apt install ffmpeg libavcodec-dev libavformat-dev
+```
+
+### Step 3: Verify Hardware Acceleration
+Check if V4L2M2M decoders are available:
+```bash
+ffmpeg -decoders | grep v4l2m2m
+```
+
+### Step 4: Optimize Performance
+- Use `elinux` build target for best performance instead of desktop Linux
+- Stop desktop environment if not needed: `sudo systemctl stop lightdm`
+- Ensure GPU memory split is adequate: `sudo raspi-config` → Advanced Options → Memory Split (set to 128MB+)
+
+### Troubleshooting Pi4 Performance
+- **High CPU usage**: Check if bundled FFmpeg libraries were properly removed
+- **Decoder failures**: Verify system FFmpeg has V4L2M2M support enabled
+- **Still slow**: Try different decoder priorities in registerWith options:
+  ```dart
+  fvp.registerWith(options: {
+    'video.decoders': ['V4L2M2M', 'FFmpeg:hwcontext=drm', 'FFmpeg'],
+    'global': {'log': 'debug'} // Enable debug logging
+  });
+  ```
+
+### Other Platforms
+- **Rockchip**: build and install https://github.com/nyanmisaka/ffmpeg-rockchip . You may also need environment var `export GL_UBO=1` for arm mali driver on linux 6.x kernel to avoid gl driver bug.
+
+## Debugging Hardware Acceleration
+
+FVP provides utility methods to help diagnose hardware acceleration issues:
+
+```dart
+import 'package:fvp/fvp.dart' as fvp;
+
+// Check system hardware support (especially useful for Pi4)
+final systemInfo = await fvp.FVPUtils.checkSystemHardwareSupport();
+print('Hardware support: $systemInfo');
+
+// Get decoder configuration info
+final decoderInfo = fvp.FVPUtils.getDecoderInfo();
+print('Decoder config: $decoderInfo');
+
+// For a specific player, get hardware acceleration status
+final hwInfo = controller.getHardwareAccelerationInfo();
+print('Hardware acceleration: $hwInfo');
+```
+
+### Understanding the Output
+- `bundledFfmpegLibraries`: If non-empty on Pi4, remove these files for hardware acceleration
+- `v4l2Devices`: Should show video devices like `video10`, `video11` for Pi4 hardware support
+- `gpuMemory`: Should be 128MB+ for optimal Pi4 video performance
+- `hardwareAccelerationBlocked`: `true` means bundled FFmpeg is blocking system hardware decoders
 
 # Enable Subtitles
 

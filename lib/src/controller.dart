@@ -211,4 +211,23 @@ extension FVPControllerExtensions on VideoPlayerController {
   void setExternalSubtitle(String uri) {
     _platform.setExternalSubtitle(_getId(this), uri);
   }
+
+  /// Get hardware acceleration status and decoder information for debugging
+  /// This is particularly useful on Raspberry Pi 4 to verify hardware acceleration is working
+  Map<String, dynamic>? getHardwareAccelerationInfo() {
+    return _platform.getHardwareAccelerationInfo(_getId(this));
+  }
+}
+
+/// Static utility methods for debugging and system information
+class FVPUtils {
+  /// Get information about the current decoder configuration
+  static Map<String, dynamic> getDecoderInfo() {
+    return MdkVideoPlayerPlatform.getDecoderInfo();
+  }
+
+  /// Check system hardware acceleration support (especially useful for Raspberry Pi 4)
+  static Future<Map<String, dynamic>> checkSystemHardwareSupport() {
+    return MdkVideoPlayerPlatform.checkSystemHardwareSupport();
+  }
 }
