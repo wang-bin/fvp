@@ -1,3 +1,8 @@
+## 0.33.1
+
+* fix protocol whitelist
+* enable dav1d, hap
+
 ## 0.33.0
 
 * improve test textureId/playerId only once
