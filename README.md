@@ -99,6 +99,10 @@ For other platforms, set environment var `FVP_DEPS_LATEST=1` and rebuilt, will u
 - Callbacks and events in C++ are notified by ReceivePort
 - Function with a one time callback is async and returns a future
 
+# Enable Hardware Decoders for Embedded Linux
+delete libffmpeg.so.* in your app bundle, which is copied from libmdk sdk.
+- Raspberry Pi: install ffmpeg and system ffmpeg libraries with v4l2 acceleration will be used.
+- Rockchip: build and install https://github.com/nyanmisaka/ffmpeg-rockchip . You may also need environment var `export GL_UBO=1` for arm mali driver on linux 6.x kernel to avoid gl driver bug.
 
 # Enable Subtitles
 

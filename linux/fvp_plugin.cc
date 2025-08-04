@@ -5,12 +5,19 @@
 // found in the LICENSE file.
 #include "include/fvp/fvp_plugin.h"
 
+#include <algorithm>
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
+#include <gdk/gdkwayland.h>
 
 #include <cstring>
+#include <cstdlib>
 #include <iostream>
+#include <list>
+#include <memory>
+#include <string>
+#include <thread>
 #include <unordered_map>
 #include <epoxy/gl.h>
 
@@ -26,6 +33,29 @@ G_DECLARE_FINAL_TYPE(PlayerTexture, player_texture, FL, PLAYER_TEXTURE, FlTextur
 #define PLAYER_TEXTURE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), player_texture_get_type(), PlayerTexture))
 
+
+class CleanupTask {
+public:
+  CleanupTask(GdkGLContext* ctx, function<void()>&& callback) : ctx_(ctx), cb_(std::move(callback)) {}
+  ~CleanupTask() {
+    auto ctx = gdk_gl_context_get_current();
+    if (ctx_ != ctx) {
+      clog << "gdk gl context change: " << ctx_ << " => " << ctx << endl;
+      gdk_gl_context_make_current(ctx_);
+    }
+    cb_();
+    if (ctx_ != ctx) {
+      gdk_gl_context_make_current(ctx);
+    }
+  }
+
+  bool disposed = false;
+private:
+  GdkGLContext* ctx_;
+  function<void()> cb_;
+};
+static thread_local list<shared_ptr<CleanupTask>> gCleanupTasks;
+
 struct _PlayerTexture {
   FlTextureGL parent_instance;
 
@@ -34,10 +64,10 @@ struct _PlayerTexture {
   GLuint fbo;
 
   TexturePlayer* player;
+  CleanupTask* cleanup;
 };
 
 G_DEFINE_TYPE(PlayerTexture, player_texture, fl_texture_gl_get_type())
-
 
 class TexturePlayer final : public mdk::Player
 {
@@ -83,21 +113,32 @@ private:
   PlayerTexture* flTex; // hold ref
 };
 
-
 // called in a current gl context
 static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, uint32_t *name,
                         uint32_t *width, uint32_t *height, GError **error) {
+  // cleanup ASAP before drawing the next frame
+  if (auto count = std::erase_if(gCleanupTasks, [](auto task) { return task->disposed; })) {
+    clog << std::to_string(count) + " cleanup tasks executed in raster thread " << this_thread::get_id() << endl;
+  }
   PlayerTexture *self = PLAYER_TEXTURE(texture);
 
   if (self->fbo == 0) {
     self->ctx = gdk_gl_context_get_current(); // fbo can not be shared
     glGenFramebuffers(1, &self->fbo);
-  }
-  if (self->texture_id == 0) {
+    assert(self->texture_id == 0);
     GLint prevFbo = 0;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFbo);
     glBindFramebuffer(GL_FRAMEBUFFER, self->fbo);
     glGenTextures(1, &self->texture_id);
+    clog << "created fbo: " + std::to_string(self->fbo) + " tex: " + std::to_string(self->texture_id) + " in raster thread " << this_thread::get_id() << endl;
+    auto task = make_shared<CleanupTask>(self->ctx, [tex = self->texture_id, fbo = self->fbo]() {
+      clog << "delete fbo: " + std::to_string(fbo) + " tex: " + std::to_string(tex) << endl;
+      glDeleteTextures(1, &tex);
+      glDeleteFramebuffers(1, &fbo);
+    });
+    self->cleanup = task.get();
+    gCleanupTasks.push_back(std::move(task));
+
     glBindTexture(GL_TEXTURE_2D, self->texture_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self->player->width, self->player->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + 0, GL_TEXTURE_2D, self->texture_id, 0);
@@ -126,12 +167,17 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
 static void player_texture_dispose(GObject* obj) {
   G_OBJECT_CLASS(player_texture_parent_class)->dispose(obj);
   auto self = PLAYER_TEXTURE(obj);
-  auto ctx = gdk_gl_context_get_current();
-  gdk_gl_context_make_current(self->ctx);
-  glDeleteTextures(1, &self->texture_id);
-  glDeleteFramebuffers(1, &self->fbo);
-  if (ctx)
-    gdk_gl_context_make_current(ctx);
+  if (!self->texture_id && !self->fbo) {
+    clog << "texture and fbo are not created yet" << endl;
+    return;
+  }
+  if (self->cleanup) {
+    self->cleanup->disposed = true;
+    clog << "try to cleanup gl resources in dispose thread " << this_thread::get_id() << endl;
+    if (auto count = std::erase_if(gCleanupTasks, [](auto task) { return task->disposed; })) {
+      clog << std::to_string(count) + " cleanup tasks executed in dispose thread " << this_thread::get_id() << endl;
+    }
+  }
 }
 
 static void player_texture_class_init(PlayerTextureClass* klass) {
@@ -145,6 +191,7 @@ static void player_texture_init(PlayerTexture* self) {
   self->fbo = 0;
   self->player = nullptr;
   self->ctx = nullptr;
+  self->cleanup = nullptr;
 }
 
 
@@ -239,6 +286,8 @@ void fvp_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
   auto gdisp = gdk_display_get_default();
   if (GDK_IS_X11_DISPLAY(gdisp)) {
     mdk::SetGlobalOption("X11Display", GDK_DISPLAY_XDISPLAY(gdisp));
+  } else if (GDK_IS_WAYLAND_DISPLAY(gdisp)) {
+    mdk::SetGlobalOption("wl_display*", gdk_wayland_display_get_wl_display(gdisp));
   }
   mdk::SetGlobalOption("MDK_KEY", "980B9623276F746C5FBB5EC5120D4A99A0B58B635592EAEE41F6817FDF3B28B96AC4A49866257726C19B246863B5ADAF5D17464E86D72A90634E8AE8418F810967F469DCD8908B93A044A13AEDF2B566E0B5810523E2B59E2D83E616B1B807B66253E1607A79BC86AEDE1AEF46F79AA60F36BE44DDEE47B84E165AF2788F8109");
 }

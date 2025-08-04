@@ -156,19 +156,19 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
     if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
       // prefer hardware decoders
-      const vdRk = ['rkmpp', 'FFmpeg'];
-      const vdPi = ['V4L2M2M', 'FFmpeg:hwcontext=drm', 'FFmpeg'];
+      const vdRk = ['rkmpp', 'FFmpeg', 'dav1d'];
+      const vdPi = ['V4L2M2M', 'FFmpeg:hwcontext=drm', 'FFmpeg', 'dav1d'];
       final vdLinux = PlatformEx.isRockchip()
           ? vdRk
           : (PlatformEx.isRaspberryPi()
               ? vdPi
-              : ['VAAPI', 'CUDA', 'VDPAU', 'FFmpeg']);
+              : ['VAAPI', 'CUDA', 'VDPAU', 'hap', 'FFmpeg', 'dav1d']);
       final vd = {
-        'windows': ['MFT:d3d=11', "D3D11", "DXVA", 'CUDA', 'FFmpeg'],
-        'macos': ['VT', 'FFmpeg'],
-        'ios': ['VT', 'FFmpeg'],
+        'windows': ['MFT:d3d=11', "D3D11", "DXVA", 'CUDA', 'hap', 'FFmpeg', 'dav1d'],
+        'macos': ['VT', 'hap', 'FFmpeg', 'dav1d'],
+        'ios': ['VT', 'FFmpeg', 'dav1d'],
         'linux': vdLinux,
-        'android': ['AMediaCodec', 'FFmpeg'],
+        'android': ['AMediaCodec', 'FFmpeg', 'dav1d'],
       };
       _decoders = vd[Platform.operatingSystem];
     }
@@ -254,9 +254,12 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     player.setProperty('avformat.safe', '0');
     player.setProperty('avio.reconnect', '1');
     player.setProperty('avio.reconnect_delay_max', '7');
-    player.setProperty('avio.protocol_whitelist',
-        'file,rtmp,http,https,tls,rtp,tcp,udp,crypto,httpproxy,data,concatf,concat,subfile');
     player.setProperty('avformat.rtsp_transport', 'tcp');
+    if (dataSource.sourceType != DataSourceType.network) {
+      // for m3u8 local file etc.
+      player.setProperty('avio.protocol_whitelist',
+          'file,ftp,rtmp,http,https,tls,rtp,tcp,udp,crypto,httpproxy,data,concatf,concat,subfile');
+    }
     _playerOpts?.forEach((key, value) {
       player.setProperty(key, value);
     });

@@ -1,3 +1,16 @@
+## 0.33.1
+
+* fix protocol whitelist
+* enable dav1d, hap
+
+## 0.33.0
+
+* improve test textureId/playerId only once
+* add `VideoPlayerController.setProgram()`
+* use highest resolution for rendering if stream have multiple programs/tracks
+* enable wayland display
+* linux/elinux: improve gl resource cleanup
+
 ## 0.32.1
 
 * compatible with video_player 2.10.0+
