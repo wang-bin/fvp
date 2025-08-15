@@ -156,7 +156,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
     if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
       // prefer hardware decoders
-      const vdRk = ['rkmpp', 'FFmpeg', 'dav1d'];
+      const vdRk = ['rockchip', 'rkmpp', 'FFmpeg', 'dav1d'];
       const vdPi = ['V4L2M2M', 'FFmpeg:hwcontext=drm', 'FFmpeg', 'dav1d'];
       final vdLinux = PlatformEx.isRockchip()
           ? vdRk
