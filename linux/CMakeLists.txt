@@ -62,6 +62,7 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE mdk)
 get_filename_component(MDK_LIB_DIR ${MDK_LIBRARY} DIRECTORY)
 set(fvp_bundled_libraries
     ${MDK_RUNTIME}
+    ${MDK_PLUGINS}
     ${MDK_FFMPEG}
     ${MDK_LIB_DIR}/libc++.so.1
   PARENT_SCOPE

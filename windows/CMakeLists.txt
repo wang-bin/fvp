@@ -70,6 +70,7 @@ get_filename_component(MDK_LIB_DIR ${MDK_LIBRARY} DIRECTORY)
 string(REPLACE "/lib/" "/bin/" MDK_BIN_DIR ${MDK_LIB_DIR})
 set(fvp_bundled_libraries
     ${MDK_RUNTIME}
+    ${MDK_PLUGINS}
     ${MDK_FFMPEG}
     ${MDK_LIBASS}
   PARENT_SCOPE
