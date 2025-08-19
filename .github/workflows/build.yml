@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - uses: subosito/flutter-action@v2
@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - uses: subosito/flutter-action@v2
@@ -88,7 +88,7 @@ jobs:
           - version: '3.19.x'
             channel: 'beta'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - uses: subosito/flutter-action@v2
@@ -123,7 +123,7 @@ jobs:
           - version: '3.10.x'
             channel: 'beta'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - uses: subosito/flutter-action@v2
@@ -148,7 +148,7 @@ jobs:
 
 
   Linux-arm64:
-    if: false
+    if: true
     runs-on: ubuntu-24.04-arm
     defaults:
       run:
@@ -157,19 +157,19 @@ jobs:
       fail-fast: false
       matrix:
         version: ['any']
-        channel: ['stable']
+        channel: ['master']
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
+    - run: |
+       sudo apt-get update -y
+       sudo apt-get install -y cmake clang ninja-build libgtk-3-dev libpulse-dev
     - uses: subosito/flutter-action@v2
       with:
         flutter-version: ${{ matrix.version }}
         channel: ${{ matrix.channel }}
         cache: true
-    - run: |
-       sudo apt-get update -y
-       sudo apt-get install -y cmake clang ninja-build libgtk-3-dev libpulse-dev
 #    - run: flutter config --enable-linux-desktop
     - run: flutter doctor --verbose
     - run: flutter pub get
@@ -184,12 +184,13 @@ jobs:
 
 
   Snap-arm64:
+    if: false
     runs-on: ubuntu-24.04-arm
     defaults:
       run:
         working-directory: example
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - name: Install dependencies
@@ -218,7 +219,7 @@ jobs:
       matrix:
         target: [linux] #, apk]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - uses: actions/setup-java@v4
@@ -246,7 +247,7 @@ jobs:
         host: [ubuntu]
         version: ['3.22.x', 'any']
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - uses: subosito/flutter-action@v2
@@ -279,7 +280,7 @@ jobs:
       matrix:
         wasm: ['--wasm', '']
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - uses: subosito/flutter-action@v2
