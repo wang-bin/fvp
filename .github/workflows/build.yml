@@ -222,7 +222,7 @@ jobs:
     - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
-    - uses: actions/setup-java@v4
+    - uses: actions/setup-java@v5
       if: ${{ matrix.target == 'apk' }}
       with:
         distribution: 'zulu'
@@ -255,7 +255,7 @@ jobs:
         flutter-version: ${{ matrix.version }}
         channel: 'stable'
         cache: true
-    - uses: actions/setup-java@v4
+    - uses: actions/setup-java@v5
       with:
         distribution: 'zulu'
         java-version: '17'
