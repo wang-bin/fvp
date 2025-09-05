@@ -255,6 +255,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     player.setProperty('avio.reconnect', '1');
     player.setProperty('avio.reconnect_delay_max', '7');
     player.setProperty('avformat.rtsp_transport', 'tcp');
+    player.setProperty('avformat.extension_picky', '0');
+    player.setProperty('avformat.allowed_segment_extensions', 'ALL');
     if (dataSource.sourceType != DataSourceType.network) {
       // for m3u8 local file etc.
       player.setProperty('avio.protocol_whitelist',
