@@ -164,7 +164,15 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
               ? vdPi
               : ['VAAPI', 'CUDA', 'VDPAU', 'hap', 'FFmpeg', 'dav1d']);
       final vd = {
-        'windows': ['MFT:d3d=11', "D3D11", "DXVA", 'CUDA', 'hap', 'FFmpeg', 'dav1d'],
+        'windows': [
+          'MFT:d3d=11',
+          "D3D11",
+          "DXVA",
+          'CUDA',
+          'hap',
+          'FFmpeg',
+          'dav1d'
+        ],
         'macos': ['VT', 'hap', 'FFmpeg', 'dav1d'],
         'ios': ['VT', 'FFmpeg', 'dav1d'],
         'linux': vdLinux,
