@@ -109,6 +109,13 @@ class Player {
             }
             _snapshot = null;
           }
+        case 8:
+          {
+            final start = message[1] as double;
+            final end = message[2] as double;
+            final texts = (message[3] as List).cast<String>();
+            _subtitleCb?.call(start, end, texts);
+          }
       }
       calloc.free(rep);
     });
@@ -769,6 +776,16 @@ class Player {
     }
   }
 
+  void onSubtitleText(
+      void Function(double start, double end, List<String> text)? callback) {
+    _subtitleCb = callback;
+    if (callback == null) {
+      Libfvp.unregisterType(nativeHandle, 8);
+    } else {
+      Libfvp.registerType(nativeHandle, 8, false);
+    }
+  }
+
   void _setVideoSize() {
     if (_videoSize.isCompleted) {
       // loading=>loaded, then frame decoded
@@ -824,6 +841,7 @@ class Player {
   final _stateCb = <Function(PlaybackState oldValue, PlaybackState newValue)>[];
   final _statusCb =
       <bool Function(MediaStatus oldValue, MediaStatus newValue)>[];
+  Function(double start, double end, List<String> text)? _subtitleCb;
   Future<bool> Function()? _prepareCb;
 
   bool _mute = false;

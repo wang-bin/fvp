@@ -1,3 +1,8 @@
+## 0.34.0
+
+* add rockchip decoder
+* deploy libmdk plugins
+
 ## 0.33.1
 
 * fix protocol whitelist

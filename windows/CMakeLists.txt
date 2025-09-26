@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.14)
 
 # Project-level configuration.
 set(PROJECT_NAME "fvp")
-project(${PROJECT_NAME} VERSION 0.33.1
+project(${PROJECT_NAME} VERSION 0.34.0
     DESCRIPTION "Flutter video_player plugin via libmdk")
 set(PROJECT_VERSION_TWEAK 0)
 set(CMAKE_CXX_STANDARD 20)
@@ -70,6 +70,7 @@ get_filename_component(MDK_LIB_DIR ${MDK_LIBRARY} DIRECTORY)
 string(REPLACE "/lib/" "/bin/" MDK_BIN_DIR ${MDK_LIB_DIR})
 set(fvp_bundled_libraries
     ${MDK_RUNTIME}
+    ${MDK_PLUGINS}
     ${MDK_FFMPEG}
     ${MDK_LIBASS}
   PARENT_SCOPE

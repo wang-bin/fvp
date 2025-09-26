@@ -156,7 +156,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
     if (_decoders == null && !PlatformEx.isAndroidEmulator()) {
       // prefer hardware decoders
-      const vdRk = ['rkmpp', 'FFmpeg', 'dav1d'];
+      const vdRk = ['rockchip', 'rkmpp', 'FFmpeg', 'dav1d'];
       const vdPi = ['V4L2M2M', 'FFmpeg:hwcontext=drm', 'FFmpeg', 'dav1d'];
       final vdLinux = PlatformEx.isRockchip()
           ? vdRk
@@ -164,7 +164,15 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
               ? vdPi
               : ['VAAPI', 'CUDA', 'VDPAU', 'hap', 'FFmpeg', 'dav1d']);
       final vd = {
-        'windows': ['MFT:d3d=11', "D3D11", "DXVA", 'CUDA', 'hap', 'FFmpeg', 'dav1d'],
+        'windows': [
+          'MFT:d3d=11',
+          "D3D11",
+          "DXVA",
+          'CUDA',
+          'hap',
+          'FFmpeg',
+          'dav1d'
+        ],
         'macos': ['VT', 'hap', 'FFmpeg', 'dav1d'],
         'ios': ['VT', 'FFmpeg', 'dav1d'],
         'linux': vdLinux,
@@ -255,6 +263,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     player.setProperty('avio.reconnect', '1');
     player.setProperty('avio.reconnect_delay_max', '7');
     player.setProperty('avformat.rtsp_transport', 'tcp');
+    player.setProperty('avformat.extension_picky', '0');
+    player.setProperty('avformat.allowed_segment_extensions', 'ALL');
     if (dataSource.sourceType != DataSourceType.network) {
       // for m3u8 local file etc.
       player.setProperty('avio.protocol_whitelist',

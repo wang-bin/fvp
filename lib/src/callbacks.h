@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Wang Bin. All rights reserved.
+// Copyright 2022-2025 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -36,6 +36,7 @@ enum CallbackType {
     Log,
     Seek,       // no register, one time callback
     Snapshot,   // no register, one time callback
+    SubtitleText,
     Count,
 };
 

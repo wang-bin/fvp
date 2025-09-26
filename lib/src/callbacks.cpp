@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Wang Bin. All rights reserved.
+// Copyright 2022-2025 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -246,6 +246,72 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             return p->dataReady[type] || !(p->callbackTypes & (1 << type));
         });
         return p->data[type].mediaStatus.ret;
+    });
+
+    player->onSubtitleText([=](double start, double end, const std::vector<std::string>& texts){
+        auto sp = wp.lock();
+        if (!sp)
+            return;
+        auto p = sp.get();
+        const auto type = int(CallbackType::SubtitleText);
+        if (!(p->callbackTypes & (1 << type)))
+            return;
+
+        Dart_CObject t{
+            .type = Dart_CObject_kInt64,
+            .value = {
+                .as_int64 = type,
+            }
+        };
+        Dart_CObject v0{
+            .type = Dart_CObject_kDouble,
+            .value = {
+                .as_double = start,
+            }
+        };
+        Dart_CObject v1{
+            .type = Dart_CObject_kDouble,
+            .value = {
+                .as_double = end,
+            }
+        };
+        std::vector<Dart_CObject> textObjs;
+        std::vector<Dart_CObject*> textObjPtrs;
+        textObjs.reserve(texts.size());
+        textObjPtrs.reserve(texts.size());
+        for (const auto& s : texts) {
+            Dart_CObject txt{
+                .type = Dart_CObject_kString,
+                .value = {
+                    .as_string = s.data(),
+                }
+            };
+            textObjs.push_back(txt);
+            textObjPtrs.push_back(&textObjs.back());
+        }
+        Dart_CObject textArray{
+            .type = Dart_CObject_kArray,
+            .value = {
+                .as_array = {
+                    .length = (int)textObjPtrs.size(),
+                    .values = textObjPtrs.data(),
+                },
+            }
+        };
+        Dart_CObject* arr[] = { &t, &v0, &v1, &textArray };
+        Dart_CObject msg {
+            .type = Dart_CObject_kArray,
+            .value = {
+                .as_array = {
+                    .length = std::size(arr),
+                    .values = arr,
+                },
+            }
+        };
+        if (!postCObject(send_port, &msg)) {
+            clog << __func__ << __LINE__ << "postCObject error" << endl;
+            return;
+        }
     });
 
 }
