@@ -795,7 +795,16 @@ class Player {
     // we don't support dynamic texture size change, so use the max video codec width
     if (v != null) {
       for (final i in mediaInfo.video!) {
-        if (i.codec.width > v!.codec.width) {
+        // 跳过明显是封面/缩略图的流
+        if (i.codec.codec.toLowerCase() == "mjpeg" && (i.codec.bitRate == 0 || i.codec.frameRate > 1000)) {
+          continue;
+        }
+        if (v!.codec.codec.toLowerCase() == "mjpeg" && (i.codec.bitRate == 0 || i.codec.frameRate > 1000)) {
+          // 如果当前 v 本身是 mjpeg/无效流，则直接替换
+          v = i;
+          continue;
+        }
+        if (i.codec.width > v.codec.width) {
           v = i;
         }
       }
