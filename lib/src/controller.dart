@@ -218,7 +218,7 @@ extension FVPControllerExtensions on VideoPlayerController {
       {required BoxFit fit,
       required double width,
       required double height}) {
-    _platform.setBoxFitToVideo(textureId,
+    _platform.setBoxFitToVideo(_getId(this),
         fit: fit, width: width, height: height);
   }
 }
