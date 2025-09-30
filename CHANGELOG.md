@@ -1,3 +1,8 @@
+## 0.35.0
+
+* add Player.onSubtitleText
+* allow hls & segments w/o or w/ any extension
+
 ## 0.34.0
 
 * add rockchip decoder
