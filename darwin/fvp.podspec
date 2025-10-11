@@ -30,5 +30,5 @@ Flutter video player plugin.
 #  s.platform = :osx, '10.11'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.resource_bundles = {'fvp_privacy' => ['PrivacyInfo.xcprivacy']}
-  s.swift_version = '5.0'
+#  s.swift_version = '5.0'
 end
