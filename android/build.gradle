@@ -101,9 +101,14 @@ def flutterSdkVersion = {
         }
     }
     assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-    def version = file(flutterSdkPath + "/version")
-    assert version.exists(), "flutter version file not found"
-    return version.text.trim()
+    def versionFile = file(flutterSdkPath + '/bin/cache/flutter.version.json')
+    if (!versionFile.exists()) {
+        def version = file(flutterSdkPath + '/version')
+        assert version.exists(), 'flutter version file not found'
+        return version.text.trim()
+    }
+    def versionJson = new groovy.json.JsonSlurper().parseText(versionFile.text)
+    return versionJson.flutterVersion
 }()
 
 def preprocessJava(Map textMap) {
