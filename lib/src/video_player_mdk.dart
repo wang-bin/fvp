@@ -39,8 +39,8 @@ class MdkVideoPlayer extends mdk.Player {
       if (!oldValue.test(mdk.MediaStatus.loaded) &&
           newValue.test(mdk.MediaStatus.loaded)) {
         // initialized event must be sent only once. keep_open=1 is another solution
-        //if ((textureId.value ?? -1) >= 0) {
-        //  return true; // prepared callback is invoked before MediaStatus.loaded, so textureId can be a valid value here
+        //if ((playerId.value ?? -1) >= 0) {
+        //  return true; // prepared callback is invoked before MediaStatus.loaded, so playerId can be a valid value here
         //}
         if (_initialized) {
           _log.fine('$hashCode player$nativeHandle already initialized');
@@ -246,8 +246,8 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   Future<void> init() async {}
 
   @override
-  Future<void> dispose(int textureId) async {
-    _players.remove(textureId)?.dispose();
+  Future<void> dispose(int playerId) async {
+    _players.remove(playerId)?.dispose();
   }
 
   @override
@@ -324,47 +324,47 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       //player.dispose();
       return -hashCode;
     }
-    _log.fine('$hashCode player${player.nativeHandle} textureId=$tex');
+    _log.fine('$hashCode player${player.nativeHandle} textureId/playerId=$tex');
     _players[tex] = player;
     return tex;
   }
 
   @override
-  Future<void> setLooping(int textureId, bool looping) async {
-    final player = _players[textureId];
+  Future<void> setLooping(int playerId, bool looping) async {
+    final player = _players[playerId];
     if (player != null) {
       player.loop = looping ? -1 : 0;
     }
   }
 
   @override
-  Future<void> play(int textureId) async {
-    _players[textureId]?.state = mdk.PlaybackState.playing;
+  Future<void> play(int playerId) async {
+    _players[playerId]?.state = mdk.PlaybackState.playing;
   }
 
   @override
-  Future<void> pause(int textureId) async {
-    _players[textureId]?.state = mdk.PlaybackState.paused;
+  Future<void> pause(int playerId) async {
+    _players[playerId]?.state = mdk.PlaybackState.paused;
   }
 
   @override
-  Future<void> setVolume(int textureId, double volume) async {
-    _players[textureId]?.volume = volume;
+  Future<void> setVolume(int playerId, double volume) async {
+    _players[playerId]?.volume = volume;
   }
 
   @override
-  Future<void> setPlaybackSpeed(int textureId, double speed) async {
-    _players[textureId]?.playbackRate = speed;
+  Future<void> setPlaybackSpeed(int playerId, double speed) async {
+    _players[playerId]?.playbackRate = speed;
   }
 
   @override
-  Future<void> seekTo(int textureId, Duration position) async {
-    return _seekToWithFlags(textureId, position, mdk.SeekFlag(_seekFlags));
+  Future<void> seekTo(int playerId, Duration position) async {
+    return _seekToWithFlags(playerId, position, mdk.SeekFlag(_seekFlags));
   }
 
   @override
-  Future<Duration> getPosition(int textureId) async {
-    final player = _players[textureId];
+  Future<Duration> getPosition(int playerId) async {
+    final player = _players[playerId];
     if (player == null) {
       return Duration.zero;
     }
@@ -382,17 +382,17 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
-  Stream<VideoEvent> videoEventsFor(int textureId) {
-    final player = _players[textureId];
+  Stream<VideoEvent> videoEventsFor(int playerId) {
+    final player = _players[playerId];
     if (player != null) {
       return player.streamCtl.stream;
     }
-    throw Exception('No Stream<VideoEvent> for textureId: $textureId.');
+    throw Exception('No Stream<VideoEvent> for textureId/playerId: $playerId.');
   }
 
   @override
-  Widget buildView(int textureId) {
-    return Texture(textureId: textureId);
+  Widget buildView(int playerId) {
+    return Texture(textureId: playerId);
   }
 
   @override
@@ -401,55 +401,55 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   }
 
   // more apis for fvp controller
-  bool isLive(int textureId) {
-    return _players[textureId]?.isLive ?? false;
+  bool isLive(int playerId) {
+    return _players[playerId]?.isLive ?? false;
   }
 
-  MediaInfo? getMediaInfo(int textureId) {
-    return _players[textureId]?.mediaInfo;
+  MediaInfo? getMediaInfo(int playerId) {
+    return _players[playerId]?.mediaInfo;
   }
 
-  void setProperty(int textureId, String name, String value) {
-    _players[textureId]?.setProperty(name, value);
+  void setProperty(int playerId, String name, String value) {
+    _players[playerId]?.setProperty(name, value);
   }
 
-  void setAudioDecoders(int textureId, List<String> value) {
-    _players[textureId]?.audioDecoders = value;
+  void setAudioDecoders(int playerId, List<String> value) {
+    _players[playerId]?.audioDecoders = value;
   }
 
-  void setVideoDecoders(int textureId, List<String> value) {
-    _players[textureId]?.videoDecoders = value;
+  void setVideoDecoders(int playerId, List<String> value) {
+    _players[playerId]?.videoDecoders = value;
   }
 
-  void record(int textureId, {String? to, String? format}) {
-    _players[textureId]?.record(to: to, format: format);
+  void record(int playerId, {String? to, String? format}) {
+    _players[playerId]?.record(to: to, format: format);
   }
 
-  Future<Uint8List?> snapshot(int textureId, {int? width, int? height}) async {
+  Future<Uint8List?> snapshot(int playerId, {int? width, int? height}) async {
     Uint8List? data;
-    final player = _players[textureId];
+    final player = _players[playerId];
     if (player == null) {
       return data;
     }
-    return _players[textureId]?.snapshot(width: width, height: height);
+    return _players[playerId]?.snapshot(width: width, height: height);
   }
 
-  void setRange(int textureId, {required int from, int to = -1}) {
-    _players[textureId]?.setRange(from: from, to: to);
+  void setRange(int playerId, {required int from, int to = -1}) {
+    _players[playerId]?.setRange(from: from, to: to);
   }
 
-  void setBufferRange(int textureId,
+  void setBufferRange(int playerId,
       {int min = -1, int max = -1, bool drop = false}) {
-    _players[textureId]?.setBufferRange(min: min, max: max, drop: drop);
+    _players[playerId]?.setBufferRange(min: min, max: max, drop: drop);
   }
 
-  Future<void> fastSeekTo(int textureId, Duration position) async {
+  Future<void> fastSeekTo(int playerId, Duration position) async {
     return _seekToWithFlags(
-        textureId, position, mdk.SeekFlag(_seekFlags | mdk.SeekFlag.keyFrame));
+        playerId, position, mdk.SeekFlag(_seekFlags | mdk.SeekFlag.keyFrame));
   }
 
-  Future<void> step(int textureId, int frames) async {
-    final player = _players[textureId];
+  Future<void> step(int playerId, int frames) async {
+    final player = _players[playerId];
     if (player == null) {
       return;
     }
@@ -458,67 +458,67 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         flags: const mdk.SeekFlag(mdk.SeekFlag.frame | mdk.SeekFlag.fromNow));
   }
 
-  void setBrightness(int textureId, double value) {
-    _players[textureId]?.setVideoEffect(mdk.VideoEffect.brightness, [value]);
+  void setBrightness(int playerId, double value) {
+    _players[playerId]?.setVideoEffect(mdk.VideoEffect.brightness, [value]);
   }
 
-  void setContrast(int textureId, double value) {
-    _players[textureId]?.setVideoEffect(mdk.VideoEffect.contrast, [value]);
+  void setContrast(int playerId, double value) {
+    _players[playerId]?.setVideoEffect(mdk.VideoEffect.contrast, [value]);
   }
 
-  void setHue(int textureId, double value) {
-    _players[textureId]?.setVideoEffect(mdk.VideoEffect.hue, [value]);
+  void setHue(int playerId, double value) {
+    _players[playerId]?.setVideoEffect(mdk.VideoEffect.hue, [value]);
   }
 
-  void setSaturation(int textureId, double value) {
-    _players[textureId]?.setVideoEffect(mdk.VideoEffect.saturation, [value]);
+  void setSaturation(int playerId, double value) {
+    _players[playerId]?.setVideoEffect(mdk.VideoEffect.saturation, [value]);
   }
 
-  void setProgram(int textureId, int programId) {
-    _players[textureId]?.setActiveTracks(mdk.MediaType.unknown, [programId]);
+  void setProgram(int playerId, int programId) {
+    _players[playerId]?.setActiveTracks(mdk.MediaType.unknown, [programId]);
   }
 
 // embedded tracks, can be main data source from create(), or external media source via setExternalAudio
-  void setAudioTracks(int textureId, List<int> value) {
-    _players[textureId]?.activeAudioTracks = value;
+  void setAudioTracks(int playerId, List<int> value) {
+    _players[playerId]?.activeAudioTracks = value;
   }
 
-  List<int>? getActiveAudioTracks(int textureId) {
-    return _players[textureId]?.activeAudioTracks;
+  List<int>? getActiveAudioTracks(int playerId) {
+    return _players[playerId]?.activeAudioTracks;
   }
 
-  void setVideoTracks(int textureId, List<int> value) {
-    _players[textureId]?.activeVideoTracks = value;
+  void setVideoTracks(int playerId, List<int> value) {
+    _players[playerId]?.activeVideoTracks = value;
   }
 
-  List<int>? getActiveVideoTracks(int textureId) {
-    return _players[textureId]?.activeVideoTracks;
+  List<int>? getActiveVideoTracks(int playerId) {
+    return _players[playerId]?.activeVideoTracks;
   }
 
-  void setSubtitleTracks(int textureId, List<int> value) {
-    _players[textureId]?.activeSubtitleTracks = value;
+  void setSubtitleTracks(int playerId, List<int> value) {
+    _players[playerId]?.activeSubtitleTracks = value;
   }
 
-  List<int>? getActiveSubtitleTracks(int textureId) {
-    return _players[textureId]?.activeSubtitleTracks;
+  List<int>? getActiveSubtitleTracks(int playerId) {
+    return _players[playerId]?.activeSubtitleTracks;
   }
 
 // external track. can select external tracks via setAudioTracks()
-  void setExternalAudio(int textureId, String uri) {
-    _players[textureId]?.setMedia(uri, mdk.MediaType.audio);
+  void setExternalAudio(int playerId, String uri) {
+    _players[playerId]?.setMedia(uri, mdk.MediaType.audio);
   }
 
-  void setExternalVideo(int textureId, String uri) {
-    _players[textureId]?.setMedia(uri, mdk.MediaType.video);
+  void setExternalVideo(int playerId, String uri) {
+    _players[playerId]?.setMedia(uri, mdk.MediaType.video);
   }
 
-  void setExternalSubtitle(int textureId, String uri) {
-    _players[textureId]?.setMedia(uri, mdk.MediaType.subtitle);
+  void setExternalSubtitle(int playerId, String uri) {
+    _players[playerId]?.setMedia(uri, mdk.MediaType.subtitle);
   }
 
   Future<void> _seekToWithFlags(
-      int textureId, Duration position, mdk.SeekFlag flags) async {
-    final player = _players[textureId];
+      int playerId, Duration position, mdk.SeekFlag flags) async {
+    final player = _players[playerId];
     if (player == null) {
       return;
     }
