@@ -5,7 +5,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'fvp'
-  s.version          = '0.35.0'
+  s.version          = '0.35.1'
   s.summary          = 'libmdk based Flutter video player plugin'
   s.description      = <<-DESC
 Flutter video player plugin.
