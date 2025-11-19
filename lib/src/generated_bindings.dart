@@ -395,6 +395,72 @@ class NativeLibrary {
       bool Function(
           ffi.Pointer<mdkMediaInfo>, ffi.Pointer<mdkStringMapEntry>)>();
 
+  ffi.Pointer<mdkAudioFrameAPI> mdkAudioFrameAPI_new(
+    int format,
+    int channels,
+    int sampleRate,
+    int samples,
+  ) {
+    return _mdkAudioFrameAPI_new(
+      format,
+      channels,
+      sampleRate,
+      samples,
+    );
+  }
+
+  late final _mdkAudioFrameAPI_newPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<mdkAudioFrameAPI> Function(
+              ffi.Int32, ffi.Int, ffi.Int, ffi.Int)>>('mdkAudioFrameAPI_new');
+  late final _mdkAudioFrameAPI_new = _mdkAudioFrameAPI_newPtr
+      .asFunction<ffi.Pointer<mdkAudioFrameAPI> Function(int, int, int, int)>();
+
+  void mdkAudioFrameAPI_delete(
+    ffi.Pointer<ffi.Pointer<mdkAudioFrameAPI>> arg0,
+  ) {
+    return _mdkAudioFrameAPI_delete(
+      arg0,
+    );
+  }
+
+  late final _mdkAudioFrameAPI_deletePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Pointer<mdkAudioFrameAPI>>)>>(
+      'mdkAudioFrameAPI_delete');
+  late final _mdkAudioFrameAPI_delete = _mdkAudioFrameAPI_deletePtr
+      .asFunction<void Function(ffi.Pointer<ffi.Pointer<mdkAudioFrameAPI>>)>();
+
+  ffi.Pointer<mdkAudioFrameAPI> mdkAudioFrameAPI_ref(
+    ffi.Pointer<mdkAudioFrameAPI> p,
+  ) {
+    return _mdkAudioFrameAPI_ref(
+      p,
+    );
+  }
+
+  late final _mdkAudioFrameAPI_refPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<mdkAudioFrameAPI> Function(
+              ffi.Pointer<mdkAudioFrameAPI>)>>('mdkAudioFrameAPI_ref');
+  late final _mdkAudioFrameAPI_ref = _mdkAudioFrameAPI_refPtr.asFunction<
+      ffi.Pointer<mdkAudioFrameAPI> Function(ffi.Pointer<mdkAudioFrameAPI>)>();
+
+  void mdkAudioFrameAPI_unref(
+    ffi.Pointer<ffi.Pointer<mdkAudioFrameAPI>> pp,
+  ) {
+    return _mdkAudioFrameAPI_unref(
+      pp,
+    );
+  }
+
+  late final _mdkAudioFrameAPI_unrefPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Pointer<mdkAudioFrameAPI>>)>>(
+      'mdkAudioFrameAPI_unref');
+  late final _mdkAudioFrameAPI_unref = _mdkAudioFrameAPI_unrefPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Pointer<mdkAudioFrameAPI>>)>();
+
   ffi.Pointer<mdkVideoFrameAPI> mdkVideoFrameAPI_new(
     int width,
     int height,
@@ -427,6 +493,36 @@ class NativeLibrary {
               ffi.Void Function(ffi.Pointer<ffi.Pointer<mdkVideoFrameAPI>>)>>(
       'mdkVideoFrameAPI_delete');
   late final _mdkVideoFrameAPI_delete = _mdkVideoFrameAPI_deletePtr
+      .asFunction<void Function(ffi.Pointer<ffi.Pointer<mdkVideoFrameAPI>>)>();
+
+  ffi.Pointer<mdkVideoFrameAPI> mdkVideoFrameAPI_ref(
+    ffi.Pointer<mdkVideoFrameAPI> p,
+  ) {
+    return _mdkVideoFrameAPI_ref(
+      p,
+    );
+  }
+
+  late final _mdkVideoFrameAPI_refPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<mdkVideoFrameAPI> Function(
+              ffi.Pointer<mdkVideoFrameAPI>)>>('mdkVideoFrameAPI_ref');
+  late final _mdkVideoFrameAPI_ref = _mdkVideoFrameAPI_refPtr.asFunction<
+      ffi.Pointer<mdkVideoFrameAPI> Function(ffi.Pointer<mdkVideoFrameAPI>)>();
+
+  void mdkVideoFrameAPI_unref(
+    ffi.Pointer<ffi.Pointer<mdkVideoFrameAPI>> pp,
+  ) {
+    return _mdkVideoFrameAPI_unref(
+      pp,
+    );
+  }
+
+  late final _mdkVideoFrameAPI_unrefPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Pointer<mdkVideoFrameAPI>>)>>(
+      'mdkVideoFrameAPI_unref');
+  late final _mdkVideoFrameAPI_unref = _mdkVideoFrameAPI_unrefPtr
       .asFunction<void Function(ffi.Pointer<ffi.Pointer<mdkVideoFrameAPI>>)>();
 
   void mdkVideoBufferPoolFree(
@@ -888,6 +984,103 @@ final class mdkMediaInfo extends ffi.Struct {
   external int nb_programs;
 }
 
+final class mdkAudioFrame extends ffi.Opaque {}
+
+abstract class MDK_SampleFormat {
+  static const int MDK_SampleFormat_Unknown = 0;
+  static const int MDK_SampleFormat_U8 = 1;
+  static const int MDK_SampleFormat_U8P = 2;
+  static const int MDK_SampleFormat_S16 = 3;
+  static const int MDK_SampleFormat_S16P = 4;
+  static const int MDK_SampleFormat_S32 = 5;
+  static const int MDK_SampleFormat_S32P = 6;
+  static const int MDK_SampleFormat_F32 = 7;
+  static const int MDK_SampleFormat_F32P = 8;
+  static const int MDK_SampleFormat_F64 = 9;
+  static const int MDK_SampleFormat_F64P = 10;
+}
+
+final class mdkAudioFrameAPI extends ffi.Struct {
+  external ffi.Pointer<mdkAudioFrame> object;
+
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<mdkAudioFrame>)>>
+      planeCount;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Int32 Function(ffi.Pointer<mdkAudioFrame>)>>
+      sampleFormat;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Uint64 Function(ffi.Pointer<mdkAudioFrame>)>>
+      channelMask;
+
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<mdkAudioFrame>)>>
+      channels;
+
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<mdkAudioFrame>)>>
+      sampleRate;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<mdkAudioFrame>,
+              ffi.Pointer<ffi.Uint8>,
+              ffi.Size,
+              ffi.Int,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(
+                          ffi.Pointer<ffi.Pointer<ffi.Void>>)>>)>> addBuffer;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<mdkAudioFrame>,
+              ffi.Pointer<ffi.Pointer<ffi.Uint8>>, ffi.Int)>> setBuffers;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Uint8> Function(
+              ffi.Pointer<mdkAudioFrame>, ffi.Int)>> bufferData;
+
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<mdkAudioFrame>)>>
+      bytesPerPlane;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<mdkAudioFrame>, ffi.Int)>>
+      setSamplesPerChannel;
+
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<mdkAudioFrame>)>>
+      samplesPerChannel;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<mdkAudioFrame>, ffi.Double)>>
+      setTimestamp;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Double Function(ffi.Pointer<mdkAudioFrame>)>>
+      timestamp;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Double Function(ffi.Pointer<mdkAudioFrame>)>>
+      duration;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Pointer<mdkAudioFrameAPI> Function(
+              ffi.Pointer<mdkAudioFrame>, ffi.Int32, ffi.Int, ffi.Int)>> to;
+
+  @ffi.Array.multi([8])
+  external ffi.Array<ffi.Pointer<ffi.Void>> reserved;
+}
+
 final class mdkDX11Resource extends ffi.Struct {
   @ffi.Int()
   external int size;
@@ -896,9 +1089,17 @@ final class mdkDX11Resource extends ffi.Struct {
 
   @ffi.Int()
   external int subResource;
+
+  @ffi.Array.multi([4])
+  external ffi.Array<ffi.Pointer<ID3D11Texture2D>> plane;
+
+  @ffi.Int()
+  external int planeCount;
 }
 
 final class ID3D11DeviceChild extends ffi.Opaque {}
+
+final class ID3D11Texture2D extends ffi.Opaque {}
 
 final class mdkDX9Resource extends ffi.Struct {
   @ffi.Int()
@@ -908,6 +1109,28 @@ final class mdkDX9Resource extends ffi.Struct {
 }
 
 final class IDirect3DSurface9 extends ffi.Opaque {}
+
+final class mdkVAAPIResource extends ffi.Struct {
+  @ffi.Int()
+  external int size;
+
+  @VASurfaceID()
+  external int surface;
+
+  external VADisplay display;
+
+  external ffi.Pointer<ffi.Void> x11Display;
+
+  external ffi.Pointer<ffi.Void> opaque;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void> opaque)>>
+      unref;
+}
+
+typedef VASurfaceID = ffi.UnsignedInt;
+typedef DartVASurfaceID = int;
+typedef VADisplay = ffi.Pointer<ffi.Void>;
 
 final class mdkVideoBufferPool extends ffi.Opaque {}
 
@@ -942,6 +1165,36 @@ abstract class MDK_PixelFormat {
   static const int MDK_PixelFormat_RGBP16 = 23;
   static const int MDK_PixelFormat_RGBPF32 = 24;
   static const int MDK_PixelFormat_BGRAF32 = 25;
+}
+
+final class mdkCUDAResource extends ffi.Struct {
+  @ffi.Int()
+  external int size;
+
+  @ffi.Array.multi([4])
+  external ffi.Array<ffi.Pointer<ffi.Void>> ptr;
+
+  @ffi.Int()
+  external int width;
+
+  @ffi.Int()
+  external int height;
+
+  @ffi.Array.multi([4])
+  external ffi.Array<ffi.Int> stride;
+
+  @ffi.Int32()
+  external int format;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  external ffi.Pointer<ffi.Void> stream;
+
+  external ffi.Pointer<ffi.Void> opaque;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void> opaque)>>
+      unref;
 }
 
 final class mdkVideoFrameAPI extends ffi.Struct {
@@ -1039,20 +1292,54 @@ final class mdkVideoFrameAPI extends ffi.Struct {
               ffi.Int,
               ffi.Int)>> fromDX9;
 
-  external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromDX12;
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<mdkVideoFrame>,
+              ffi.Pointer<ffi.Pointer<mdkVideoBufferPool>>,
+              ffi.Pointer<mdkVAAPIResource>,
+              ffi.Int,
+              ffi.Int)>> fromVAAPI;
 
-  external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromMetal;
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<mdkVideoFrame>,
+              ffi.Pointer<ffi.Pointer<mdkVideoBufferPool>>,
+              ffi.Pointer<mdkCUDAResource>,
+              ffi.Int,
+              ffi.Int)>> fromCUDA;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<mdkVideoFrame>,
+              ffi.Pointer<mdkDX11Resource>,
+              ffi.Pointer<ID3D11Device>)>> getDX11;
+
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<mdkVideoFrame>)>>
+      rotation;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<mdkVideoFrame>,
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Int>)>> metadata;
 
   external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromVk;
 
   external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromGL;
 
+  external ffi.Pointer<ffi.NativeFunction<ffi.Bool Function()>> fromDX12;
+
   external ffi.Pointer<
       ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<mdkVideoFrame>)>> toHost;
 
-  @ffi.Array.multi([12])
+  @ffi.Array.multi([8])
   external ffi.Array<ffi.Pointer<ffi.Void>> reserved;
 }
+
+final class ID3D11Device extends ffi.Opaque {}
 
 abstract class MDK_RenderAPI {
   static const int MDK_RenderAPI_Invalid = 0;
@@ -1064,8 +1351,6 @@ abstract class MDK_RenderAPI {
 }
 
 final class mdkRenderAPI extends ffi.Opaque {}
-
-final class mdkAudioFrame extends ffi.Opaque {}
 
 final class mdkPlayer extends ffi.Opaque {}
 
@@ -1108,9 +1393,21 @@ final class mdkRenderCallback extends ffi.Struct {
 }
 
 final class mdkVideoCallback extends ffi.Struct {
+  /// !
+  /// \brief cb
+  /// \return pending number of frames. For most filters, 1 input frame generates 1 output frame, then return 0.
   external ffi.Pointer<
       ffi.NativeFunction<
           ffi.Int Function(ffi.Pointer<ffi.Pointer<mdkVideoFrameAPI>> pFrame,
+              ffi.Int track, ffi.Pointer<ffi.Void> opaque)>> cb;
+
+  external ffi.Pointer<ffi.Void> opaque;
+}
+
+final class mdkAudioCallback extends ffi.Struct {
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<ffi.Pointer<mdkAudioFrameAPI>> pFrame,
               ffi.Int track, ffi.Pointer<ffi.Void> opaque)>> cb;
 
   external ffi.Pointer<ffi.Void> opaque;
@@ -1202,6 +1499,15 @@ final class mdkSubtitleCallback extends ffi.Struct {
               ffi.Pointer<ffi.Char> text, ffi.Pointer<ffi.Void> opaque)>> cb;
 
   external ffi.Pointer<ffi.Void> opaque;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Double start,
+              ffi.Double end,
+              ffi.Pointer<ffi.Pointer<ffi.Char>> texts,
+              ffi.Int textCount,
+              ffi.Pointer<ffi.Void> opaque)>> cb2;
 }
 
 final class mdkPlayerAPI extends ffi.Struct {
@@ -1451,9 +1757,9 @@ final class mdkPlayerAPI extends ffi.Struct {
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<mdkPlayer>, mdkVideoCallback)>> onVideo;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<mdkPlayer>)>>
-      onAudio;
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<mdkPlayer>, mdkAudioCallback)>> onAudio;
 
   external ffi.Pointer<
       ffi.NativeFunction<
@@ -1768,6 +2074,22 @@ final class mdkPlayerAPI extends ffi.Struct {
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<mdkPlayer>, ffi.Double, ffi.Int,
               mdkSubtitleCallback)>> subtitleText;
+
+  /// !
+  /// \brief setAudioMix
+  /// Audio channel map or remix.
+  /// \param mat map or mix coefficients matrix. matrix[i + cols * o] is the weight of input channel i in output channel o.
+  /// \param rows mat rows, output channel count
+  /// \param cols mat colums, input channel count to use
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<mdkPlayer>, ffi.Pointer<ffi.Float>,
+              ffi.Int, ffi.Int)>> setAudioMix;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<mdkPlayer>, mdkSubtitleCallback,
+              ffi.Bool, ffi.Pointer<MDK_CallbackToken>)>> onSubtitleText;
 }
 
 final class SwitchBitrateCallback extends ffi.Struct {
@@ -1785,6 +2107,7 @@ final class SwitchBitrateCallback extends ffi.Struct {
 /// Null callback(.opaque == null) + non-null token: can remove the callback of given token.
 /// Null callback(.opaque == null) + null token: clear all callbacks.
 typedef MDK_CallbackToken = ffi.Uint64;
+typedef DartMDK_CallbackToken = int;
 
 /// !
 /// \brief size
@@ -1800,8 +2123,8 @@ final class UnnamedUnion2 extends ffi.Union {
 
 const int MDK_MAJOR = 0;
 
-const int MDK_MINOR = 31;
+const int MDK_MINOR = 35;
 
 const int MDK_MICRO = 0;
 
-const int MDK_VERSION = 7936;
+const int MDK_VERSION = 8960;
