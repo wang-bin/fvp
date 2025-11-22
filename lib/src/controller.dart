@@ -4,6 +4,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
+import 'package:fvp/mdk.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
@@ -144,6 +146,15 @@ extension FVPControllerExtensions on VideoPlayerController {
   /// set hue. -1 <= [value] <= 1
   void setHue(double value) {
     _platform.setHue(_getId(this), value);
+  }
+
+  void onEvent(void Function(MediaEvent)? callback) {
+    _platform.onEvent(_getId(this), callback);
+  }
+
+  void onSubtitleText(
+      void Function(double start, double end, List<String> text)? callback) {
+    _platform.onSubtitleText(_getId(this), callback);
   }
 
   /// set saturation. -1 <= [value] <= 1
