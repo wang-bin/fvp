@@ -31,4 +31,8 @@ Flutter video player plugin.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.resource_bundles = {'fvp_privacy' => ['PrivacyInfo.xcprivacy']}
 #  s.swift_version = '5.0'
+  s.prepare_command = <<-CMD
+    FVP_VERSION=`grep 'version: ' ../pubspec.yaml | head -1 | awk '{print $2}'`
+    echo '#pragma once\n#define FVP_VERSION "'$FVP_VERSION'"' > ../lib/src/version.h
+  CMD
 end

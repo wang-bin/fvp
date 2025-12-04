@@ -1,4 +1,25 @@
+
+function(fvp_version)
+  set(PUBSPEC_FILE "${CMAKE_CURRENT_LIST_DIR}/../pubspec.yaml")
+  if(NOT EXISTS ${PUBSPEC_FILE})
+    message(FATAL_ERROR "pubspec.yaml not found: ${PUBSPEC_FILE}")
+  endif()
+  file(READ ${PUBSPEC_FILE} PUBSPEC_CONTENTS)
+  string(REGEX MATCH "version:[ \t]*([0-9]+\\.[0-9]+\\.[0-9]+|[0-9]+\\.[0-9]+|[^ \t\n\r]+)" MATCHED_LINE "${PUBSPEC_CONTENTS}")
+
+  if(MATCHED_LINE)
+    string(REGEX REPLACE "version:[ \t]*" "" FVP_VERSION "${MATCHED_LINE}")
+    message(STATUS "Found fvp version: ${FVP_VERSION}")
+    set(VERSION_HEADER_FILE "${CMAKE_CURRENT_LIST_DIR}/../lib/src/version.h")
+    file(WRITE ${VERSION_HEADER_FILE} "#pragma once\n#define FVP_VERSION \"${FVP_VERSION}\"\n")
+  else()
+    message(WARNING "No version line found in file")
+  endif()
+endfunction(fvp_version)
+
+
 macro(fvp_setup_deps)
+  fvp_version()
   if(WIN32)
     set(MDK_SDK_PKG mdk-sdk-windows-desktop-vs2022.7z)
     if(CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "[xX]64") # msvc

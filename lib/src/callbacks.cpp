@@ -11,6 +11,9 @@
 #include <thread>
 #include "dart_api_types.h"
 #include "callbacks.h"
+#if __has_include("version.h")
+#include "version.h"
+#endif
 
 using namespace std;
 
@@ -79,6 +82,9 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
                 return;
             }
         });
+#ifdef FVP_VERSION
+        clog << "fvp plugin version: " FVP_VERSION << endl;
+#endif
         return;
     }
     auto player = make_shared<Player>(handle);
