@@ -10,6 +10,7 @@ import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
 import 'fvp_platform_interface.dart';
@@ -611,6 +612,64 @@ class Player {
           .asFunction<void Function(Pointer<mdkPlayer>, int, Pointer<Void>)>()(
       _player.ref.object, degree, _getVid());
 
+
+  void setBoxFitToVideo({
+    required BoxFit fit,
+    required double width,
+    required double height,
+  }) async {
+    var x = await textureSize;
+    if (x == null) {
+      return;
+    }
+    var videoWidth = x.width;
+    var videoHeight = x.height;
+    if (videoWidth == 0 ||
+        videoHeight == 0 ||
+        width == 0 ||
+        height == 0) {
+      return;
+    }
+
+    var fittedHeight = width * videoHeight / videoWidth;
+    var heightScale = fittedHeight / height;
+
+    var fittedWidth = height * videoWidth / videoHeight;
+    var widthScale = fittedWidth / width;
+
+    switch (fit) {
+      case BoxFit.fill:
+        scale(1, 1);
+        break;
+      case BoxFit.contain:
+      case BoxFit.scaleDown:
+        if (fittedWidth < width) {
+          scale(1 * widthScale, 1);
+        } else if (fittedHeight < height) {
+          scale(1, 1 * heightScale);
+        }
+        break;
+      case BoxFit.cover:
+        if (fittedWidth > width) {
+          scale(1 * widthScale, 1);
+        } else if (fittedHeight > height) {
+          scale(1, 1 * heightScale);
+        }
+        break;
+      case BoxFit.fitWidth:
+        scale(1, 1 * heightScale);
+        break;
+      case BoxFit.fitHeight:
+        scale(1 * widthScale, 1);
+        break;
+      case BoxFit.none:
+        var originalWidthScale = videoWidth / width;
+        var originalHeightScale = videoHeight / height;
+        scale(originalWidthScale, originalHeightScale);
+        break;
+    }
+  }
+
   /// scale video content. 1.0 is no scale.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-scalefloat-x-float-y-void-vo_opaque--nullptr
   void scale(double x, double y) => _player.ref.scale.asFunction<
@@ -736,7 +795,16 @@ class Player {
     // we don't support dynamic texture size change, so use the max video codec width
     if (v != null) {
       for (final i in mediaInfo.video!) {
-        if (i.codec.width > v!.codec.width) {
+        // 跳过明显是封面/缩略图的流
+        if (i.codec.codec.toLowerCase() == "mjpeg" && (i.codec.bitRate == 0 || i.codec.frameRate > 1000)) {
+          continue;
+        }
+        if (v!.codec.codec.toLowerCase() == "mjpeg" && (i.codec.bitRate == 0 || i.codec.frameRate > 1000)) {
+          // 如果当前 v 本身是 mjpeg/无效流，则直接替换
+          v = i;
+          continue;
+        }
+        if (i.codec.width > v.codec.width) {
           v = i;
         }
       }

@@ -4,6 +4,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/widgets.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
@@ -210,5 +211,14 @@ extension FVPControllerExtensions on VideoPlayerController {
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setmediaconst-char-url-mediatype-type
   void setExternalSubtitle(String uri) {
     _platform.setExternalSubtitle(_getId(this), uri);
+  }
+
+  /// Set video box fit mode
+  void setBoxFitToVideo(
+      {required BoxFit fit,
+      required double width,
+      required double height}) {
+    _platform.setBoxFitToVideo(_getId(this),
+        fit: fit, width: width, height: height);
   }
 }
