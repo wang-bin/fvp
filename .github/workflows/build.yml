@@ -41,7 +41,7 @@ jobs:
         mv build/macos/Build/Products/Release/fvp_example.app .
         cmake -E tar cvf fvp_example_macos.7z --format=7zip fvp_example.app
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: fvp-example-macOS
         path: example/fvp_example_macos.7z
@@ -68,7 +68,7 @@ jobs:
         mv build/ios/iphoneos/Runner.app .
         cmake -E tar cvf fvp_example_ios.7z --format=7zip Runner.app
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: fvp-example-iOS
         path: example/fvp_example_ios.7z
@@ -102,7 +102,7 @@ jobs:
     - run: mv build/windows/x64/runner/Release .
     - run: cmake -E tar cvf fvp_example_windows-flutter-${{ matrix.version }}-${{ matrix.channel }}.7z --format=7zip Release
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: fvp-example-windows-flutter-${{ matrix.version }}-${{ matrix.channel }}
         path: |
@@ -141,7 +141,7 @@ jobs:
     - run: mv build/linux/x64/release/bundle .
     - run: cmake -E tar Jcvf fvp_example_linux-${{ matrix.channel }}-${{ matrix.version }}.tar.xz bundle
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: fvp-example-linux-${{ matrix.channel }}-${{ matrix.version }}
         path: example/fvp_example_linux*.tar.xz
@@ -177,7 +177,7 @@ jobs:
     - run: mv build/linux/arm64/release/bundle .
     - run: cmake -E tar Jcvf fvp_example_linux-arm64-${{ matrix.channel }}-${{ matrix.version }}.tar.xz bundle
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: fvp-example-linux-arm64-${{ matrix.channel }}-${{ matrix.version }}
         path: example/fvp_example_linux*.tar.xz
@@ -204,7 +204,7 @@ jobs:
     - run: mv build/linux/arm64/release/bundle .
     - run: cmake -E tar Jcvf fvp_example_linux-arm64-snap.tar.xz bundle
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: fvp-example-linux-arm64-snap
         path: example/fvp_example_linux*.tar.xz
@@ -264,7 +264,7 @@ jobs:
     - run: flutter build apk --verbose
     - run: mv ./build/app/outputs/apk/release/app-release.apk fvp_example_android.apk
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: fvp-example-android-${{ matrix.host }}-${{ matrix.version }}
         path: example/fvp_example_android.apk
