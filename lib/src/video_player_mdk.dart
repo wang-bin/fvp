@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
+import 'package:fvp/src/global.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:logging/logging.dart';
 import 'package:http/http.dart' as http;
@@ -468,6 +469,15 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   void setHue(int playerId, double value) {
     _players[playerId]?.setVideoEffect(mdk.VideoEffect.hue, [value]);
+  }
+
+  void onEvent(int playerId, void Function(MediaEvent)? callback) {
+    _players[playerId]?.onEvent(callback);
+  }
+
+  void onSubtitleText(int playerId,
+      void Function(double start, double end, List<String> text)? callback) {
+    _players[playerId]?.onSubtitleText(callback);
   }
 
   void setSaturation(int playerId, double value) {
