@@ -1,3 +1,7 @@
+## 0.35.2
+
+* log plugin version
+
 ## 0.35.1
 
 * fix linux arch for cmake 4.0+
