@@ -1,3 +1,8 @@
+# =============================================================================
+# MDK SDK Default URL Configuration
+# Change this to point to your Artifactory or custom server
+# =============================================================================
+set(MDK_SDK_DEFAULT_URL "https://your-artifactory.example.com/artifactory/mdk-sdk/nightly")
 
 function(fvp_version)
   set(PUBSPEC_FILE "${CMAKE_CURRENT_LIST_DIR}/../pubspec.yaml")
@@ -36,10 +41,11 @@ macro(fvp_setup_deps)
     endif()
   else()
   endif()
-  if("$ENV{FVP_DEPS_URL}" MATCHES "^http") # github release: https://github.com/wang-bin/mdk-sdk/releases/latest/download
-    set(FVP_DEPS_URL $ENV{FVP_DEPS_URL}) # TODO: md5
+  # FVP_DEPS_URL env var overrides the default URL
+  if("$ENV{FVP_DEPS_URL}" MATCHES "^http")
+    set(FVP_DEPS_URL $ENV{FVP_DEPS_URL})
   else()
-    set(FVP_DEPS_URL https://sourceforge.net/projects/mdk-sdk/files/nightly)
+    set(FVP_DEPS_URL ${MDK_SDK_DEFAULT_URL})
   endif()
   set(MDK_SDK_URL ${FVP_DEPS_URL}/${MDK_SDK_PKG})
   set(MDK_SDK_SAVE "${CMAKE_CURRENT_SOURCE_DIR}/${MDK_SDK_PKG}")
