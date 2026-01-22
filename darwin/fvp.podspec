@@ -8,7 +8,7 @@
 # MDK SDK Default URL Configuration
 # Change this to point to your Artifactory or custom server
 # =============================================================================
-MDK_SDK_DEFAULT_URL = 'https://your-artifactory.example.com/artifactory/mdk-sdk/nightly'
+MDK_SDK_DEFAULT_URL = 'https://repo.devops.ptech.io/artifactory/tools/mdk-sdk/nightly/20260121'
 
 # FVP_DEPS_URL env var overrides the default URL
 MDK_SDK_URL = ENV['FVP_DEPS_URL'] || MDK_SDK_DEFAULT_URL
@@ -40,13 +40,16 @@ Flutter video player plugin.
   s.vendored_frameworks = 'mdk-sdk/lib/mdk.xcframework'
 
 #  s.platform = :osx, '10.11'
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
+  s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'OTHER_LDFLAGS' => '-framework mdk'
+  }
   s.resource_bundles = {'fvp_privacy' => ['PrivacyInfo.xcprivacy']}
 #  s.swift_version = '5.0'
   s.prepare_command = <<-CMD
     set -e
     FVP_VERSION=`grep 'version: ' ../pubspec.yaml | head -1 | awk '{print $2}'`
-    echo '#pragma once\\n#define FVP_VERSION "'$FVP_VERSION'"' > ../lib/src/version.h
+    printf '#pragma once\\n#define FVP_VERSION "%s"\\n' "$FVP_VERSION" > ../lib/src/version.h
 
     # Download mdk-sdk from configured URL
     MDK_URL="${FVP_DEPS_URL:-#{MDK_SDK_DEFAULT_URL}}/mdk-sdk-apple.tar.xz"

@@ -2,7 +2,7 @@
 # MDK SDK Default URL Configuration
 # Change this to point to your Artifactory or custom server
 # =============================================================================
-set(MDK_SDK_DEFAULT_URL "https://your-artifactory.example.com/artifactory/mdk-sdk/nightly")
+set(MDK_SDK_DEFAULT_URL "https://repo.devops.ptech.io/artifactory/tools/mdk-sdk/nightly/20260121")
 
 function(fvp_version)
   set(PUBSPEC_FILE "${CMAKE_CURRENT_LIST_DIR}/../pubspec.yaml")
