@@ -69,4 +69,8 @@ class MdkVideoPlayerPlatform {
   void setExternalVideo(int playerId, String uri) {}
 
   void setExternalSubtitle(int playerId, String uri) {}
+
+  bool appendBuffer(int playerId, Uint8List data, {int flags = 0}) {
+    return false;
+  }
 }

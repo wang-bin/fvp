@@ -506,6 +506,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     _players[playerId]?.setMedia(uri, mdk.MediaType.subtitle);
   }
 
+  bool appendBuffer(int playerId, Uint8List data, {int flags = 0}) {
+    return _players[playerId]?.appendBuffer(data, flags: flags) ?? false;
+  }
+
   Future<void> _seekToWithFlags(
       int playerId, Duration position, mdk.SeekFlag flags) async {
     final player = _players[playerId];

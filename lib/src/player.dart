@@ -496,6 +496,26 @@ class Player {
     return _seeked!.future;
   }
 
+  /// Append media data to the player. Used with a `mdk:` media source URL to feed data
+  /// incrementally (similar to MSE). The player will not finish [prepare] until
+  /// enough data has been appended.
+  /// [flags] can be 0 for normal data, or -1 to signal end-of-stream.
+  /// Returns true on success.
+  /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#bool-appendbufferconst-uint8_t-data-size_t-size-int-flags
+  bool appendBuffer(Uint8List data, {int flags = 0}) {
+    final fn = _player.ref.appendBuffer.asFunction<
+        bool Function(Pointer<mdkPlayer>, Pointer<Uint8>, int, int)>();
+    if (data.isEmpty) {
+      return fn(_player.ref.object, nullptr, 0, flags);
+    }
+    // The native appendBuffer copies the data synchronously before returning.
+    final pointer = malloc<Uint8>(data.length);
+    pointer.asTypedList(data.length).setAll(0, data);
+    final result = fn(_player.ref.object, pointer, data.length, flags);
+    malloc.free(pointer);
+    return result;
+  }
+
   List<DurationRange> bufferedTimeRanges() {
     const int n = 16;
     final cbytes = calloc<Int64>(2 * n);

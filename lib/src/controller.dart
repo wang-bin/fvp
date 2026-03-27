@@ -211,4 +211,14 @@ extension FVPControllerExtensions on VideoPlayerController {
   void setExternalSubtitle(String uri) {
     _platform.setExternalSubtitle(_getId(this), uri);
   }
+
+  /// Append media data to the player. Used together with a `mdk:` media source URL
+  /// to feed data incrementally. The [VideoPlayerController] will not finish
+  /// initializing until enough data has been appended via this method.
+  /// [flags] can be 0 for normal data, or -1 to signal end-of-stream.
+  /// Returns true on success.
+  /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#bool-appendbufferconst-uint8_t-data-size_t-size-int-flags
+  bool appendBuffer(Uint8List data, {int flags = 0}) {
+    return _platform.appendBuffer(_getId(this), data, flags: flags);
+  }
 }
