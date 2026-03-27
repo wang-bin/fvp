@@ -508,7 +508,8 @@ class Player {
     if (data.isEmpty) {
       return fn(_player.ref.object, nullptr, 0, flags);
     }
-    // The native appendBuffer copies the data synchronously before returning.
+    // The native appendBuffer copies the data synchronously before returning,
+    // so the allocated memory can be freed immediately after the call.
     final pointer = malloc<Uint8>(data.length);
     pointer.asTypedList(data.length).setAll(0, data);
     final result = fn(_player.ref.object, pointer, data.length, flags);

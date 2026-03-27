@@ -70,7 +70,15 @@ class MdkVideoPlayerPlatform {
 
   void setExternalSubtitle(int playerId, String uri) {}
 
-  bool appendBuffer(int playerId, Uint8List data, {int flags = 0}) {
+  int createPendingPlayer() => 0;
+
+  void setNextPlayerHandle(int handle) {}
+
+  void clearNextPlayerHandle() {}
+
+  void discardPendingPlayer(int handle) {}
+
+  bool appendBufferByHandle(int handle, Uint8List data, {int flags = 0}) {
     return false;
   }
 }
