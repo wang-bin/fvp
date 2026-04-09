@@ -18,7 +18,6 @@ abstract class Libmdk {
       case 'linux':
         name = 'libmdk.so.0';
       case 'android':
-        name = 'libmdk.so';
       case 'ohos':
         name = 'libmdk.so';
       default:
@@ -43,9 +42,7 @@ abstract class Libfvp {
       name = 'fvp_plugin.dll';
     } else if (Platform.isIOS || Platform.isMacOS) {
       name = 'fvp.framework/fvp';
-    } else if (Platform.isAndroid || Platform.isLinux) {
-      name = 'libfvp_plugin.so';
-    } else if (Platform.operatingSystem == 'ohos') {
+    } else if (Platform.isAndroid || Platform.isLinux || Platform.operatingSystem == 'ohos') {
       name = 'libfvp_plugin.so';
     } else {
       throw Exception(
