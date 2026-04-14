@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.10)
 set(PROJECT_NAME "fvp")
 project(${PROJECT_NAME} LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # This value is used when generating builds using this plugin, so it must
@@ -24,7 +24,6 @@ target_link_options(${PLUGIN_NAME} PRIVATE -Wl,--gc-sections)
 target_link_libraries(${PLUGIN_NAME} PRIVATE
   libace_napi.z.so
   libace_ndk.z.so
-  libhilog_ndk.z.so
   libnativewindow.so
 )
 
