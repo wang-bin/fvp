@@ -1,7 +1,7 @@
 # The Flutter tooling requires that developers have CMake 3.10 or later
 # installed. You should not increase this version, as doing so will cause
 # the plugin to fail to compile for some customers of the plugin.
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.17)
 
 # Project-level configuration.
 set(PROJECT_NAME "fvp")
@@ -39,7 +39,7 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-#set_target_properties(fvp_plugin PROPERTIES
+#set_target_properties(${PLUGIN_NAME} PROPERTIES
 #  PUBLIC_HEADER fvp_plugin.h
 #  OUTPUT_NAME "fvp_plugin"
 #)

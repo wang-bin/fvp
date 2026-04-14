@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.17)
 set(PROJECT_NAME "fvp")
 project(${PROJECT_NAME} LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
