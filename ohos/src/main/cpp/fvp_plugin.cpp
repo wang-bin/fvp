@@ -6,12 +6,16 @@
 #include "include/fvp/fvp_plugin.h"
 #include <napi/native_api.h>
 #include <native_window/external_window.h>
+#include <hilog/log.h>
 #include <mdk/Player.h>
-#include <cassert>
 #include <iostream>
 #include <unordered_map>
 
 using namespace std;
+
+#define FVP_TAG "fvp"
+#define FVP_LOG(...) OH_LOG_Print(LOG_APP, LOG_INFO,  0xFF00, FVP_TAG, __VA_ARGS__)
+#define FVP_ERR(...) OH_LOG_Print(LOG_APP, LOG_ERROR, 0xFF00, FVP_TAG, __VA_ARGS__)
 
 class TexturePlayer final : public mdk::Player {
 public:
@@ -56,7 +60,7 @@ static napi_value NativeSetSurface(napi_env env, napi_callback_info info)
             }
             players.erase(it);
         } else {
-            clog << "FvpPlugin: player not found(already removed?) for texId " << texId << endl;
+            FVP_LOG("player not found (already removed?) for texId %{public}" PRId64, texId);
         }
         return nullptr;
     }
@@ -68,7 +72,7 @@ static napi_value NativeSetSurface(napi_env env, napi_callback_info info)
     OHNativeWindow* window = nullptr;
     int32_t ret = OH_NativeWindow_CreateNativeWindowFromSurfaceId(static_cast<uint64_t>(surfaceId), &window);
     if (ret != 0 || !window) {
-        clog << "FvpPlugin: OH_NativeWindow_CreateNativeWindowFromSurfaceId failed: " << ret << endl;
+        FVP_ERR("OH_NativeWindow_CreateNativeWindowFromSurfaceId failed: %{public}d", ret);
         return nullptr;
     }
 
@@ -83,6 +87,19 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     mdk::SetGlobalOption("MDK_KEY", "980B9623276F746C5FBB5EC5120D4A99A0B58B635592EAEE41F6817FDF3B28B96AC4A49866257726C19B246863B5ADAF5D17464E86D72A90634E8AE8418F810967F469DCD8908B93A044A13AEDF2B566E0B5810523E2B59E2D83E616B1B807B66253E1607A79BC86AEDE1AEF46F79AA60F36BE44DDEE47B84E165AF2788F8109");
 
+    mdk::setLogHandler([](mdk::LogLevel level, const char* msg) {
+        static const ::LogLevel ohLevel[] = {
+            LOG_INFO,  // MDK LogLevel::Off     (0)
+            LOG_ERROR, // MDK LogLevel::Error   (1)
+            LOG_WARN,  // MDK LogLevel::Warning (2)
+            LOG_INFO,  // MDK LogLevel::Info    (3)
+            LOG_DEBUG, // MDK LogLevel::Debug   (4)
+            LOG_DEBUG, // MDK LogLevel::All     (5)
+        };
+        const int idx = (int)level < 6 ? (int)level : 0;
+        OH_LOG_Print(LOG_APP, ohLevel[idx], 0xFF00, FVP_TAG, "%{public}s", msg);
+    });
+
     napi_property_descriptor desc[] = {
         { "nativeSetSurface", nullptr, NativeSetSurface, nullptr, nullptr, nullptr, napi_default, nullptr }
     };
@@ -91,7 +108,20 @@ static napi_value Init(napi_env env, napi_value exports)
     return exports;
 }
 
-NAPI_MODULE(fvp_plugin, Init)
+static napi_module fvpModule = {
+    .nm_version = 1,
+    .nm_flags = 0,
+    .nm_filename = nullptr,
+    .nm_register_func = Init,
+    .nm_modname = "fvp_plugin",
+    .nm_priv = nullptr,
+    .reserved = {nullptr},
+};
+
+extern "C" __attribute__((constructor)) void RegisterFvpPluginModule(void)
+{
+    napi_module_register(&fvpModule);
+}
 
 extern "C" bool MdkIsEmulator()
 {
