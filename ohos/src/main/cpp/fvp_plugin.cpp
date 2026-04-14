@@ -60,7 +60,7 @@ static napi_value NativeSetSurface(napi_env env, napi_callback_info info)
             }
             players.erase(it);
         } else {
-            FVP_LOG("player not found (already removed?) for texId %{public}" PRId64, texId);
+            FVP_LOG("player not found (already removed?) for texId %{public}lld", (long long)texId);
         }
         return nullptr;
     }
