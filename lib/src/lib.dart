@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Wang Bin. All rights reserved.
+// Copyright 2022-2026 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import 'dart:ffi';
@@ -18,6 +18,7 @@ abstract class Libmdk {
       case 'linux':
         name = 'libmdk.so.0';
       case 'android':
+      case 'ohos':
         name = 'libmdk.so';
       default:
         throw Exception(
@@ -41,7 +42,7 @@ abstract class Libfvp {
       name = 'fvp_plugin.dll';
     } else if (Platform.isIOS || Platform.isMacOS) {
       name = 'fvp.framework/fvp';
-    } else if (Platform.isAndroid || Platform.isLinux) {
+    } else if (Platform.isAndroid || Platform.isLinux || Platform.operatingSystem == 'ohos') {
       name = 'libfvp_plugin.so';
     } else {
       throw Exception(

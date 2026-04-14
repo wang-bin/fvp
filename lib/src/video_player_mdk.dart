@@ -175,6 +175,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         'ios': ['VT', 'FFmpeg', 'dav1d'],
         'linux': vdLinux,
         'android': ['AMediaCodec', 'FFmpeg', 'dav1d'],
+        'ohos': ['OH', 'FFmpeg', 'dav1d'],
       };
       _decoders = vd[Platform.operatingSystem];
     }
