@@ -90,20 +90,7 @@ static napi_value Init(napi_env env, napi_value exports)
     return exports;
 }
 
-static napi_module fvpModule = {
-    .nm_version = 1,
-    .nm_flags = 0,
-    .nm_filename = nullptr,
-    .nm_register_func = Init,
-    .nm_modname = "fvp_plugin",
-    .nm_priv = nullptr,
-    .reserved = {nullptr},
-};
-
-extern "C" __attribute__((constructor)) void RegisterFvpPluginModule(void)
-{
-    napi_module_register(&fvpModule);
-}
+NAPI_MODULE(fvp_plugin, Init)
 
 extern "C" bool MdkIsEmulator()
 {

@@ -4,12 +4,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#if defined(_WIN32)
+#define FVP_EXPORT __declspec(dllexport)
+#else
+#define FVP_EXPORT __attribute__((visibility("default")))
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-bool MdkIsEmulator();
-void* MdkGetPlayerVid(int64_t tex_id);
+FVP_EXPORT bool MdkIsEmulator();
+FVP_EXPORT void* MdkGetPlayerVid(int64_t tex_id);
 
 #if defined(__cplusplus)
 }  // extern "C"
