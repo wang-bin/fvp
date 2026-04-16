@@ -217,6 +217,13 @@ class MediaEvent {
 /// libmdk version.
 int version() => Libmdk.instance.MDK_version();
 
+/// Set the license key for libmdk. Required for some features or platforms (e.g. darwin).
+void setLicenseKey(String key) {
+  final k = key.toNativeUtf8();
+  Libfvp.setKey(k.cast());
+  malloc.free(k);
+}
+
 /// Global options: https://github.com/wang-bin/mdk-sdk/wiki/Global-Options
 void setGlobalOption<T>(String name, T value) {
   final k = name.toNativeUtf8();
