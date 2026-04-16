@@ -251,11 +251,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       if (key == 'MDK_KEY') return; // handled separately below
       mdk.setGlobalOption(key, value);
     });
-    // Use MDK_KEY from user-provided global options, or fall back to the
-    // default key bundled with this plugin.
-    final mdkKey = (_globalOpts?['MDK_KEY'] is String)
-        ? _globalOpts!['MDK_KEY'] as String
-        : _kDefaultMdkKey;
+    final mdkKey = _globalOpts?['MDK_KEY'] as String? ?? _kDefaultMdkKey;
     final k = mdkKey.toNativeUtf8();
     Libfvp.setKey(k.cast());
     malloc.free(k);
