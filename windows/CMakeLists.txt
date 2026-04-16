@@ -46,7 +46,8 @@ apply_standard_settings(${PLUGIN_NAME})
 # between plugins. This should not be removed; any symbols that should be
 # exported should be explicitly exported with the FLUTTER_PLUGIN_EXPORT macro.
 set_target_properties(${PLUGIN_NAME} PROPERTIES
-  CXX_VISIBILITY_PRESET hidden)
+  CXX_VISIBILITY_PRESET hidden
+  OUTPUT_NAME "fvp")
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 #target_compile_definitions(${PLUGIN_NAME} PUBLIC DART_SHARED_LIB) # all platforms?
 

@@ -18,6 +18,7 @@
 #define FVP_EXPORT FVP_EXTERN_C __attribute__((visibility("default")))
 #endif
 
+FVP_EXPORT void MdkSetKey(const char* key);
 FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, int64_t send_port);
 FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle);
 FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type, bool reply);

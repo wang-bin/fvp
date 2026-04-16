@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
@@ -10,13 +11,23 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 import 'package:logging/logging.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:ffi/ffi.dart';
 import 'fvp_platform_interface.dart';
 import 'extensions.dart';
+import 'lib.dart';
 import 'media_info.dart';
 
 import '../mdk.dart' as mdk;
 
 final _log = Logger('fvp');
+
+// Default MDK_KEY bundled with this plugin. Users can override it by passing
+// {'global': {'MDK_KEY': '<key>'}} to registerWith().
+const _kDefaultMdkKey =
+    '4DF316BC71206BCEECD01559CC0FEDAF32DF8ECAE656BD9999CB821B67DB5B33'
+    '2B323F24539BA7172746B8F5A64CA67AF342B16BF4B418F76718B821F77BEA07'
+    '22F71DBC8EDF9431132FEAA633F0125072DF8DAC90268C62D0E4BA7D6DF9A6C4'
+    '976AB1146EC55FFD1945CAB4125B20D5C77976CF1BCB77B14C563868EA00EA07';
 
 class MdkVideoPlayer extends mdk.Player {
   final streamCtl = StreamController<VideoEvent>();
@@ -237,8 +248,13 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
           PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
     }
     _globalOpts?.forEach((key, value) {
+      if (key == 'MDK_KEY') return; // handled separately below
       mdk.setGlobalOption(key, value);
     });
+    final mdkKey = _globalOpts?['MDK_KEY'] as String? ?? _kDefaultMdkKey;
+    final k = mdkKey.toNativeUtf8();
+    Libfvp.setKey(k.cast());
+    malloc.free(k);
   }
 
   @override
