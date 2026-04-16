@@ -41,6 +41,13 @@ static unordered_map<int64_t, shared_ptr<Player>> players;
 // global callbacks
 static int gCallbackTypes = 0;
 
+FVP_EXPORT void MdkSetKey(const char* key)
+{
+    if (!key)
+        return;
+    mdk::SetGlobalOption("MDK_KEY", key);
+}
+
 FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, int64_t send_port)
 {
     const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
