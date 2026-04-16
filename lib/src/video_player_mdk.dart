@@ -193,7 +193,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     VideoPlayerPlatform.instance = MdkVideoPlayerPlatform();
   }
 
-  static void _setupMdk() {
+  static Future<void> _setupMdk() async {
     mdk.setLogHandler((level, msg) {
       if (msg.endsWith('\n')) {
         msg = msg.substring(0, msg.length - 1);
@@ -240,14 +240,20 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
           PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
     }
     _globalOpts?.forEach((key, value) {
-      if (key == 'MDK_KEY' && value is String) {
-        final k = value.toNativeUtf8();
-        Libfvp.setKey(k.cast());
-        malloc.free(k);
-        return;
-      }
+      if (key == 'MDK_KEY') return; // handled separately below
       mdk.setGlobalOption(key, value);
     });
+    // Use MDK_KEY from user-provided global options, or fall back to the
+    // platform-bundled key from native (e.g. FvpPlugin.mm on darwin).
+    var mdkKey = _globalOpts?['MDK_KEY'];
+    if (mdkKey == null || mdkKey is! String) {
+      mdkKey = await FvpPlatform.instance.getMdkKey();
+    }
+    if (mdkKey != null && mdkKey is String) {
+      final k = (mdkKey as String).toNativeUtf8();
+      Libfvp.setKey(k.cast());
+      malloc.free(k);
+    }
   }
 
   @override
