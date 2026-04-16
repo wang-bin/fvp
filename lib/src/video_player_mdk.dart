@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
@@ -10,8 +11,10 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 import 'package:logging/logging.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:ffi/ffi.dart';
 import 'fvp_platform_interface.dart';
 import 'extensions.dart';
+import 'lib.dart';
 import 'media_info.dart';
 
 import '../mdk.dart' as mdk;
@@ -237,6 +240,12 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
           PlatformEx.assetUri(_subtitleFontFile ?? 'assets/subfont.ttf'));
     }
     _globalOpts?.forEach((key, value) {
+      if (key == 'MDK_KEY' && value is String) {
+        final k = value.toNativeUtf8();
+        Libfvp.setKey(k.cast());
+        malloc.free(k);
+        return;
+      }
       mdk.setGlobalOption(key, value);
     });
   }
