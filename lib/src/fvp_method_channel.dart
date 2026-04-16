@@ -47,13 +47,4 @@ class MethodChannelFvp extends FvpPlatform {
       "value": mixWithOthers,
     });
   }
-
-  @override
-  Future<String?> getMdkKey() async {
-    try {
-      return await methodChannel.invokeMethod<String>('GetMdkKey');
-    } catch (_) {
-      return null;
-    }
-  }
 }

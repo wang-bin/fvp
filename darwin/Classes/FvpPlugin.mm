@@ -124,8 +124,6 @@ private:
 @property(readonly, strong, nonatomic) NSObject<FlutterTextureRegistry>* texRegistry;
 @end
 
-static NSString* const kMdkKey = @"C03BFF5306AB39058A767105F82697F42A00FE970FB0E641D306DEFF3F220547E5E5377A3C504DC30D547890E71059BC023A4DD91A95474D1F33CA4C26C81B0FC73B00ACF954C6FA75898EFA07D9680B6A00FDF179C0A15381101D01124498AF55B069BD4B0156D5CF5A56DEDE782E5F3930AD47C8F40BFBA379231142E31B0F";
-
 @implementation FvpPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
 #if TARGET_OS_OSX
@@ -156,9 +154,7 @@ static NSString* const kMdkKey = @"C03BFF5306AB39058A767105F82697F42A00FE970FB0E
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-    if ([call.method isEqualToString:@"GetMdkKey"]) {
-        result(kMdkKey);
-    } else if ([call.method isEqualToString:@"CreateRT"]) {
+    if ([call.method isEqualToString:@"CreateRT"]) {
         const auto handle = ((NSNumber*)call.arguments[@"player"]).longLongValue;
         const auto width = ((NSNumber*)call.arguments[@"width"]).intValue;
         const auto height = ((NSNumber*)call.arguments[@"height"]).intValue;

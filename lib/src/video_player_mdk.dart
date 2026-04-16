@@ -21,6 +21,14 @@ import '../mdk.dart' as mdk;
 
 final _log = Logger('fvp');
 
+// Default MDK_KEY bundled with this plugin. Users can override it by passing
+// {'global': {'MDK_KEY': '<key>'}} to registerWith().
+const _kDefaultMdkKey =
+    'C03BFF5306AB39058A767105F82697F42A00FE970FB0E641D306DEFF3F220547'
+    'E5E5377A3C504DC30D547890E71059BC023A4DD91A95474D1F33CA4C26C81B0F'
+    'C73B00ACF954C6FA75898EFA07D9680B6A00FDF179C0A15381101D01124498AF'
+    '55B069BD4B0156D5CF5A56DEDE782E5F3930AD47C8F40BFBA379231142E31B0F';
+
 class MdkVideoPlayer extends mdk.Player {
   final streamCtl = StreamController<VideoEvent>();
   bool _initialized = false;
@@ -193,7 +201,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     VideoPlayerPlatform.instance = MdkVideoPlayerPlatform();
   }
 
-  static Future<void> _setupMdk() async {
+  static void _setupMdk() {
     mdk.setLogHandler((level, msg) {
       if (msg.endsWith('\n')) {
         msg = msg.substring(0, msg.length - 1);
@@ -244,16 +252,13 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       mdk.setGlobalOption(key, value);
     });
     // Use MDK_KEY from user-provided global options, or fall back to the
-    // platform-bundled key from native (e.g. FvpPlugin.mm on darwin).
-    var mdkKey = _globalOpts?['MDK_KEY'];
-    if (mdkKey == null || mdkKey is! String) {
-      mdkKey = await FvpPlatform.instance.getMdkKey();
-    }
-    if (mdkKey != null && mdkKey is String) {
-      final k = (mdkKey as String).toNativeUtf8();
-      Libfvp.setKey(k.cast());
-      malloc.free(k);
-    }
+    // default key bundled with this plugin.
+    final mdkKey = (_globalOpts?['MDK_KEY'] is String)
+        ? _globalOpts!['MDK_KEY'] as String
+        : _kDefaultMdkKey;
+    final k = mdkKey.toNativeUtf8();
+    Libfvp.setKey(k.cast());
+    malloc.free(k);
   }
 
   @override
