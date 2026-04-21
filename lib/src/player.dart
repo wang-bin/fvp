@@ -48,7 +48,10 @@ class Player {
             final oldValue = message[1] as int;
             final newValue = message[2] as int;
             if (_stateCb.hasListener) {
-              _stateCb.add((oldValue: PlaybackState.from(oldValue), newValue: PlaybackState.from(newValue)));
+              _stateCb.add((
+                oldValue: PlaybackState.from(oldValue),
+                newValue: PlaybackState.from(newValue)
+              ));
             }
             Libfvp.replyType(nativeHandle, type, nullptr);
           }
@@ -59,7 +62,10 @@ class Player {
             final newValue = message[2] as int;
             bool ret = true;
             if (_statusCb.hasListener) {
-              _statusCb.add((oldValue: MediaStatus(oldValue), newValue: MediaStatus(newValue)));
+              _statusCb.add((
+                oldValue: MediaStatus(oldValue),
+                newValue: MediaStatus(newValue)
+              ));
             }
             rep.ref.mediaStatus.ret = ret;
             Libfvp.replyType(nativeHandle, type, rep.cast());
@@ -687,12 +693,14 @@ class Player {
 
   /// Get a [PlaybackState] change stream.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#player-onstatechangedstdfunctionvoidstate-cb
-  Stream<({PlaybackState oldValue, PlaybackState newValue})> get onStateChanged => _stateCb.stream;
+  Stream<({PlaybackState oldValue, PlaybackState newValue})>
+      get onStateChanged => _stateCb.stream;
 
   /// Get a [MediaStatus] change stream.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#player-onmediastatusstdfunctionboolmediastatus-oldvalue-mediastatus-newvalue-cb-callbacktoken-token--nullptr
 // reply: true to let native code wait for dart callback result, may result in dead lock because when native waiting main isolate reply, main isolate may execute another task(e.g. frequent seekTo) which also acquire the same lock in native
-  Stream<({MediaStatus oldValue, MediaStatus newValue})> get onMediaStatus => _statusCb.stream;
+  Stream<({MediaStatus oldValue, MediaStatus newValue})> get onMediaStatus =>
+      _statusCb.stream;
 
   void onSubtitleText(
       void Function(double start, double end, List<String> text)? callback) {
@@ -756,8 +764,10 @@ class Player {
   final _receivePort = ReceivePort();
 
   final _eventCb = StreamController<MediaEvent>.broadcast();
-  final _stateCb = StreamController<({PlaybackState oldValue, PlaybackState newValue})>.broadcast();
-  final _statusCb = StreamController<({MediaStatus oldValue, MediaStatus newValue})>.broadcast();
+  final _stateCb = StreamController<
+      ({PlaybackState oldValue, PlaybackState newValue})>.broadcast();
+  final _statusCb = StreamController<
+      ({MediaStatus oldValue, MediaStatus newValue})>.broadcast();
   Function(double start, double end, List<String> text)? _subtitleCb;
   Future<bool> Function()? _prepareCb;
 

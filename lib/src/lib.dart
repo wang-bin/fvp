@@ -42,7 +42,9 @@ abstract class Libfvp {
       name = 'fvp.dll';
     } else if (Platform.isIOS || Platform.isMacOS) {
       name = 'fvp.framework/fvp';
-    } else if (Platform.isAndroid || Platform.isLinux || Platform.operatingSystem == 'ohos') {
+    } else if (Platform.isAndroid ||
+        Platform.isLinux ||
+        Platform.operatingSystem == 'ohos') {
       name = 'libfvp.so';
     } else {
       throw Exception(
@@ -57,8 +59,7 @@ abstract class Libfvp {
   }
 
   static final instance = _load();
-  static final setKey = instance.lookupFunction<
-      Void Function(Pointer<Char>),
+  static final setKey = instance.lookupFunction<Void Function(Pointer<Char>),
       void Function(Pointer<Char>)>('MdkSetKey');
   static final registerPort = instance.lookupFunction<
       Void Function(Int64, Pointer<Void>, Int64),
