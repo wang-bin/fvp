@@ -50,7 +50,8 @@ extension PlatformEx on Platform {
       case 'android':
         return 'assets://flutter_assets/$key';
       case 'ohos':
-        return 'assets://flutter_assets/$key';
+        return path.join(path.dirname(Platform.resolvedExecutable), '..', '..',
+            'resources', 'flutter_assets', key);
     }
     return asset;
   }
