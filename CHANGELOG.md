@@ -1,3 +1,8 @@
+## 0.36.0
+
+* new ohos platform
+* rename native shared lib
+
 ## 0.35.2
 
 * log plugin version
