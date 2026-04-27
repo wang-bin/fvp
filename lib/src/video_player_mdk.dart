@@ -110,6 +110,12 @@ class MdkVideoPlayer extends mdk.Player {
 
 class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static final _players = <int, MdkVideoPlayer>{};
+  // Players indexed by nativeHandle for FVPController to access before textureId is known.
+  static final _playersByHandle = <int, MdkVideoPlayer>{};
+  // Handles of players that have been promoted into _players (i.e. create() succeeded).
+  static final _promotedHandles = <int>{};
+  // nativeHandle hint set by FVPController.initialize() so create() can reuse the pre-created player.
+  static int? _nextPlayerHandle;
   static Map<String, Object>? _globalOpts;
   static Map<String, String>? _playerOpts;
   static int? _maxWidth;
@@ -262,13 +268,24 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> dispose(int playerId) async {
-    _players.remove(playerId)?.dispose();
+    final player = _players.remove(playerId);
+    if (player != null) {
+      _promotedHandles.remove(player.nativeHandle);
+      _playersByHandle.remove(player.nativeHandle);
+      player.dispose();
+    }
   }
 
   @override
   Future<int?> create(DataSource dataSource) async {
     final uri = _toUri(dataSource);
-    final player = MdkVideoPlayer();
+    // Use a pre-created player if FVPController.initialize() set one up.
+    final nextHandle = _nextPlayerHandle;
+    _nextPlayerHandle = null;
+    final preCreated = nextHandle != null ? _playersByHandle[nextHandle] : null;
+    final player = preCreated ?? MdkVideoPlayer();
+    // Register by nativeHandle so appendBufferByHandle() can find it during prepare().
+    _playersByHandle[player.nativeHandle] = player;
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
 
     //player.setProperty("keep_open", "1");
@@ -316,6 +333,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     if (ret < 0) {
       // no throw, handle error in controller.addListener
       _players[-hashCode] = player;
+      _promotedHandles.add(player.nativeHandle);
       player.streamCtl.addError(PlatformException(
         code: 'media open error',
         message: 'invalid or unsupported media',
@@ -332,6 +350,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         fit: _fitMaxSize);
     if (tex < 0) {
       _players[-hashCode] = player;
+      _promotedHandles.add(player.nativeHandle);
       player.streamCtl.addError(PlatformException(
         code: 'video size error',
         message: 'invalid or unsupported media with invalid video size',
@@ -341,6 +360,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     }
     _log.fine('$hashCode player${player.nativeHandle} textureId/playerId=$tex');
     _players[tex] = player;
+    _promotedHandles.add(player.nativeHandle);
     return tex;
   }
 
@@ -521,6 +541,40 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   void setExternalSubtitle(int playerId, String uri) {
     _players[playerId]?.setMedia(uri, mdk.MediaType.subtitle);
+  }
+
+  // FVPController support: create a player before initialize() so appendBuffer() can be called early.
+
+  /// Creates a player and registers it by nativeHandle for [FVPController].
+  /// Returns the nativeHandle to use with [setNextPlayerHandle] and [appendBufferByHandle].
+  int createPendingPlayer() {
+    final player = MdkVideoPlayer();
+    _playersByHandle[player.nativeHandle] = player;
+    return player.nativeHandle;
+  }
+
+  /// Tells [create] to use the pre-created player with [handle] instead of making a new one.
+  void setNextPlayerHandle(int handle) {
+    _nextPlayerHandle = handle;
+  }
+
+  /// Safety: clears the next-player hint if [create] was never called.
+  void clearNextPlayerHandle() {
+    _nextPlayerHandle = null;
+  }
+
+  /// Disposes the pre-created player if [initialize] was never called and it was never promoted.
+  /// Calling this on an already-promoted or non-existent handle is a safe no-op.
+  void discardPendingPlayer(int handle) {
+    if (!_promotedHandles.contains(handle)) {
+      _playersByHandle.remove(handle)?.dispose();
+    }
+  }
+
+  /// Calls [appendBuffer] on the player identified by [nativeHandle].
+  /// Works at any point in the lifecycle: before, during, or after [initialize].
+  bool appendBufferByHandle(int handle, Uint8List data, {int flags = 0}) {
+    return _playersByHandle[handle]?.appendBuffer(data, flags: flags) ?? false;
   }
 
   Future<void> _seekToWithFlags(
