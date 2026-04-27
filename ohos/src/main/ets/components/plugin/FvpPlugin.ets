@@ -61,7 +61,7 @@ export default class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       const surfaceId = entry.getSurfaceId();
       textureRegistry.setTextureBufferSize(texId, width, height);
 
-        fvpNative.nativeSetSurface(handle, texId, surfaceId, width, height);
+      fvpNative.nativeSetSurface(handle, texId, surfaceId, width, height);
 
       this.textures.set(texId, entry);
       result.success(texId);
