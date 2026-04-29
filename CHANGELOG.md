@@ -1,3 +1,7 @@
+## 0.36.1
+
+* fix ohos plugin native lib name
+
 ## 0.36.0
 
 * new ohos platform
