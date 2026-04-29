@@ -88,7 +88,7 @@ static napi_value Init(napi_env env, napi_value exports)
     return exports;
 }
 
-NAPI_MODULE(fvp_plugin, Init)
+NAPI_MODULE(fvp, Init)
 
 extern "C" bool MdkIsEmulator()
 {

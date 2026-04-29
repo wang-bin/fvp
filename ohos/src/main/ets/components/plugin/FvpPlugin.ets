@@ -13,7 +13,7 @@ import {
   MethodResult,
   SurfaceTextureEntry,
 } from '@ohos/flutter_ohos';
-import fvpNative from 'libfvp_plugin.so';
+import fvpNative from 'libfvp.so';
 
 const TAG = 'FvpPlugin';
 
@@ -61,7 +61,7 @@ export default class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       const surfaceId = entry.getSurfaceId();
       textureRegistry.setTextureBufferSize(texId, width, height);
 
-      fvpNative.nativeSetSurface(handle, texId, surfaceId, width, height);
+        fvpNative.nativeSetSurface(handle, texId, surfaceId, width, height);
 
       this.textures.set(texId, entry);
       result.success(texId);
