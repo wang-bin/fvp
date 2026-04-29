@@ -15,7 +15,7 @@ add_library(${PLUGIN_NAME} SHARED
 
 set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden
-  OUTPUT_NAME "fvp")
+  OUTPUT_NAME "fvp_plugin")
 target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
