@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Wang Bin. All rights reserved.
+// Copyright 2022-2026 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -41,7 +41,12 @@ static unordered_map<int64_t, shared_ptr<Player>> players;
 // global callbacks
 static int gCallbackTypes = 0;
 
-FVP_EXPORT void MdkSetKey(const char* key)
+FVP_EXPORT
+#if (__clang__ + 0)
+__attribute__((disable_tail_calls))
+//[[clang::disable_tail_calls]] // msvc: C5030 + C2220. clang 15: can not mix gnu and c++ attributes
+#endif
+void MdkSetKey(const char* key)
 {
     if (!key)
         return;

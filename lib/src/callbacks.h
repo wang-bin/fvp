@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Wang Bin. All rights reserved.
+// Copyright 2022-2026 Wang Bin. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,7 +15,7 @@
 #ifdef _WIN32
 #define FVP_EXPORT FVP_EXTERN_C __declspec(dllexport)
 #else
-#define FVP_EXPORT FVP_EXTERN_C __attribute__((visibility("default")))
+#define FVP_EXPORT FVP_EXTERN_C __attribute__((visibility("default"))) // will be built with objc compiler, c++ attribute can not be used
 #endif
 
 FVP_EXPORT void MdkSetKey(const char* key);
