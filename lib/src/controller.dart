@@ -212,3 +212,85 @@ extension FVPControllerExtensions on VideoPlayerController {
     _platform.setExternalSubtitle(_getId(this), uri);
   }
 }
+
+/// A [VideoPlayerController] subclass that pre-creates the underlying player so that
+/// [appendBuffer] can be called before or during [initialize].
+///
+/// Use this class instead of [VideoPlayerController] when you need to feed media data
+/// incrementally (e.g. with a `mdk:` source URL) using [appendBuffer].
+///
+/// Typical usage:
+/// ```dart
+/// final ctrl = FVPController.network('mdk:');
+/// final initFuture = ctrl.initialize(); // starts but does not await yet
+/// ctrl.appendBuffer(chunk1);
+/// ctrl.appendBuffer(chunk2, flags: -1); // flags: -1 signals end-of-stream
+/// await initFuture;
+/// ```
+class FVPController extends VideoPlayerController {
+  final int _nativeHandle;
+
+  FVPController.network(
+    String dataSource, {
+    VideoFormat? formatHint,
+    Map<String, String> httpHeaders = const {},
+    VideoPlayerOptions? videoPlayerOptions,
+    Future<ClosedCaptionFile>? closedCaptionFile,
+  })  : _nativeHandle = _platform.createPendingPlayer(),
+        super.network(dataSource,
+            formatHint: formatHint,
+            httpHeaders: httpHeaders,
+            videoPlayerOptions: videoPlayerOptions,
+            closedCaptionFile: closedCaptionFile);
+
+  FVPController.asset(
+    String dataSource, {
+    String? package,
+    Future<ClosedCaptionFile>? closedCaptionFile,
+    VideoPlayerOptions? videoPlayerOptions,
+  })  : _nativeHandle = _platform.createPendingPlayer(),
+        super.asset(dataSource,
+            package: package,
+            closedCaptionFile: closedCaptionFile,
+            videoPlayerOptions: videoPlayerOptions);
+
+  FVPController.file(
+    File file, {
+    Future<ClosedCaptionFile>? closedCaptionFile,
+    VideoPlayerOptions? videoPlayerOptions,
+    Map<String, String> httpHeaders = const {},
+  })  : _nativeHandle = _platform.createPendingPlayer(),
+        super.file(file,
+            closedCaptionFile: closedCaptionFile,
+            videoPlayerOptions: videoPlayerOptions,
+            httpHeaders: httpHeaders);
+
+  @override
+  Future<void> initialize() async {
+    _platform.setNextPlayerHandle(_nativeHandle);
+    try {
+      return await super.initialize();
+    } finally {
+      // Safety: clear the hint if create() was never reached (e.g. on error).
+      _platform.clearNextPlayerHandle();
+    }
+  }
+
+  @override
+  Future<void> dispose() async {
+    // Disposes the pre-created player if initialize() was never called.
+    _platform.discardPendingPlayer(_nativeHandle);
+    return super.dispose();
+  }
+
+  /// Append media data to the player. Works before, during, and after [initialize].
+  ///
+  /// Used together with a `mdk:` source URL to feed data incrementally. [initialize]
+  /// will not complete until enough data has been appended via this method.
+  /// [flags] can be 0 for normal data, or -1 to signal end-of-stream.
+  /// Returns true on success.
+  /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#bool-appendbufferconst-uint8_t-data-size_t-size-int-flags
+  bool appendBuffer(Uint8List data, {int flags = 0}) {
+    return _platform.appendBufferByHandle(_nativeHandle, data, flags: flags);
+  }
+}
