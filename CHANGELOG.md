@@ -1,3 +1,7 @@
+# 0.36.2
+
+* fix MDK_KEY in release build
+
 ## 0.36.1
 
 * fix ohos plugin native lib name
