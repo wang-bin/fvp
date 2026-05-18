@@ -31,6 +31,7 @@ export default class FvpPlugin implements FlutterPlugin, MethodCallHandler {
     this.binding = binding;
     this.channel = new MethodChannel(binding.getBinaryMessenger(), 'fvp');
     this.channel.setMethodCallHandler(this);
+    fvpNative.nativeSetResourceManager(binding.getApplicationContext().resourceManager());
   }
 
   onDetachedFromEngine(binding: FlutterPluginBinding): void {

@@ -26,6 +26,7 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE
   libace_napi.z.so
   libace_ndk.z.so
   libnative_window.so
+  librawfile.z.so
 )
 
 include(../../../../cmake/deps.cmake)
