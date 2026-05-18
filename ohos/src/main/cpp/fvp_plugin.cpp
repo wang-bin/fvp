@@ -6,6 +6,7 @@
 #include "include/fvp/fvp_plugin.h"
 #include <napi/native_api.h>
 #include <native_window/external_window.h>
+#include <rawfile/raw_file_manager.h>
 #include <mdk/Player.h>
 #include <iostream>
 #include <unordered_map>
@@ -78,10 +79,26 @@ static napi_value NativeSetSurface(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+// nativeSetResourceManager(resourceManager: object): void
+// Converts an OHOS ResourceManager object to native pointer and passes it to MDK.
+static napi_value NativeSetResourceManager(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    NativeResourceManager* nativeRm = OH_ResourceManager_InitNativeResourceManager(env, args[0]);
+    if (nativeRm) {
+        mdk::SetGlobalOption("resourceManager", nativeRm);
+    }
+    return nullptr;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
-        { "nativeSetSurface", nullptr, NativeSetSurface, nullptr, nullptr, nullptr, napi_default, nullptr }
+        { "nativeSetSurface", nullptr, NativeSetSurface, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "nativeSetResourceManager", nullptr, NativeSetResourceManager, nullptr, nullptr, nullptr, napi_default, nullptr },
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
 
