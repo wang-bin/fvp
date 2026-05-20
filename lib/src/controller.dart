@@ -46,15 +46,14 @@ extension FVPControllerExtensions on VideoPlayerController {
   }
   // extension can't override existing method, e.g. `dynamic noSuchMethod(Invocation invocation)`
 */
-// TODO: prefer playerId in a future version
   static final int Function(VideoPlayerController c) _getId = () {
+    // prefer playerId when available(since video_player 2.10.0 to support platform view), fallback to textureId for older video_player versions
     try {
-      // try to get textureId. static implies late, but can't access this
-      final _ = (VideoPlayerController.file(File('')) as dynamic).textureId;
-      return (dynamic c) => c.textureId as int;
-    } on NoSuchMethodError {
-      // since video_player 2.10.0 to support platform view
+      // try to get playerId. static implies late, but can't access this
+      final _ = (VideoPlayerController.file(File('')) as dynamic).playerId;
       return (dynamic c) => c.playerId as int;
+    } on NoSuchMethodError {
+      return (dynamic c) => c.textureId as int;
     }
   }();
 
