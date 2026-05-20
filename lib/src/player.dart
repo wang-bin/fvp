@@ -127,11 +127,11 @@ class Player {
     Libfvp.registerPort(nativeHandle, NativeApi.postCObject.cast(),
         _receivePort.sendPort.nativePort);
 
-    _stateCb.stream.listen((event) {
+    onStateChanged.listen((event) {
       _state = event.newValue;
     });
     Libfvp.registerType(nativeHandle, 1, false);
-    _statusCb.stream.listen((event) {
+    onMediaStatus.listen((event) {
       final oldValue = event.oldValue;
       final newValue = event.newValue;
       if (!oldValue.test(MediaStatus.loaded) &&
@@ -158,7 +158,7 @@ class Player {
       }
     });
     Libfvp.registerType(nativeHandle, 2, false);
-    _eventCb.stream.listen((e) {
+    onEvent.listen((e) {
       if (_videoSize.isCompleted) {
         return;
       }
@@ -618,7 +618,8 @@ class Player {
 
   /// Set region-of-interest mapping for video display
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setpointmapconst-float-videoroi-const-float-viewroi--nullptr-int-count--2-void-vo_opaque--nullptr
-  void setPointMap({List<double>? videoRoi, List<double>? viewRoi, int count = 2}) {
+  void setPointMap(
+      {List<double>? videoRoi, List<double>? viewRoi, int count = 2}) {
     final cv = (videoRoi != null)
         ? () {
             final p = calloc<Float>(count * 2);
@@ -650,25 +651,23 @@ class Player {
   }
 
   /// Map a point between viewport coordinates and video frame coordinates.
-  /// Returns the mapped coordinates as a record `({double x, double y, double z})`.
+  /// Returns the mapped coordinates as a record `({double x, double y})`.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-mappointmapdirection-dir-float-x-float-y-float-z--nullptr-void-vo_opaque--nullptr
-  ({double x, double y, double z}) mapPoint(
+  ({double x, double y}) mapPoint(
     MapDirection direction, {
     required double x,
     required double y,
-    double z = 0,
   }) {
     final cx = calloc<Float>();
     final cy = calloc<Float>();
     final cz = calloc<Float>();
     cx.value = x;
     cy.value = y;
-    cz.value = z;
     _player.ref.mapPoint.asFunction<
             void Function(Pointer<mdkPlayer>, int, Pointer<Float>,
                 Pointer<Float>, Pointer<Float>, Pointer<Void>)>()(
         _player.ref.object, direction.rawValue, cx, cy, cz, _getVid());
-    final result = (x: cx.value, y: cy.value, z: cz.value);
+    final result = (x: cx.value, y: cy.value);
     calloc.free(cx);
     calloc.free(cy);
     calloc.free(cz);
