@@ -173,6 +173,16 @@ enum ColorSpace {
   }
 }
 
+/// https://github.com/wang-bin/mdk-sdk/wiki/Types#enum-mapdirection
+enum MapDirection {
+  frameToViewport(MDK_MapDirection.MDK_MapDirection_FrameToViewport),
+  viewportToFrame(MDK_MapDirection.MDK_MapDirection_ViewportToFrame),
+  ;
+
+  final int rawValue;
+  const MapDirection(this.rawValue);
+}
+
 enum LogLevel {
   off(MDK_LogLevel.MDK_LogLevel_Off),
   error(MDK_LogLevel.MDK_LogLevel_Error),

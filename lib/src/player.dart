@@ -616,7 +616,64 @@ class Player {
           void Function(Pointer<mdkPlayer>, double, Pointer<Void>)>()(
       _player.ref.object, value, _getVid());
 
-  // TODO: mapPoint( List<double>)
+  /// Set region-of-interest mapping for video display
+  /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-setpointmapconst-float-videoroi-const-float-viewroi--nullptr-int-count--2-void-vo_opaque--nullptr
+  void setPointMap({List<double>? videoRoi, List<double>? viewRoi, int count = 2}) {
+    final cv = (videoRoi != null)
+        ? () {
+            final p = calloc<Float>(count * 2);
+            for (int i = 0; i < videoRoi.length; ++i) {
+              p[i] = videoRoi[i];
+            }
+            return p;
+          }()
+        : nullptr;
+    final cw = (viewRoi != null)
+        ? () {
+            final p = calloc<Float>(count * 2);
+            for (int i = 0; i < viewRoi.length; ++i) {
+              p[i] = viewRoi[i];
+            }
+            return p;
+          }()
+        : nullptr;
+    _player.ref.setPointMap.asFunction<
+            void Function(Pointer<mdkPlayer>, Pointer<Float>, Pointer<Float>,
+                int, Pointer<Void>)>()(
+        _player.ref.object, cv.cast(), cw.cast(), count, _getVid());
+    if (cv != nullptr) {
+      calloc.free(cv);
+    }
+    if (cw != nullptr) {
+      calloc.free(cw);
+    }
+  }
+
+  /// Map a point between viewport coordinates and video frame coordinates.
+  /// Returns the mapped coordinates as a record `({double x, double y, double z})`.
+  /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-mappointmapdirection-dir-float-x-float-y-float-z--nullptr-void-vo_opaque--nullptr
+  ({double x, double y, double z}) mapPoint(
+    MapDirection direction, {
+    required double x,
+    required double y,
+    double z = 0,
+  }) {
+    final cx = calloc<Float>();
+    final cy = calloc<Float>();
+    final cz = calloc<Float>();
+    cx.value = x;
+    cy.value = y;
+    cz.value = z;
+    _player.ref.mapPoint.asFunction<
+            void Function(Pointer<mdkPlayer>, int, Pointer<Float>,
+                Pointer<Float>, Pointer<Float>, Pointer<Void>)>()(
+        _player.ref.object, direction.rawValue, cx, cy, cz, _getVid());
+    final result = (x: cx.value, y: cy.value, z: cz.value);
+    calloc.free(cx);
+    calloc.free(cy);
+    calloc.free(cz);
+    return result;
+  }
 
   /// rotate video content around the center. [degree] can be 0, 90, 180, 270 in counterclockwise.
   /// https://github.com/wang-bin/mdk-sdk/wiki/Player-APIs#void-rotateint-degree-void-vo_opaque--nullptr
