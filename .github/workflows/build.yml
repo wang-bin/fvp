@@ -34,6 +34,7 @@ jobs:
         channel: 'stable'
         cache: true
 #    - run: flutter config --enable-macos-desktop
+    - run: flutter config --enable-swift-package-manager
     - run: flutter doctor --verbose
     - run: flutter pub get
     - run: flutter build macos --verbose
@@ -62,6 +63,7 @@ jobs:
         channel: 'stable'
         cache: true
     - run: flutter doctor --verbose
+    - run: flutter config --enable-swift-package-manager
     - run: flutter pub get
     - run: flutter build ios --release --no-codesign --verbose
     - run: |
