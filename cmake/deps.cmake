@@ -1,5 +1,9 @@
 
 function(fvp_version)
+  if(NOT DEFINED CMAKE_CURRENT_FUNCTION_LIST_DIR)
+    message(WARNING "CMAKE_CURRENT_FUNCTION_LIST_DIR not defined")
+    set(CMAKE_CURRENT_FUNCTION_LIST_DIR ${CMAKE_CURRENT_LIST_DIR})
+  endif()
   set(PUBSPEC_FILE "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../pubspec.yaml")
   if(NOT EXISTS ${PUBSPEC_FILE})
     message(FATAL_ERROR "pubspec.yaml not found: ${PUBSPEC_FILE}")
