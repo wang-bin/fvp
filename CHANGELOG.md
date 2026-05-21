@@ -1,3 +1,9 @@
+# 0.37.0
+
+* add Player.setPointMap() to support ROI rendering
+* add Player.pointMap() to map between widget viewport coordinates and frame coordinates
+* support asset for OHOS
+
 # 0.36.2
 
 * fix MDK_KEY in release build
