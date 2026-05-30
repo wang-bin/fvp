@@ -1,3 +1,7 @@
+# 0.37.1
+
+* support swift package manager
+
 # 0.37.0
 
 * add Player.setPointMap() to support ROI rendering
