@@ -9,7 +9,7 @@ let package = Package(
         .macOS("10.13"),
     ],
     products: [
-        .library(name: "fvp", targets: ["fvp"]),
+        .library(name: "fvp", type: .dynamic, targets: ["fvp"]),
     ],
     dependencies: [
         .package(name: "FlutterFramework", path: "../FlutterFramework"),
@@ -37,6 +37,7 @@ let package = Package(
                 .unsafeFlags(["-Wno-documentation"]),
             ],
             linkerSettings: [
+                .linkedFramework("Flutter"),
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("CoreVideo"),
                 .linkedFramework("Metal"),
