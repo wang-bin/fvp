@@ -37,7 +37,8 @@ let package = Package(
                 .unsafeFlags(["-Wno-documentation"]),
             ],
             linkerSettings: [
-                .linkedFramework("Flutter"),
+                .linkedFramework("Flutter", .when(platforms: [.iOS])),
+                .linkedFramework("FlutterMacOS", .when(platforms: [.macOS])),
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("CoreVideo"),
                 .linkedFramework("Metal"),
