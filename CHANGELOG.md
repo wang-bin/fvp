@@ -1,3 +1,7 @@
+# 0.37.2
+
+* produce dynamic framework with SPM
+
 # 0.37.1
 
 * support swift package manager
