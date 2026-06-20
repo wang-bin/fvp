@@ -85,8 +85,8 @@ macro(fvp_setup_deps)
     # this compatible with the cmake_minimum_required(3.17) of this plugin.
     get_filename_component(MDK_SDK_EXTRACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" REALPATH)
     execute_process(
-      COMMAND ${CMAKE_COMMAND} -E tar "xvf" ${MDK_SDK_SAVE} # "--format=7zip"
-      WORKING_DIRECTORY ${MDK_SDK_EXTRACT_DIR}
+      COMMAND ${CMAKE_COMMAND} -E tar "xvf" "${MDK_SDK_SAVE}" # "--format=7zip"
+      WORKING_DIRECTORY "${MDK_SDK_EXTRACT_DIR}"
       OUTPUT_STRIP_TRAILING_WHITESPACE
       RESULT_VARIABLE EXTRACT_RET
     )
