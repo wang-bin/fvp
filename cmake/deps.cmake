@@ -76,9 +76,17 @@ macro(fvp_setup_deps)
       file(MD5 ${MDK_SDK_SAVE} MDK_SDK_MD5_SAVE)
       message("MDK_SDK_MD5_SAVE: ${MDK_SDK_MD5_SAVE}")
     endif()
+    # On Flutter Windows, CMAKE_CURRENT_SOURCE_DIR is reached through the
+    # generated plugin symlink (.../flutter/ephemeral/.plugin_symlinks/fvp).
+    # Newer CMake's `cmake -E tar` extracts with ARCHIVE_EXTRACT_SECURE_SYMLINKS,
+    # which refuses to write entries through a symlinked directory
+    # ("Cannot extract through symlink"). Resolve the real path so extraction
+    # targets a non-symlinked directory. REALPATH (vs file(REAL_PATH)) keeps
+    # this compatible with the cmake_minimum_required(3.17) of this plugin.
+    get_filename_component(MDK_SDK_EXTRACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" REALPATH)
     execute_process(
-      COMMAND ${CMAKE_COMMAND} -E tar "xvf" ${MDK_SDK_SAVE} # "--format=7zip"
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND ${CMAKE_COMMAND} -E tar "xvf" "${MDK_SDK_SAVE}" # "--format=7zip"
+      WORKING_DIRECTORY "${MDK_SDK_EXTRACT_DIR}"
       OUTPUT_STRIP_TRAILING_WHITESPACE
       RESULT_VARIABLE EXTRACT_RET
     )
