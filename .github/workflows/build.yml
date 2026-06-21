@@ -82,11 +82,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['3.19.x', 'any']      # 3.19 for win7
+        version: ['any']      # 3.19 for win7, but requires vs2019 on gha
         channel: ['stable', 'beta']
-        exclude:
-          - version: '3.19.x'
-            channel: 'beta'
     steps:
     - uses: actions/checkout@v6
       with:
