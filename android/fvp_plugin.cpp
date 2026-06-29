@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2023-2026 WangBin <wbsecg1 at gmail.com>
  */
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -37,17 +37,16 @@ static unordered_map<int64_t, shared_ptr<TexturePlayer>> players;
 extern "C" {
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-
+    clog << "JNI_OnLoad" << endl;
+    mdk::javaVM(vm);
     mdk::SetGlobalOption("profiler.gpu", 1);
 
-    clog << "JNI_OnLoad" << endl;
     JNIEnv *env = nullptr;
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK || !env) {
         clog << "GetEnv for JNI_VERSION_1_4 failed" << endl;
         return -1;
     }
 
-    mdk::SetGlobalOption("JavaVM", vm);
     return JNI_VERSION_1_4;
 }
 

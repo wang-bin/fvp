@@ -154,6 +154,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
 
   static {
     try {
+        System.loadLibrary("mdk");
         System.loadLibrary("fvp");
     } catch (UnsatisfiedLinkError e) {
         Log.w("FvpPlugin", "static initializer: loadLibrary fvp error: " + e);
