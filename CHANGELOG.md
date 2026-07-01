@@ -1,3 +1,9 @@
+# 0.37.3
+
+* fix PrivacyInfo.xcprivacy for SPM
+* upgrade libmdk for SPM
+* fix new cmake build on windows
+
 # 0.37.2
 
 * produce dynamic framework with SPM
