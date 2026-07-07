@@ -210,4 +210,11 @@ extension FVPControllerExtensions on VideoPlayerController {
   void setExternalSubtitle(String uri) {
     _platform.setExternalSubtitle(_getId(this), uri);
   }
+
+  /// Set a callback to receive subtitle text when active subtitle track renders a new piece of text.
+  /// [start] and [end] are in seconds. [text] is the subtitle text lines. Pass null to disable.
+  void onSubtitleText(
+      void Function(double start, double end, List<String> text)? callback) {
+    _platform.onSubtitleText(_getId(this), callback);
+  }
 }

@@ -522,6 +522,11 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     _players[playerId]?.setMedia(uri, mdk.MediaType.subtitle);
   }
 
+  void onSubtitleText(int playerId,
+      void Function(double start, double end, List<String> text)? callback) {
+    _players[playerId]?.onSubtitleText(callback);
+  }
+
   Future<void> _seekToWithFlags(
       int playerId, Duration position, mdk.SeekFlag flags) async {
     final player = _players[playerId];

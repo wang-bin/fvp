@@ -69,4 +69,7 @@ class MdkVideoPlayerPlatform {
   void setExternalVideo(int playerId, String uri) {}
 
   void setExternalSubtitle(int playerId, String uri) {}
+
+  void onSubtitleText(int playerId,
+      void Function(double start, double end, List<String> text)? callback) {}
 }
