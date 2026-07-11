@@ -272,23 +272,19 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   /// (SurfaceView on Android), keyed by playerId. Absent for texture players.
   final _platformViewParams = <int, Map<String, Object>>{};
 
-  /// View type requested by the current createWithOptions() call.
-  VideoViewType _createViewType = VideoViewType.textureView;
-
   @override
-  Future<int?> createWithOptions(VideoCreationOptions options) async {
+  Future<int?> createWithOptions(VideoCreationOptions options) {
     // SurfaceView output is Android-only; other platforms keep the texture.
-    _createViewType =
-        Platform.isAndroid ? options.viewType : VideoViewType.textureView;
-    try {
-      return await create(options.dataSource);
-    } finally {
-      _createViewType = VideoViewType.textureView;
-    }
+    return _create(
+        options.dataSource,
+        Platform.isAndroid ? options.viewType : VideoViewType.textureView);
   }
 
   @override
-  Future<int?> create(DataSource dataSource) async {
+  Future<int?> create(DataSource dataSource) =>
+      _create(dataSource, VideoViewType.textureView);
+
+  Future<int?> _create(DataSource dataSource, VideoViewType viewType) async {
     final uri = _toUri(dataSource);
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
@@ -345,14 +341,14 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       //player.dispose(); // dispose for throw
       return -hashCode;
     }
-    if (_createViewType == VideoViewType.platformView) {
+    if (viewType == VideoViewType.platformView) {
       // SurfaceView output (Android): no Flutter texture. The surface is
       // created by the FvpVideoView platform view and attached to the player
       // natively; buffers are sized to the video so TVs with an upscaled UI
       // layer (e.g. 1080p UI on a 4K panel) still scan out at full video
       // resolution. playerId is the native handle instead of a texture id.
       final size = await player.textureSize;
-      if (size == null) {
+      if (size == null || size.width <= 0 || size.height <= 0) {
         _players[-hashCode] = player;
         player.streamCtl.addError(PlatformException(
           code: 'video size error',
