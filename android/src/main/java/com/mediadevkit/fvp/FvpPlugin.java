@@ -58,6 +58,9 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
     texRegistry = flutterPluginBinding.getTextureRegistry();
     textures = new HashMap<>();
     surfaces = new HashMap<>();
+    // SurfaceView output for VideoViewType.platformView (full display
+    // resolution on TVs with an upscaled UI layer; tunneled playback).
+    flutterPluginBinding.getPlatformViewRegistry().registerViewFactory("fvp/video-view", new FvpVideoViewFactory());
   }
 
   @Override
@@ -148,9 +151,9 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
 
   /*!
     \param playerHandle null to destroy
-    \param texId
+    \param texId a TextureRegistry id, or a negative synthetic id for platform views (FvpVideoView)
    */
-  private native void nativeSetSurface(long playerHandle, long texId, Surface surface, int w, int h, boolean tunnel);
+  static native void nativeSetSurface(long playerHandle, long texId, Surface surface, int w, int h, boolean tunnel);
 
   static {
     try {
