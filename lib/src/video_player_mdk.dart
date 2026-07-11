@@ -119,6 +119,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static int _lowLatency = 0;
   static int _seekFlags = mdk.SeekFlag.fromStart | mdk.SeekFlag.inCache;
   static List<String>? _decoders;
+  static List<String>? _audioBackends;
   static final _mdkLog = Logger('mdk');
   // _prevImpl: required if registerWith() can be invoked multiple times by user
   static VideoPlayerPlatform? _prevImpl;
@@ -159,6 +160,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _globalOpts = options['global'];
       // TODO: _env => putenv
       _decoders = options['video.decoders'];
+      _audioBackends = options['audioBackends'];
       _subtitleFontFile = options['subtitleFontFile'];
     }
 
@@ -290,6 +292,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
     if (_decoders != null) {
       player.videoDecoders = _decoders!;
+    }
+    if (_audioBackends != null) {
+      player.audioBackends = _audioBackends!;
     }
     if (_lowLatency > 0) {
 // +nobuffer: the 1st key-frame packet is dropped. -nobuffer: high latency

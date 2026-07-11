@@ -19,6 +19,8 @@ export 'src/controller.dart';
 ///
 /// "video.decoders": a list of decoder names. supported decoders: https://github.com/wang-bin/mdk-sdk/wiki/Decoders
 ///
+/// "audioBackends": a list of audio renderer names passed to Player.setAudioBackends, e.g. ['AudioTrack'] or ['OpenSL'] on android. If not set, mdk's default order is used.
+///
 /// "maxWidth", "maxHeight": texture max size. if not set, video frame size is used. a small value can reduce memory cost, but may result in lower image quality.
 ///
 /// 'lowLatency': int. default is 0. reduce network stream latency. 1: for vod. 2: for live stream, may drop frames to ensure the latest content is displayed
