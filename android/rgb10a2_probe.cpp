@@ -76,6 +76,7 @@ bool closeToAny(const uint8_t* px) {
 }
 
 struct ProbeCleanup {
+  void* ndk = nullptr;
   EGLDisplay dpy = EGL_NO_DISPLAY;
   EGLSurface winSurf = EGL_NO_SURFACE;
   EGLSurface pbuf = EGL_NO_SURFACE;
@@ -87,10 +88,27 @@ struct ProbeCleanup {
   AImageReader_delete_t readerDelete = nullptr;
   AImage_delete_t imageDelete = nullptr;
   PFNEGLDESTROYIMAGEKHRPROC destroyImage = nullptr;
+  // Whatever was current on this thread before the probe ran — restored on
+  // exit so callers with a live EGL context are not clobbered.
+  EGLDisplay oldDpy = EGL_NO_DISPLAY;
+  EGLContext oldCtx = EGL_NO_CONTEXT;
+  EGLSurface oldDraw = EGL_NO_SURFACE;
+  EGLSurface oldRead = EGL_NO_SURFACE;
+
+  void saveCurrent() {
+    oldDpy = eglGetCurrentDisplay();
+    oldCtx = eglGetCurrentContext();
+    oldDraw = eglGetCurrentSurface(EGL_DRAW);
+    oldRead = eglGetCurrentSurface(EGL_READ);
+  }
 
   ~ProbeCleanup() {
     if (dpy != EGL_NO_DISPLAY) {
-      eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+      if (oldCtx != EGL_NO_CONTEXT && oldDpy != EGL_NO_DISPLAY) {
+        eglMakeCurrent(oldDpy, oldDraw, oldRead, oldCtx);
+      } else {
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+      }
       if (image != EGL_NO_IMAGE_KHR && destroyImage) destroyImage(dpy, image);
       if (winSurf != EGL_NO_SURFACE) eglDestroySurface(dpy, winSurf);
       if (pbuf != EGL_NO_SURFACE) eglDestroySurface(dpy, pbuf);
@@ -99,6 +117,8 @@ struct ProbeCleanup {
     }
     if (img && imageDelete) imageDelete(img);
     if (reader && readerDelete) readerDelete(reader);
+    // Last: the deleters above live in this library.
+    if (ndk) dlclose(ndk);
   }
 };
 
@@ -107,6 +127,9 @@ struct ProbeCleanup {
 bool probeShowsBroken() {
   void* ndk = dlopen("libmediandk.so", RTLD_NOW | RTLD_LOCAL);
   if (!ndk) return false;
+  ProbeCleanup c;
+  c.ndk = ndk;
+  c.saveCurrent();
   auto newWithUsage = (AImageReader_newWithUsage_t)dlsym(ndk, "AImageReader_newWithUsage");
   auto getWindow = (AImageReader_getWindow_t)dlsym(ndk, "AImageReader_getWindow");
   auto acquireNext = (AImageReader_acquireNextImage_t)dlsym(ndk, "AImageReader_acquireNextImage");
@@ -127,7 +150,6 @@ bool probeShowsBroken() {
     return false;
   }
 
-  ProbeCleanup c;
   c.readerDelete = readerDelete;
   c.imageDelete = imageDelete;
   c.destroyImage = destroyImage;
@@ -259,15 +281,17 @@ bool probeShowsBroken() {
 } // namespace
 
 // True when RGBA_1010102 window buffers survive cross-context sampling on
-// this driver (or when the probe cannot run). Cached after the first call.
+// this driver (or when the probe cannot run). Probed once; magic-static
+// initialization makes concurrent first calls safe.
 bool fvpRgb10a2CrossContextOk() {
-  static int cached = -1;
-  if (cached >= 0) return cached != 0;
-  if (const char* env = getenv("FVP_RGB10A2_PROBE")) {
-    if (!strcmp(env, "0")) cached = 1;
-    else if (!strcmp(env, "force8")) cached = 0;
-  }
-  if (cached < 0) cached = probeShowsBroken() ? 0 : 1;
-  clog << "rgb10a2 cross-context sampling ok: " << cached << endl;
-  return cached != 0;
+  static const bool ok = [] {
+    if (const char* env = getenv("FVP_RGB10A2_PROBE")) {
+      if (!strcmp(env, "0")) return true;
+      if (!strcmp(env, "force8")) return false;
+    }
+    const bool broken = probeShowsBroken();
+    clog << "rgb10a2 cross-context sampling ok: " << !broken << endl;
+    return !broken;
+  }();
+  return ok;
 }
