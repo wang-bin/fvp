@@ -92,6 +92,16 @@ rm -rf {mac,i}os/Pods
 
 For other platforms, set environment var `FVP_DEPS_LATEST=1` and rebuilt, will upgrade to the latest sdk. If fvp is installed from pub.dev, run `flutter pub cache clean` is another option.
 
+To use an immutable SDK release or mirror, set its base URL and expected SHA-256. The platform archive name, such as `mdk-sdk-android.7z`, is appended to the URL.
+
+```bash
+FVP_DEPS_URL=https://example.com/mdk-sdk/releases/vX.Y.Z \
+FVP_DEPS_SHA256="replace-with-64-character-sha256" \
+flutter build apk
+```
+
+Replace the SHA-256 placeholder with the archive's 64-character digest. Both options can also be set as CMake cache variables. A non-empty CMake value takes precedence over the corresponding environment variable. When `FVP_DEPS_SHA256` is set, the downloaded archive is verified and the extracted SDK cache is reused only if its recorded checksum matches. `FVP_DEPS_LATEST` is ignored in this mode.
+
 
 # Design
 - Playback control api in dart via ffi

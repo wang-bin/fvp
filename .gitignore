@@ -12,6 +12,8 @@ mdk-sdk/
 *.log
 *.pyc
 *.swp
+*.part
+.fvp-mdk-*/
 .DS_Store
 .atom/
 .buildlog/
