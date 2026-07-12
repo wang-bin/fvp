@@ -49,6 +49,11 @@ configure_file(
   "${INTEGRATION_RELEASE_DIR}/mdk-sdk-linux-x64.tar.xz"
   COPYONLY
 )
+configure_file(
+  "${FIXTURE_V1_ARCHIVE}"
+  "${INTEGRATION_RELEASE_DIR}/mdk-sdk-windows.7z"
+  COPYONLY
+)
 
 add_test(
   NAME fvp_deps
