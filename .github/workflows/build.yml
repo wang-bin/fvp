@@ -18,6 +18,17 @@ on:
     - cron: '0 6 * * 0'
 
 jobs:
+  CMake-tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v6
+    - run: cmake -S cmake/tests -B build/cmake-tests
+    - run: ctest -C Release --output-on-failure
+      working-directory: build/cmake-tests
+
   macOS:
     runs-on: macos-15
     defaults:
