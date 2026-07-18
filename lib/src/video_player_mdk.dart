@@ -160,7 +160,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _globalOpts = options['global'];
       // TODO: _env => putenv
       _decoders = options['video.decoders'];
-      _audioBackends = options['audioBackends'];
+      _audioBackends = (options['audioBackends'] as List?)?.cast<String>();
       _subtitleFontFile = options['subtitleFontFile'];
     }
 
