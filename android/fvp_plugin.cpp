@@ -48,7 +48,12 @@ static bool no10BitConformantWindowConfig()
         if (dpy == EGL_NO_DISPLAY)
             return false;
         EGLint major = 0, minor = 0;
-        if (!eglInitialize(dpy, &major, &minor)) // ref counted, no eglTerminate
+        // Intentionally no eglTerminate: this is the process-global default
+        // display shared with the flutter engine and mdk's renderer, and per
+        // the EGL spec eglTerminate destroys ALL resources of the display
+        // (android's libEGL refcounts, other implementations may not). The
+        // display staying initialized for the process lifetime is expected.
+        if (!eglInitialize(dpy, &major, &minor))
             return false;
         const EGLint attrs[] = {
             EGL_CONFIG_CAVEAT, EGL_NONE, // exclude slow/non-conformant configs
