@@ -6,9 +6,11 @@
 #include <jni.h>
 #include <android/native_window_jni.h>
 #include <android/log.h>
+#include <EGL/egl.h>
 //#include <vulkan/vulkan.h> // before any mdk header
 #include <mdk/Player.h>
 #include <mdk/MediaInfo.h>
+#include <mdk/RenderAPI.h>
 #include <cassert>
 #include <unordered_map>
 #include <iostream>
@@ -32,6 +34,40 @@ private:
 };
 
 static unordered_map<int64_t, shared_ptr<TexturePlayer>> players;
+
+// Some drivers expose RGBA_1010102 window configs but mark them all
+// EGL_NON_CONFORMANT_CONFIG (e.g. PowerVR BXE on Realtek TVs): rendering into
+// one from a shared context corrupts the output (#374). mdk prefers a 10bit
+// EGLConfig for its render target; if the driver has no conformant 10bit
+// window config, request an 8bit target instead. Returns true when the
+// fallback is needed. Probed once, EGL only (no context/surface created).
+static bool no10BitConformantWindowConfig()
+{
+    static const bool no10bit = []{
+        EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        if (dpy == EGL_NO_DISPLAY)
+            return false;
+        EGLint major = 0, minor = 0;
+        if (!eglInitialize(dpy, &major, &minor)) // ref counted, no eglTerminate
+            return false;
+        const EGLint attrs[] = {
+            EGL_CONFIG_CAVEAT, EGL_NONE, // exclude slow/non-conformant configs
+            EGL_BUFFER_SIZE, 32,
+            EGL_RED_SIZE, 10,
+            EGL_GREEN_SIZE, 10,
+            EGL_BLUE_SIZE, 10,
+            EGL_ALPHA_SIZE, 2,
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT | 0x40/*EGL_OPENGL_ES3_BIT*/,
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_NONE
+        };
+        EGLint count = 0;
+        const EGLBoolean ok = eglChooseConfig(dpy, attrs, nullptr, 0, &count);
+        clog << "conformant rgb10a2 window EGLConfigs: " << count << endl;
+        return ok && count <= 0;
+    }();
+    return no10bit;
+}
 
 
 extern "C" {
@@ -80,6 +116,11 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
         player->surface = env->NewGlobalRef(surface);
         player->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)player->surface));
     } else {
+        if (no10BitConformantWindowConfig()) {
+            mdk::GLRenderAPI ra{};
+            ra.depth = 8;
+            player->setRenderAPI(&ra, surface);
+        }
         player->updateNativeSurface(surface, w, h);
         player->vo_opaque = surface;
     }
