@@ -4,6 +4,9 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart' show PlatformViewHitTestBehavior;
 import 'package:flutter/widgets.dart'; //
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
@@ -261,11 +264,27 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> dispose(int playerId) async {
+    _platformViewParams.remove(playerId);
     _players.remove(playerId)?.dispose();
   }
 
+  /// Creation parameters for players rendering into a platform view
+  /// (SurfaceView on Android), keyed by playerId. Absent for texture players.
+  final _platformViewParams = <int, Map<String, Object>>{};
+
   @override
-  Future<int?> create(DataSource dataSource) async {
+  Future<int?> createWithOptions(VideoCreationOptions options) {
+    // SurfaceView output is Android-only; other platforms keep the texture.
+    return _create(
+        options.dataSource,
+        Platform.isAndroid ? options.viewType : VideoViewType.textureView);
+  }
+
+  @override
+  Future<int?> create(DataSource dataSource) =>
+      _create(dataSource, VideoViewType.textureView);
+
+  Future<int?> _create(DataSource dataSource, VideoViewType viewType) async {
     final uri = _toUri(dataSource);
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
@@ -321,6 +340,61 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       ));
       //player.dispose(); // dispose for throw
       return -hashCode;
+    }
+    if (viewType == VideoViewType.platformView) {
+      // SurfaceView output (Android): no Flutter texture. The surface is
+      // created by the FvpVideoView platform view and attached to the player
+      // natively; buffers are sized to the video so TVs with an upscaled UI
+      // layer (e.g. 1080p UI on a 4K panel) still scan out at full video
+      // resolution. playerId is the native handle instead of a texture id.
+      final size = await player.textureSize;
+      if (size == null || size.width <= 0 || size.height <= 0) {
+        _players[-hashCode] = player;
+        player.streamCtl.addError(PlatformException(
+          code: 'video size error',
+          message: 'invalid or unsupported media with invalid video size',
+        ));
+        return -hashCode;
+      }
+      final id = player.nativeHandle;
+      // Respect the same registerWith() "maxWidth"/"maxHeight" options as the
+      // texture path: surface buffers are sized to the video, optionally
+      // clamped. A clamp matters on weak GPUs — GL-rendering full 4K RGBA can
+      // force SurfaceFlinger into GPU composition at panel resolution.
+      var w = size.width.toInt();
+      var h = size.height.toInt();
+      if (_maxWidth != null && _maxHeight != null && (_fitMaxSize ?? true)) {
+        final r = w / h;
+        final fitW = (_maxHeight! * r).toInt();
+        if (fitW <= _maxWidth!) {
+          if (fitW < w) {
+            w = fitW;
+            h = _maxHeight!;
+          }
+        } else if (_maxWidth! < w) {
+          h = (_maxWidth! / r).toInt();
+          w = _maxWidth!;
+        }
+      } else {
+        if (_maxWidth != null && _maxWidth! < w) {
+          h = (h * _maxWidth! / w).round();
+          w = _maxWidth!;
+        }
+        if (_maxHeight != null && _maxHeight! < h) {
+          w = (w * _maxHeight! / h).round();
+          h = _maxHeight!;
+        }
+      }
+      _platformViewParams[id] = <String, Object>{
+        'player': player.nativeHandle,
+        'width': w,
+        'height': h,
+        'tunnel': _tunnel ?? false,
+      };
+      _log.fine('$hashCode player${player.nativeHandle} platform view, '
+          'video ${size.width.toInt()}x${size.height.toInt()}');
+      _players[id] = player;
+      return id;
     }
 // FIXME: pending events will be processed after texture returned, but no events before prepared
 // FIXME: set tunnel too late
@@ -406,6 +480,42 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   @override
   Widget buildView(int playerId) {
     return Texture(textureId: playerId);
+  }
+
+  @override
+  Widget buildViewWithOptions(VideoViewOptions options) {
+    final playerId = options.playerId;
+    final creationParams = _platformViewParams[playerId];
+    if (creationParams == null) {
+      // Texture player (default).
+      return buildView(playerId);
+    }
+    // SurfaceView requires hybrid composition (initExpensiveAndroidView):
+    // under Flutter's default TLHC mode a SurfaceView draws at the wrong
+    // location/z-index (see Flutter's Android platform views docs).
+    return PlatformViewLink(
+      viewType: 'fvp/video-view',
+      surfaceFactory: (context, controller) {
+        return AndroidViewSurface(
+          controller: controller as AndroidViewController,
+          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+          hitTestBehavior: PlatformViewHitTestBehavior.transparent,
+        );
+      },
+      onCreatePlatformView: (params) {
+        final controller = PlatformViewsService.initExpensiveAndroidView(
+          id: params.id,
+          viewType: 'fvp/video-view',
+          layoutDirection: TextDirection.ltr,
+          creationParams: creationParams,
+          creationParamsCodec: const StandardMessageCodec(),
+        );
+        controller
+            .addOnPlatformViewCreatedListener(params.onPlatformViewCreated);
+        controller.create();
+        return controller;
+      },
+    );
   }
 
   @override

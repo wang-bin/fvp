@@ -79,6 +79,11 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
     if (tunnel) { // TODO: tunel via ffi + global var
         player->surface = env->NewGlobalRef(surface);
         player->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)player->surface));
+        // Platform-view surfaces (FvpVideoView) arrive after prepare(), when
+        // the video decoder has already opened without a tunnel surface.
+        // Re-set the decoder list to force a decoder re-open so the surface
+        // property takes effect. Tunneled output requires MediaCodec.
+        player->setDecoders(mdk::MediaType::Video, {"AMediaCodec"});
     } else {
         player->updateNativeSurface(surface, w, h);
         player->vo_opaque = surface;
