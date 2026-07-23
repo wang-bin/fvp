@@ -42,3 +42,15 @@ and
 PASTE LOG HERE
 ```
 </details>
+
+#### Android crash log
+starts with(including) `*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***`, and upload `libmdk.so*` from dart cache dir, e.g. `$HOME/.pub-cache/hosted/pub.flutter-io.cn/fvp-0.36.0/android/mdk-sdk/lib/arm64-v8a/libmdk.so*`
+
+<details>
+<summary>Android crash log</summary>
+
+```
+PASTE CRASH LOG HERE
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+```
+</details>
