@@ -86,7 +86,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
         te = ste;
       }
       final long texId = te.id();
-      nativeSetSurface(handle, texId, surface, width, height, tunnel);
+      nativeSetSurface(handle, texId, surface, width, height, tunnel, false);
       textures.put(texId, te);
       surfaces.put(texId, surface);
       result.success(texId);
@@ -101,14 +101,14 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
                     final Surface newSurface = sp.getSurface();
                     surfaces.put(texId, newSurface);
                     // will do nothing if same surface
-                    nativeSetSurface(handle, texId, newSurface, width, height, tunnel);
+                    nativeSetSurface(handle, texId, newSurface, width, height, tunnel, false);
                   }
 
                   @Override
                   public void onSurfaceCleanup() {
                     Log.d("FvpPlugin", "SurfaceProducer.onSurfaceCleanup for textureId " + texId);
                     textures.remove(texId);
-                    nativeSetSurface(handle, texId, null, 0, 0, tunnel);
+                    nativeSetSurface(handle, texId, null, 0, 0, tunnel, false);
                   }
                 }
         );
@@ -117,7 +117,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
     } else if (call.method.equals("ReleaseRT")) {
       final int texId = call.argument("texture"); // 32bit int, 0, 1, 2 .... but SurfaceTexture.id() is long
       final long texId64 = texId; // MUST cast texId to long, otherwise remove() error
-      nativeSetSurface(0, texId, null, -1, -1, false);
+      nativeSetSurface(0, texId, null, -1, -1, false, false);
       TextureEntry te = textures.get(texId64);
       if (te == null) {
         Log.w("FvpPlugin", "onMethodCall: ReleaseRT texId not found: " + texId);
@@ -144,7 +144,7 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     channel.setMethodCallHandler(null);
     Log.i("FvpPlugin", "onDetachedFromEngine: ");
-    for (long texId : textures.keySet()) { nativeSetSurface(0, texId, null, -1, -1, false);}
+    for (long texId : textures.keySet()) { nativeSetSurface(0, texId, null, -1, -1, false, false);}
     surfaces = null;
     textures = null;
   }
@@ -153,7 +153,13 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
     \param playerHandle null to destroy
     \param texId a TextureRegistry id, or a negative synthetic id for platform views (FvpVideoView)
    */
-  static native void nativeSetSurface(long playerHandle, long texId, Surface surface, int w, int h, boolean tunnel);
+  static native void nativeSetSurface(long playerHandle, long texId, Surface surface, int w, int h, boolean tunnel, boolean direct);
+
+  /*!
+    Surface size change (SurfaceHolder.Callback.surfaceChanged). Only the GL
+    render path needs it; in direct mode the decoder owns the buffer geometry.
+   */
+  static native void nativeSetSurfaceSize(long texId, int w, int h);
 
   static {
     try {

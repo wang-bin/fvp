@@ -39,13 +39,20 @@ public class FvpVideoView implements PlatformView, SurfaceHolder.Callback {
     private final int videoWidth;
     private final int videoHeight;
     private final boolean tunnel;
+    // MediaCodec renders straight into this view's surface (no GL renderer).
+    private final boolean direct;
     private boolean released = false;
+    // Last size handed to the native side, so a surfaceChanged reporting the
+    // size already set (the usual case with setFixedSize) costs nothing.
+    private int surfaceWidth;
+    private int surfaceHeight;
 
     FvpVideoView(Context context, int viewId, Map<String, Object> params) {
         playerHandle = ((Number) params.get("player")).longValue();
         videoWidth = ((Number) params.get("width")).intValue();
         videoHeight = ((Number) params.get("height")).intValue();
         tunnel = Boolean.TRUE.equals(params.get("tunnel"));
+        direct = Boolean.TRUE.equals(params.get("direct"));
         surfaceId = -1000L - viewId;
         surfaceView = new SurfaceView(context);
         if (videoWidth > 0 && videoHeight > 0) {
@@ -63,15 +70,25 @@ public class FvpVideoView implements PlatformView, SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        Log.i("FvpPlugin", "FvpVideoView surfaceCreated, video " + videoWidth + "x" + videoHeight + ", tunnel " + tunnel);
-        FvpPlugin.nativeSetSurface(playerHandle, surfaceId, holder.getSurface(), videoWidth, videoHeight, tunnel);
+        Log.i("FvpPlugin", "FvpVideoView surfaceCreated, video " + videoWidth + "x" + videoHeight + ", tunnel " + tunnel + ", direct " + direct);
+        FvpPlugin.nativeSetSurface(playerHandle, surfaceId, holder.getSurface(), videoWidth, videoHeight, tunnel, direct);
+        surfaceWidth = videoWidth;
+        surfaceHeight = videoHeight;
         released = false;
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        // Buffer size is fixed; nothing to do. Logged for diagnostics.
         Log.i("FvpPlugin", "FvpVideoView surfaceChanged " + width + "x" + height + " format " + format);
+        if (released || (width == surfaceWidth && height == surfaceHeight)) {
+            return;
+        }
+        surfaceWidth = width;
+        surfaceHeight = height;
+        // With setFixedSize (video size known) this is the video resolution and
+        // never changes, so the check above skips it. Without it the surface
+        // follows the view, and the GL renderer needs the new size.
+        FvpPlugin.nativeSetSurfaceSize(surfaceId, width, height);
     }
 
     @Override
@@ -90,6 +107,6 @@ public class FvpVideoView implements PlatformView, SurfaceHolder.Callback {
             return;
         }
         released = true;
-        FvpPlugin.nativeSetSurface(0, surfaceId, null, -1, -1, tunnel);
+        FvpPlugin.nativeSetSurface(0, surfaceId, null, -1, -1, tunnel, direct);
     }
 }

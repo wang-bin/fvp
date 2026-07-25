@@ -28,6 +28,7 @@ public:
     int height = 0;
     jobject surface = nullptr;
     void* vo_opaque = nullptr; // can change by TextureRegistry.SurfaceProducer.Callback
+    bool directSurface = false; // decoder renders into the surface, no GL renderer
 private:
 };
 
@@ -58,15 +59,30 @@ void JNI_OnUnload(JavaVM *vm, void *reserved) {
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, jlong player_handle,
-                                                    jlong tex_id, jobject surface, jint w, jint h, jboolean tunnel) {
+                                                    jlong tex_id, jobject surface, jint w, jint h, jboolean tunnel,
+                                                    jboolean direct) {
     if (!player_handle || !surface) {
         if (auto it = players.find(tex_id); it != players.end()) {
             auto& player = it->second;
             auto s = player->surface;
+            if (player->directSurface) {
+                // The codec renders into the surface that is about to be
+                // destroyed. Detach it BEFORE the surface dies: a MediaCodec
+                // left bound to a dead surface wedges (dequeue -10000, "can
+                // not return buffer to native window") and the stream is
+                // marked decode-error, so the next surface never shows a
+                // frame. An empty decoder list releases the codec without
+                // opening a replacement — re-opening one here would run a
+                // full codec create+configure+start and re-prime the pipeline
+                // synchronously, on the UI thread inside surfaceDestroyed
+                // (~600ms with a deep buffer). The re-attach below re-opens
+                // with the new surface.
+                player->setDecoders(mdk::MediaType::Video, {});
+            }
             player->updateNativeSurface(nullptr);
             players.erase(it);
             if (s) {
-                env->DeleteGlobalRef(surface);
+                env->DeleteGlobalRef(s);
             }
         } else {
             clog << "player not found(already removed?) for textureId " + std::to_string(tex_id) + " surface " + std::to_string((intptr_t)surface) << endl;
@@ -84,11 +100,45 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
         // Re-set the decoder list to force a decoder re-open so the surface
         // property takes effect. Tunneled output requires MediaCodec.
         player->setDecoders(mdk::MediaType::Video, {"AMediaCodec"});
+    } else if (direct) {
+        // Hand the surface to MediaCodec itself: decoded frames go straight
+        // into the SurfaceView's buffer queue, with no GL renderer, no
+        // EGLConfig and no GPU copy in between. image=0 disables the
+        // AImageReader (frame readback) path; dv=1 is required for Dolby
+        // Vision profile 5 to a SurfaceView on older SDKs. The surface arrives
+        // after prepare(), so setDecoders forces a decoder re-open with it
+        // attached.
+        player->surface = env->NewGlobalRef(surface);
+        player->directSurface = true;
+        player->setDecoders(mdk::MediaType::Video,
+            {"AMediaCodec:dv=1:image=0:surface=" + std::to_string((intptr_t)player->surface)});
     } else {
-        player->updateNativeSurface(surface, w, h);
-        player->vo_opaque = surface;
+        player->surface = env->NewGlobalRef(surface);
+        player->updateNativeSurface(player->surface, w, h);
+        player->vo_opaque = player->surface;
     }
+    player->width = w;
+    player->height = h;
     players[tex_id] = player;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurfaceSize(JNIEnv *env, jobject thiz, jlong tex_id,
+                                                        jint w, jint h) {
+    auto it = players.find(tex_id);
+    if (it == players.end()) {
+        return;
+    }
+    auto& player = it->second;
+    player->width = w;
+    player->height = h;
+    // The decoder owns the buffer geometry in direct mode — the compositor
+    // scales its layer to the view, so a resize needs nothing here. The GL
+    // renderer draws at the surface size and does need it.
+    if (!player->directSurface && player->surface) {
+        player->updateNativeSurface(player->surface, w, h);
+    }
 }
 
 extern "C"
