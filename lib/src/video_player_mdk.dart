@@ -275,8 +275,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   @override
   Future<int?> createWithOptions(VideoCreationOptions options) {
     // SurfaceView output is Android-only; other platforms keep the texture.
-    return _create(
-        options.dataSource,
+    return _create(options.dataSource,
         Platform.isAndroid ? options.viewType : VideoViewType.textureView);
   }
 
@@ -368,7 +367,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       var h = size.height.toInt();
       if (_tunnel ?? false) {
         // native size, no clamp
-      } else if (_maxWidth != null && _maxHeight != null && (_fitMaxSize ?? true)) {
+      } else if (_maxWidth != null &&
+          _maxHeight != null &&
+          (_fitMaxSize ?? true)) {
         final r = w / h;
         final fitW = (_maxHeight! * r).toInt();
         if (fitW <= _maxWidth!) {
@@ -498,31 +499,39 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     // SurfaceView requires hybrid composition (initExpensiveAndroidView):
     // under Flutter's default TLHC mode a SurfaceView draws at the wrong
     // location/z-index (see Flutter's Android platform views docs).
-    return PlatformViewLink(
-      viewType: 'fvp/video-view',
-      surfaceFactory: (context, controller) {
-        return AndroidViewSurface(
-          controller: controller as AndroidViewController,
-          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
-          hitTestBehavior: PlatformViewHitTestBehavior.transparent,
-        );
-      },
-      onCreatePlatformView: (params) {
-        final controller = PlatformViewsService.initExpensiveAndroidView(
-          id: params.id,
-          viewType: 'fvp/video-view',
-          // The direction Flutter resolved for this view's context — a
-          // hard-coded ltr lays the view out wrongly in an RTL app.
-          layoutDirection: params.layoutDirection,
-          creationParams: creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
-        );
-        controller
-            .addOnPlatformViewCreatedListener(params.onPlatformViewCreated);
-        controller.create();
-        return controller;
-      },
-    );
+    //
+    // Builder: the view has to be laid out in the direction that applies where
+    // it is mounted, and that is only readable from a context below this
+    // widget (PlatformViewCreationParams does not carry it).
+    return Builder(builder: (context) {
+      final layoutDirection =
+          Directionality.maybeOf(context) ?? TextDirection.ltr;
+      return PlatformViewLink(
+        viewType: 'fvp/video-view',
+        surfaceFactory: (context, controller) {
+          return AndroidViewSurface(
+            controller: controller as AndroidViewController,
+            gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+            hitTestBehavior: PlatformViewHitTestBehavior.transparent,
+          );
+        },
+        onCreatePlatformView: (params) {
+          final controller = PlatformViewsService.initExpensiveAndroidView(
+            id: params.id,
+            viewType: 'fvp/video-view',
+            // The direction Flutter resolved for this view's context — a
+            // hard-coded ltr lays the view out wrongly in an RTL app.
+            layoutDirection: layoutDirection,
+            creationParams: creationParams,
+            creationParamsCodec: const StandardMessageCodec(),
+          );
+          controller
+              .addOnPlatformViewCreatedListener(params.onPlatformViewCreated);
+          controller.create();
+          return controller;
+        },
+      );
+    });
   }
 
   @override
