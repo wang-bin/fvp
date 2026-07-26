@@ -364,10 +364,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       // "tunnel" there is no GL renderer at all: MediaCodec owns the buffer
       // geometry, so the clamp does not apply and the video scans out at its
       // native resolution.
-      final directSurface = _tunnel ?? false;
       var w = size.width.toInt();
       var h = size.height.toInt();
-      if (directSurface) {
+      if (_tunnel ?? false) {
         // native size, no clamp
       } else if (_maxWidth != null && _maxHeight != null && (_fitMaxSize ?? true)) {
         final r = w / h;
