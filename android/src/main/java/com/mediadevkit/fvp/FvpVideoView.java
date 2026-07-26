@@ -40,8 +40,7 @@ public class FvpVideoView implements PlatformView, SurfaceHolder.Callback {
     private final int videoHeight;
     private final boolean tunnel;
     private boolean released = false;
-    // Last size handed to the native side, so a surfaceChanged reporting the
-    // size already set (the usual case with setFixedSize) costs nothing.
+    // Last size sent natively; setFixedSize makes most callbacks a no-op.
     private int surfaceWidth;
     private int surfaceHeight;
 
@@ -82,9 +81,7 @@ public class FvpVideoView implements PlatformView, SurfaceHolder.Callback {
         }
         surfaceWidth = width;
         surfaceHeight = height;
-        // With setFixedSize (video size known) this is the video resolution and
-        // never changes, so the check above skips it. Without it the surface
-        // follows the view, and the GL renderer needs the new size.
+        // Only reached without setFixedSize, where the GL renderer needs it.
         FvpPlugin.nativeSetSurfaceSize(surfaceId, width, height);
     }
 

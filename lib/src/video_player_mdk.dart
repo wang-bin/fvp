@@ -356,13 +356,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         return -hashCode;
       }
       final id = player.nativeHandle;
-      // Respect the same registerWith() "maxWidth"/"maxHeight" options as the
-      // texture path: surface buffers are sized to the video, optionally
-      // clamped. A clamp matters on weak GPUs — GL-rendering full 4K RGBA can
-      // force SurfaceFlinger into GPU composition at panel resolution. With
-      // "tunnel" there is no GL renderer at all: MediaCodec owns the buffer
-      // geometry, so the clamp does not apply and the video scans out at its
-      // native resolution.
+      // Clamp the GL render target as the texture path does — full 4K RGBA can
+      // push SurfaceFlinger into GPU composition on weak GPUs. "tunnel" has no
+      // GL renderer, so the decoder's own geometry stands.
       var w = size.width.toInt();
       var h = size.height.toInt();
       if (_tunnel ?? false) {
@@ -499,10 +495,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     // SurfaceView requires hybrid composition (initExpensiveAndroidView):
     // under Flutter's default TLHC mode a SurfaceView draws at the wrong
     // location/z-index (see Flutter's Android platform views docs).
-    //
-    // Builder: the view has to be laid out in the direction that applies where
-    // it is mounted, and that is only readable from a context below this
-    // widget (PlatformViewCreationParams does not carry it).
+    // Builder: Directionality is only readable from a context below this.
     return Builder(builder: (context) {
       final layoutDirection =
           Directionality.maybeOf(context) ?? TextDirection.ltr;

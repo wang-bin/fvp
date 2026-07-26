@@ -65,17 +65,12 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
             auto& player = it->second;
             auto s = player->surface;
             if (player->directSurface) {
-                // The codec renders into the surface that is about to be
-                // destroyed. Detach it BEFORE the surface dies: a MediaCodec
-                // left bound to a dead surface wedges (dequeue -10000, "can
-                // not return buffer to native window") and the stream is
-                // marked decode-error, so the next surface never shows a
-                // frame. An empty decoder list releases the codec without
-                // opening a replacement — re-opening one here would run a
-                // full codec create+configure+start and re-prime the pipeline
-                // synchronously, on the UI thread inside surfaceDestroyed
-                // (~600ms with a deep buffer). The re-attach below re-opens
-                // with the new surface.
+                // Release the codec BEFORE the surface dies, or it wedges
+                // (dequeue -10000) and the stream is marked decode-error, so
+                // the next surface never shows a frame. Empty list, not a
+                // surface-less re-open: that costs ~600ms of codec restart
+                // and pipeline re-prime, here on the UI thread inside
+                // surfaceDestroyed.
                 player->setDecoders(mdk::MediaType::Video, {});
             }
             player->updateNativeSurface(nullptr);
@@ -92,16 +87,11 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
     auto player = make_shared<TexturePlayer>(player_handle);
     clog << __func__ << endl;
     if (tunnel) {
-        // Decode straight into the surface: MediaCodec writes into the
-        // SurfaceView's (or SurfaceTexture's) buffer queue itself, with no GL
-        // renderer, no EGLConfig and no GPU copy in between. image=0 disables
-        // the AImageReader (frame readback) path; dv=1 is required for Dolby
-        // Vision profile 5 on SDKs where it is not the default.
-        //
-        // The surface only exists after prepare(), by which point the decoder
-        // has already opened without one, so setDecoders forces a re-open with
-        // it attached — setting the property alone never took effect, which is
-        // why this option did nothing before.
+        // MediaCodec writes into the surface's buffer queue itself: no GL
+        // renderer, no EGLConfig, no GPU copy. image=0 drops the AImageReader
+        // readback path; dv=1 is needed for Dolby Vision profile 5 on older
+        // SDKs. The surface only exists after prepare(), so setDecoders is
+        // what forces the re-open that makes it take effect.
         player->surface = env->NewGlobalRef(surface);
         player->directSurface = true;
         player->setDecoders(mdk::MediaType::Video,
@@ -127,9 +117,8 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurfaceSize(JNIEnv *env, jobject thi
     auto& player = it->second;
     player->width = w;
     player->height = h;
-    // The decoder owns the buffer geometry in direct mode — the compositor
-    // scales its layer to the view, so a resize needs nothing here. The GL
-    // renderer draws at the surface size and does need it.
+    // Only the GL renderer draws at the surface size; with tunnel the decoder
+    // owns the geometry and the compositor scales its layer.
     if (!player->directSurface && player->surface) {
         player->updateNativeSurface(player->surface, w, h);
     }
