@@ -511,7 +511,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         final controller = PlatformViewsService.initExpensiveAndroidView(
           id: params.id,
           viewType: 'fvp/video-view',
-          layoutDirection: TextDirection.ltr,
+          // The direction Flutter resolved for this view's context — a
+          // hard-coded ltr lays the view out wrongly in an RTL app.
+          layoutDirection: params.layoutDirection,
           creationParams: creationParams,
           creationParamsCodec: const StandardMessageCodec(),
         );
