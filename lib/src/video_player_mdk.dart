@@ -118,7 +118,6 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static int? _maxHeight;
   static bool? _fitMaxSize;
   static bool? _tunnel;
-  static bool? _directSurface;
   static String? _subtitleFontFile;
   static int _lowLatency = 0;
   static int _seekFlags = mdk.SeekFlag.fromStart | mdk.SeekFlag.inCache;
@@ -159,7 +158,6 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       _maxHeight = options["maxHeight"];
       _fitMaxSize = options["fitMaxSize"];
       _tunnel = options["tunnel"];
-      _directSurface = options["directSurface"];
       _playerOpts = options['player'];
       _globalOpts = options['global'];
       // TODO: _env => putenv
@@ -363,10 +361,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       // texture path: surface buffers are sized to the video, optionally
       // clamped. A clamp matters on weak GPUs — GL-rendering full 4K RGBA can
       // force SurfaceFlinger into GPU composition at panel resolution. With
-      // "directSurface" there is no GL renderer at all: MediaCodec owns the
-      // buffer geometry, so the clamp does not apply and the video scans out
-      // at its native resolution.
-      final directSurface = _directSurface ?? false;
+      // "tunnel" there is no GL renderer at all: MediaCodec owns the buffer
+      // geometry, so the clamp does not apply and the video scans out at its
+      // native resolution.
+      final directSurface = _tunnel ?? false;
       var w = size.width.toInt();
       var h = size.height.toInt();
       if (directSurface) {
@@ -398,7 +396,6 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         'width': w,
         'height': h,
         'tunnel': _tunnel ?? false,
-        'direct': directSurface,
       };
       _log.fine('$hashCode player${player.nativeHandle} platform view, '
           'video ${size.width.toInt()}x${size.height.toInt()}');

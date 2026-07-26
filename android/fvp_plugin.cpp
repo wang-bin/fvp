@@ -59,8 +59,7 @@ void JNI_OnUnload(JavaVM *vm, void *reserved) {
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, jlong player_handle,
-                                                    jlong tex_id, jobject surface, jint w, jint h, jboolean tunnel,
-                                                    jboolean direct) {
+                                                    jlong tex_id, jobject surface, jint w, jint h, jboolean tunnel) {
     if (!player_handle || !surface) {
         if (auto it = players.find(tex_id); it != players.end()) {
             auto& player = it->second;
@@ -92,22 +91,17 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
     assert(surface && "null surface");
     auto player = make_shared<TexturePlayer>(player_handle);
     clog << __func__ << endl;
-    if (tunnel) { // TODO: tunel via ffi + global var
-        player->surface = env->NewGlobalRef(surface);
-        player->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)player->surface));
-        // Platform-view surfaces (FvpVideoView) arrive after prepare(), when
-        // the video decoder has already opened without a tunnel surface.
-        // Re-set the decoder list to force a decoder re-open so the surface
-        // property takes effect. Tunneled output requires MediaCodec.
-        player->setDecoders(mdk::MediaType::Video, {"AMediaCodec"});
-    } else if (direct) {
-        // Hand the surface to MediaCodec itself: decoded frames go straight
-        // into the SurfaceView's buffer queue, with no GL renderer, no
-        // EGLConfig and no GPU copy in between. image=0 disables the
-        // AImageReader (frame readback) path; dv=1 is required for Dolby
-        // Vision profile 5 to a SurfaceView on older SDKs. The surface arrives
-        // after prepare(), so setDecoders forces a decoder re-open with it
-        // attached.
+    if (tunnel) {
+        // Decode straight into the surface: MediaCodec writes into the
+        // SurfaceView's (or SurfaceTexture's) buffer queue itself, with no GL
+        // renderer, no EGLConfig and no GPU copy in between. image=0 disables
+        // the AImageReader (frame readback) path; dv=1 is required for Dolby
+        // Vision profile 5 on SDKs where it is not the default.
+        //
+        // The surface only exists after prepare(), by which point the decoder
+        // has already opened without one, so setDecoders forces a re-open with
+        // it attached — setting the property alone never took effect, which is
+        // why this option did nothing before.
         player->surface = env->NewGlobalRef(surface);
         player->directSurface = true;
         player->setDecoders(mdk::MediaType::Video,
