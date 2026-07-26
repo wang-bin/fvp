@@ -19,6 +19,7 @@ set(PLUGIN_NAME "fvp_plugin")
 # Any new source files that you add to the plugin should be added here.
 add_library(${PLUGIN_NAME} SHARED
   "fvp_plugin.cpp"
+  "rgb10a2_probe.cpp"
   ../lib/src/callbacks.cpp
 )
 
@@ -55,7 +56,7 @@ endif()
 include(../cmake/deps.cmake)
 fvp_setup_deps()
 target_link_libraries(${PLUGIN_NAME} PRIVATE mdk
-        android log)
+        android log EGL GLESv2)
 
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
