@@ -10,8 +10,8 @@ topics:
   - elinux
 
 environment:
-  sdk: ^3.0.0
-  flutter: ">=3.0.0"
+  sdk: ^3.4.0
+  flutter: ">=3.22.0"
 
 dependencies: # TODO: limit max version?
   ffi: any
@@ -21,7 +21,9 @@ dependencies: # TODO: limit max version?
   path: any
   plugin_platform_interface: any
   video_player: any
-  video_player_platform_interface: any
+  # 6.3.0 is where VideoViewType/createWithOptions/buildViewWithOptions land,
+  # which the Android platform view path needs.
+  video_player_platform_interface: '>=6.3.0'
   path_provider: any
   http: any
 

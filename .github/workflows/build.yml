@@ -125,11 +125,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['3.10.x', 'any']
+        version: ['any']
         channel: ['stable', 'beta']
-        exclude:
-          - version: '3.10.x'
-            channel: 'beta'
     steps:
     - uses: actions/checkout@v6
       with:
