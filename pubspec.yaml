@@ -10,8 +10,8 @@ topics:
   - elinux
 
 environment:
-  sdk: ^3.0.0
-  flutter: ">=3.0.0"
+  sdk: ^3.4.0
+  flutter: ">=3.22.0"
 
 dependencies: # TODO: limit max version?
   ffi: any
