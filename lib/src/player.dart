@@ -38,7 +38,7 @@ class Player {
             final category = message[2] as String;
             final detail = message[3] as String;
             final ev = MediaEvent(error, category, detail);
-            if (_eventCb.hasListener) {
+            if (!_disposed && _eventCb.hasListener) {
               _eventCb.add(ev);
             }
           }
@@ -47,7 +47,7 @@ class Player {
             // state
             final oldValue = message[1] as int;
             final newValue = message[2] as int;
-            if (_stateCb.hasListener) {
+            if (!_disposed && _stateCb.hasListener) {
               _stateCb.add((
                 oldValue: PlaybackState.from(oldValue),
                 newValue: PlaybackState.from(newValue)
@@ -61,7 +61,7 @@ class Player {
             final oldValue = message[1] as int;
             final newValue = message[2] as int;
             bool ret = true;
-            if (_statusCb.hasListener) {
+            if (!_disposed && _statusCb.hasListener) {
               _statusCb.add((
                 oldValue: MediaStatus(oldValue),
                 newValue: MediaStatus(newValue)
@@ -169,8 +169,19 @@ class Player {
     Libfvp.registerType(nativeHandle, 0, false);
   }
 
-  /// Release resources
-  void dispose() async {
+  /// Release resources without waiting for completion.
+  void dispose() {
+    unawaited(disposeAsync());
+  }
+
+  /// Release resources and complete when the native player is deleted.
+  ///
+  /// This method is idempotent. Existing callers may continue to use
+  /// [dispose] when they do not need to wait for cleanup.
+  Future<void> disposeAsync() => _disposeFuture ??= _dispose();
+
+  Future<void> _dispose() async {
+    _disposed = true;
     if (_pp == nullptr) {
       textureId.dispose();
       return;
@@ -179,12 +190,15 @@ class Player {
     await updateTexture(width: -1);
     state = PlaybackState.stopped;
     Libfvp.unregisterPort(nativeHandle);
-    _eventCb.close();
     Libfvp.unregisterType(nativeHandle, 0);
-    _stateCb.close();
     Libfvp.unregisterType(nativeHandle, 1);
-    _statusCb.close();
     Libfvp.unregisterType(nativeHandle, 2);
+
+    await Future.wait<void>([
+      _eventCb.close(),
+      _stateCb.close(),
+      _statusCb.close(),
+    ]);
 
     _receivePort.close();
 
@@ -203,6 +217,9 @@ class Player {
     if ((textureId.value ?? -1) >= 0) {
       await FvpPlatform.instance.releaseTexture(nativeHandle, textureId.value!);
       textureId.value = null;
+    }
+    if ((width != null && width <= 0) || (height != null && height <= 0)) {
+      return -1;
     }
     final size = await _videoSize.future;
     if (size == null) {
@@ -811,6 +828,9 @@ class Player {
 
   final _player = Libmdk.instance.mdkPlayerAPI_new();
   var _pp = calloc<Pointer<mdkPlayerAPI>>();
+
+  bool _disposed = false;
+  Future<void>? _disposeFuture;
 
   bool _live = false;
   var _videoSize = Completer<ui.Size?>();
