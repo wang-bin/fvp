@@ -1,3 +1,7 @@
+# 0.38.1
+
+* align SPM mdk with CocoaPods (~> 0.38.0)
+
 # 0.38.0
 
 * add `onSubtitleText` for VideoPlayerController extension
