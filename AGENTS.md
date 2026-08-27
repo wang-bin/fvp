@@ -7,9 +7,9 @@ the native `libmdk`/`mdk-sdk` C/C++ SDK via Dart FFI. There is **no backend serv
 listening port** — "running" the product means running the demo app in `example/`.
 
 ### Environment already provisioned (by the startup update script + one-off setup)
-- Flutter SDK (stable) is installed at `/opt/flutter` and symlinked onto `PATH` via
-  `/usr/local/bin/flutter` and `/usr/local/bin/dart`, so `flutter`/`dart` work in any shell
-  (no PATH export needed). Linux desktop is enabled (`flutter config --enable-linux-desktop`).
+- Flutter SDK (stable, currently 3.47.1) is installed at `/opt/flutter` and symlinked onto
+  `PATH` via `/usr/local/bin/flutter` and `/usr/local/bin/dart`, so `flutter`/`dart` work in any
+  shell (no PATH export needed). Linux desktop is enabled (`flutter config --enable-linux-desktop`).
 - Linux native build toolchain is installed: `cmake`, `clang`, `ninja-build`, `pkg-config`,
   `libgtk-3-dev`, `libpulse-dev`. Note `libstdc++-14-dev` is required (not just `-13`): clang 18
   selects the GCC 14 toolchain, and without `libstdc++-14-dev` the C++ link step fails with
