@@ -38,7 +38,12 @@ class Player {
             final category = message[2] as String;
             final detail = message[3] as String;
             final ev = MediaEvent(error, category, detail);
-            if (_eventCb.hasListener) {
+            if (category == 'render.video' &&
+                detail == '1st_frame' &&
+                !_firstFrameRendered.isCompleted) {
+              _firstFrameRendered.complete();
+            }
+            if (!_eventCb.isClosed && _eventCb.hasListener) {
               _eventCb.add(ev);
             }
           }
@@ -47,7 +52,7 @@ class Player {
             // state
             final oldValue = message[1] as int;
             final newValue = message[2] as int;
-            if (_stateCb.hasListener) {
+            if (!_stateCb.isClosed && _stateCb.hasListener) {
               _stateCb.add((
                 oldValue: PlaybackState.from(oldValue),
                 newValue: PlaybackState.from(newValue)
@@ -61,7 +66,7 @@ class Player {
             final oldValue = message[1] as int;
             final newValue = message[2] as int;
             bool ret = true;
-            if (_statusCb.hasListener) {
+            if (!_statusCb.isClosed && _statusCb.hasListener) {
               _statusCb.add((
                 oldValue: MediaStatus(oldValue),
                 newValue: MediaStatus(newValue)
@@ -175,7 +180,19 @@ class Player {
       textureId.dispose();
       return;
     }
+    // close streams first, but keep native events so that 1st frame can be received
+    _stateCb.close();
+    Libfvp.unregisterType(nativeHandle, 1);
+    _statusCb.close();
+    Libfvp.unregisterType(nativeHandle, 2);
+    _eventCb.close();
+
     final tex = textureId.value;
+    if (tex != null && tex >= 0 && !_firstFrameRendered.isCompleted) {
+      // mdk attaches the surface asynchronously in render thread. detach/destroy before attach finishes crashes in libmdk, so wait for 1st frame
+      await _firstFrameRendered.future
+          .timeout(surfaceAttachTimeout, onTimeout: () {});
+    }
     // await: ensure no player ref in fvp plugin before mdkPlayerAPI_delete() in dart.
     // detach only. updateTexture(width: -1) also destroys the texture entry
     if (tex != null && tex >= 0) {
@@ -183,13 +200,8 @@ class Player {
       textureId.value = null;
     }
     state = PlaybackState.stopped;
-    Libfvp.unregisterPort(nativeHandle);
-    _eventCb.close();
     Libfvp.unregisterType(nativeHandle, 0);
-    _stateCb.close();
-    Libfvp.unregisterType(nativeHandle, 1);
-    _statusCb.close();
-    Libfvp.unregisterType(nativeHandle, 2);
+    Libfvp.unregisterPort(nativeHandle);
 
     _receivePort.close();
 
@@ -833,6 +845,10 @@ class Player {
   Completer<Uint8List?>? _snapshot;
   Completer<int>? _seeked;
   final _receivePort = ReceivePort();
+
+  /// max time [dispose] waits for the 1st frame before detaching the surface
+  static Duration surfaceAttachTimeout = const Duration(seconds: 1);
+  final _firstFrameRendered = Completer<void>();
 
   final _eventCb = StreamController<MediaEvent>.broadcast();
   final _stateCb = StreamController<
