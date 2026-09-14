@@ -197,10 +197,13 @@ class Player {
     calloc.free(_pp);
     _pp = nullptr;
     // release texture (and its Surface) after player is destroyed, mdk render thread may still be attaching it. no-op if ReleaseRT already released
-    if (tex != null && tex >= 0) {
-      await FvpPlatform.instance.destroyTexture(tex);
+    try {
+      if (tex != null && tex >= 0) {
+        await FvpPlatform.instance.destroyTexture(tex);
+      }
+    } finally {
+      textureId.dispose();
     }
-    textureId.dispose();
   }
 
   /// Release current texture then create a new one for current [media], and update [textureId].
@@ -212,9 +215,9 @@ class Player {
     if ((textureId.value ?? -1) >= 0) {
       final old = textureId.value!;
       await FvpPlatform.instance.releaseTexture(nativeHandle, old);
+      textureId.value = null;
       // player is alive here, release immediately as before
       await FvpPlatform.instance.destroyTexture(old);
-      textureId.value = null;
     }
     final size = await _videoSize.future;
     if (size == null) {

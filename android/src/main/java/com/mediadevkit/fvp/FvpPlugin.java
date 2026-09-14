@@ -98,6 +98,10 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
                   @Override
                   public void onSurfaceAvailable() {
                     Log.d("FvpPlugin", "SurfaceProducer.onSurfaceAvailable for textureId " + texId);
+                    // removed by ReleaseRT, player is being destroyed
+                    if (surfaces == null || !surfaces.containsKey(texId)) {
+                      return;
+                    }
                     final Surface newSurface = sp.getSurface();
                     surfaces.put(texId, newSurface);
                     // will do nothing if same surface
@@ -107,6 +111,9 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
                   @Override
                   public void onSurfaceCleanup() {
                     Log.d("FvpPlugin", "SurfaceProducer.onSurfaceCleanup for textureId " + texId);
+                    if (surfaces == null || !surfaces.containsKey(texId)) {
+                      return; // already detached by ReleaseRT
+                    }
                     // keep textures entry for DestroyRT
                     nativeSetSurface(handle, texId, null, 0, 0, tunnel);
                   }
