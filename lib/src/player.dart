@@ -189,6 +189,8 @@ class Player {
 
     final tex = textureId.value;
     if (tex != null && tex >= 0 && !_firstFrameRendered.isCompleted) {
+      // playback is not stopped until the wait below, so mute first
+      mute = true;
       // mdk attaches the surface asynchronously in render thread. detach/destroy before attach finishes crashes in libmdk, so wait for 1st frame
       await _firstFrameRendered.future
           .timeout(surfaceAttachTimeout, onTimeout: () {});
