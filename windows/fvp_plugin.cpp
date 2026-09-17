@@ -177,11 +177,25 @@ void FvpPlugin::HandleMethodCall(
   } else if (method_call.method_name() == "ReleaseRT") {
     auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
     const auto texId = args[flutter::EncodableValue("texture")].LongValue();
-    texture_registrar_->UnregisterTexture(texId);
+    // Dart waits for this result before deleting the underlying MDK player.
+    // Keep the wrapper alive until Flutter no longer uses its texture callback.
+    auto release_result =
+        std::shared_ptr<flutter::MethodResult<flutter::EncodableValue>>(
+            std::move(result));
     if (auto it = players_.find(texId); it != players_.cend()) {
+        auto player = std::move(it->second);
         players_.erase(it);
+        player->setRenderCallback(nullptr);
+        texture_registrar_->UnregisterTexture(
+            texId, [player = std::move(player), release_result]() mutable {
+                player.reset();
+                release_result->Success();
+            });
+    } else {
+        texture_registrar_->UnregisterTexture(texId, [release_result]() {
+            release_result->Success();
+        });
     }
-    result->Success();
   } else if (method_call.method_name() == "MixWithOthers") {
     result->Success();
   } else {
