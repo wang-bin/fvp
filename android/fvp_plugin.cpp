@@ -13,6 +13,10 @@
 #include <unordered_map>
 #include <iostream>
 #include <sys/system_properties.h>
+#include <string>
+#include <memory>
+#include <cstdlib>
+#include <cstring>
 
 using namespace std;
 
