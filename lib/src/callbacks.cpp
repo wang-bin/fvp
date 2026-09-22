@@ -1,8 +1,10 @@
 // Copyright 2022-2026 Wang Bin. All rights reserved.
+// AI participated
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "mdk/Player.h"
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -20,14 +22,82 @@ using namespace std;
 class Player final: public mdk::Player
 {
 public:
+    struct CallbackState {
+        mutex mtx;
+        condition_variable cv;
+        bool closing = false;
+        int active = 0;
+    };
+
+    class CallbackGuard final {
+    public:
+        CallbackGuard(const weak_ptr<Player>& wp, const shared_ptr<CallbackState>& state)
+            : state_(state)
+        {
+            {
+                const scoped_lock lock(state_->mtx);
+                if (state_->closing)
+                    return;
+                ++state_->active;
+                active_ = true;
+            }
+            player_ = wp.lock();
+            if (!player_)
+                finish();
+        }
+
+        CallbackGuard(const CallbackGuard&) = delete;
+        CallbackGuard& operator=(const CallbackGuard&) = delete;
+
+        ~CallbackGuard() { finish(); }
+
+        explicit operator bool() const { return bool(player_); }
+        Player* get() const { return player_.get(); }
+
+    private:
+        void finish() {
+            if (!active_)
+                return;
+            player_.reset(); // release the wrapper before shutdown observes zero active callbacks
+            const scoped_lock lock(state_->mtx);
+            if (--state_->active == 0)
+                state_->cv.notify_all();
+            active_ = false;
+        }
+
+        shared_ptr<CallbackState> state_;
+        shared_ptr<Player> player_;
+        bool active_ = false;
+    };
 
     Player(int64_t handle)
         : mdk::Player(reinterpret_cast<mdkPlayerAPI*>(handle))
     {
     }
 
-    int callbackTypes = 0;
-    bool reply[int(CallbackType::Count)] = {};
+    void stopCallbacks() {
+        const auto state = callbackState;
+        // Close admission before draining so no new callback can retain this non-owning Player wrapper.
+        {
+            const scoped_lock lock(state->mtx);
+            state->closing = true;
+        }
+        for (auto& value : reply)
+            value.store(false, memory_order::release);
+        callbackTypes.store(0, memory_order::release);
+        for (int i = 0; i < (int)CallbackType::Count; ++i) {
+            const scoped_lock lock(mtx[i]);
+            data[i] = {};
+            dataReady[i] = true;
+            cv[i].notify_all();
+        }
+        unique_lock lock(state->mtx);
+        state->cv.wait(lock, [&]{ return state->active == 0; });
+    }
+
+    shared_ptr<CallbackState> callbackState = make_shared<CallbackState>();
+    atomic<int> callbackTypes = 0;
+    atomic<bool> reply[int(CallbackType::Count)]{};
     bool dataReady[int(CallbackType::Count)] = {};
     CallbackReply data[int(CallbackType::Count)];
     mutex mtx[int(CallbackType::Count)];
@@ -104,13 +174,14 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
     const auto tid = this_thread::get_id();
 
     auto wp = weak_ptr<Player>(player);
+    const auto callbackState = player->callbackState;
     player->onEvent([=](const mdk::MediaEvent& e){
-        auto sp = wp.lock();
-        if (!sp)
+        Player::CallbackGuard callback(wp, callbackState);
+        if (!callback)
             return false;
-        auto p = sp.get();
+        auto p = callback.get();
         const auto type = int(CallbackType::Event);
-        if (!(p->callbackTypes & (1 << type)))
+        if (!(p->callbackTypes.load(memory_order::acquire) & (1 << type)))
             return false;
         Dart_CObject t{
             .type = Dart_CObject_kInt64,
@@ -154,14 +225,14 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
     });
 
     player->onStateChanged([=](mdk::State s){
-        auto sp = wp.lock();
-        if (!sp)
+        Player::CallbackGuard callback(wp, callbackState);
+        if (!callback)
             return;
-        auto p = sp.get();
+        auto p = callback.get();
         const auto type = int(CallbackType::State);
         const auto oldValue = p->oldState;
         p->oldState = s;
-        if (!(p->callbackTypes & (1 << type)))
+        if (!(p->callbackTypes.load(memory_order::acquire) & (1 << type)))
             return;
 
         unique_lock lock(p->mtx[type]);
@@ -199,24 +270,24 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             clog << __func__ << __LINE__ << " postCObject error" << endl;
             return;
         }
-        if (!p->reply[type])
+        if (!p->reply[type].load(memory_order::acquire))
             return;
         if (tid == this_thread::get_id()) {// FIXME: can not convert dart non-static function to native function, and dart object has no address, so func(context, args) is impossible too
             clog << "main thread. won't wait callback" << endl;
             return;
         }
         p->cv[type].wait(lock, [=]{
-            return p->dataReady[type] || !(p->callbackTypes & (1 << type));
+            return p->dataReady[type] || !(p->callbackTypes.load(memory_order::acquire) & (1 << type));
         });
     });
 
     player->onMediaStatus([=](mdk::MediaStatus oldValue, mdk::MediaStatus newValue){
-        auto sp = wp.lock();
-        if (!sp)
+        Player::CallbackGuard callback(wp, callbackState);
+        if (!callback)
             return false;
-        auto p = sp.get();
+        auto p = callback.get();
         const auto type = int(CallbackType::MediaStatus);
-        if (!(p->callbackTypes & (1 << type)))
+        if (!(p->callbackTypes.load(memory_order::acquire) & (1 << type)))
             return true;
 
         unique_lock lock(p->mtx[type]);
@@ -254,25 +325,25 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
             clog << __func__ << __LINE__ << "postCObject error" << endl;
             return true;
         }
-        if (!p->reply[type])
+        if (!p->reply[type].load(memory_order::acquire))
             return true;
         if (tid == this_thread::get_id()) {// FIXME: can not convert dart non-static function to native function, and dart object has no address, so func(context, args) is impossible too
             clog << "main thread. won't wait callback" << endl;
             return true;
         }
         p->cv[type].wait(lock, [=]{
-            return p->dataReady[type] || !(p->callbackTypes & (1 << type));
+            return p->dataReady[type] || !(p->callbackTypes.load(memory_order::acquire) & (1 << type));
         });
         return p->data[type].mediaStatus.ret;
     });
 
     player->onSubtitleText([=](double start, double end, const std::vector<std::string>& texts){
-        auto sp = wp.lock();
-        if (!sp)
+        Player::CallbackGuard callback(wp, callbackState);
+        if (!callback)
             return;
-        auto p = sp.get();
+        auto p = callback.get();
         const auto type = int(CallbackType::SubtitleText);
-        if (!(p->callbackTypes & (1 << type)))
+        if (!(p->callbackTypes.load(memory_order::acquire) & (1 << type)))
             return;
 
         Dart_CObject t{
@@ -347,11 +418,7 @@ FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle)
     }
 
     auto sp = it->second;
-    for (int i = 0; i < (int)CallbackType::Count; ++i) {
-        unique_lock lock(sp->mtx[i]);
-        sp->cv[i].notify_one();
-    }
-
+    sp->stopCallbacks();
     players.erase(it);
 }
 
@@ -368,8 +435,8 @@ FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type, bool reply)
     }
 
     auto sp = it->second;
-    sp->callbackTypes |= (1 << type);
-    sp->reply[type] = reply;
+    sp->reply[type].store(reply, memory_order::release);
+    sp->callbackTypes.fetch_or(1 << type, memory_order::release);
 }
 
 FVP_EXPORT void MdkCallbacksUnregisterType(int64_t handle, int type)
@@ -385,7 +452,12 @@ FVP_EXPORT void MdkCallbacksUnregisterType(int64_t handle, int type)
     }
 
     auto sp = it->second;
-    sp->callbackTypes &= ~(1 << type);
+    sp->reply[type].store(false, memory_order::release);
+    sp->callbackTypes.fetch_and(~(1 << type), memory_order::release);
+    unique_lock lock(sp->mtx[type]);
+    sp->data[type] = {};
+    sp->dataReady[type] = true;
+    sp->cv[type].notify_all();
 }
 
 FVP_EXPORT void MdkCallbacksReplyType(int64_t handle, int type, const void* data)
@@ -413,14 +485,15 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
     const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
     auto sp = it->second;
     auto wp = weak_ptr<Player>(sp);
+    const auto callbackState = sp->callbackState;
     const auto tid = this_thread::get_id();
     sp->set(mdk::State::Stopped);
     sp->waitFor(mdk::State::Stopped); // ensure correct state
-    sp->prepare(pos, [send_port, postCObject, wp, tid](int64_t position, bool* boost){
-        auto sp = wp.lock();
-        if (!sp)
+    sp->prepare(pos, [send_port, postCObject, wp, callbackState, tid](int64_t position, bool* boost){
+        Player::CallbackGuard callback(wp, callbackState);
+        if (!callback)
             return false;
-        auto p = sp.get();
+        auto p = callback.get();
         const auto info = p->mediaInfo();
         const auto type = int(CallbackType::Prepared);
         unique_lock lock(p->mtx[type]);
@@ -458,14 +531,14 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
             clog << __func__ << __LINE__ << " postCObject error" << endl; // when?
             return false;
         }
-        if (!p->reply[type])
+        if (!p->reply[type].load(memory_order::acquire))
             return true;
         if (tid == this_thread::get_id()) {// FIXME: can not convert dart non-static function to native function, and dart object has no address, so func(context, args) is impossible too
             clog << __func__ << "callback in main thread. won't wait callback" << endl;
             return true;
         }
         p->cv[type].wait(lock, [=]{
-            return p->dataReady[type] || !(p->callbackTypes & (1 << type));
+            return p->dataReady[type] || !(p->callbackTypes.load(memory_order::acquire) & (1 << type));
         });
         *boost = p->data[type].prepared.boost;
         return p->data[type].prepared.ret;
