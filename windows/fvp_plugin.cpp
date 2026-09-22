@@ -4,6 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 #include "fvp_plugin.h"
+#include "../lib/src/callbacks.h"
 #include <flutter/standard_method_codec.h>
 
 #pragma comment(lib, "dxgi.lib")
@@ -129,9 +130,13 @@ void FvpPlugin::RegisterWithRegistrar(
 FvpPlugin::FvpPlugin(flutter::TextureRegistrar* tr, IDXGIAdapter* adapter)
     : texture_registrar_(tr)
     , adapter_(adapter)
-{}
+{
+  MdkCallbacksStartup();
+}
 
-FvpPlugin::~FvpPlugin() {}
+FvpPlugin::~FvpPlugin() {
+  MdkCallbacksShutdown();
+}
 
 void FvpPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
