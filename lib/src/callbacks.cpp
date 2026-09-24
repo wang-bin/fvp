@@ -109,7 +109,51 @@ public:
 static unordered_map<int64_t, shared_ptr<Player>> players;
 
 // global callbacks
-static int gCallbackTypes = 0;
+static atomic<int> gCallbackTypes = 0;
+
+#ifdef _WIN32
+// The Windows plugin is destroyed before FlutterEngineShutdown. Close
+// admission and drain posts from MDK threads before the last engine stops.
+static mutex dartPostMutex;
+static condition_variable dartPostCv;
+static mutex pluginLifecycleMutex;
+static bool dartPostEnabled = false;
+static uint64_t dartPostGeneration = 0;
+static int activeDartPosts = 0;
+static int activeWindowsPlugins = 0;
+
+static uint64_t currentDartPostGeneration()
+{
+    const scoped_lock lock(dartPostMutex);
+    return dartPostGeneration;
+}
+
+static bool postToDart(Dart_PostCObject post, Dart_Port port,
+                       Dart_CObject* message, uint64_t generation)
+{
+    {
+        const scoped_lock lock(dartPostMutex);
+        if (!dartPostEnabled || generation != dartPostGeneration)
+            return false;
+        ++activeDartPosts;
+    }
+    const bool posted = post(port, message);
+    {
+        const scoped_lock lock(dartPostMutex);
+        if (--activeDartPosts == 0)
+            dartPostCv.notify_all();
+    }
+    return posted;
+}
+#else
+static uint64_t currentDartPostGeneration() { return 0; }
+
+static bool postToDart(Dart_PostCObject post, Dart_Port port,
+                       Dart_CObject* message, uint64_t)
+{
+    return post(port, message);
+}
+#endif
 
 FVP_EXPORT
 #if (__clang__ + 0)
@@ -126,6 +170,7 @@ void MdkSetKey(const char* key)
 FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, int64_t send_port)
 {
     const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
+    const auto postGeneration = currentDartPostGeneration();
     if (!handle) { // global callbacks
         mdk::setLogHandler([=](mdk::LogLevel level, const char* logMsg){
             const auto type = int(CallbackType::Log);
@@ -159,7 +204,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
                     },
                 },
             };
-            if (!postCObject(send_port, &msg)) {
+            if (!postToDart(postCObject, send_port, &msg, postGeneration)) {
                 cout << __func__ << "postCObject error" << endl; // clog: dead log. why post error?
                 return;
             }
@@ -217,7 +262,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
                 },
             },
         };
-        if (!postCObject(send_port, &msg)) {
+        if (!postToDart(postCObject, send_port, &msg, postGeneration)) {
             clog << __func__ << __LINE__ << " postCObject error" << endl;
             return false;
         }
@@ -266,7 +311,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
                 },
             }
         };
-        if (!postCObject(send_port, &msg)) {
+        if (!postToDart(postCObject, send_port, &msg, postGeneration)) {
             clog << __func__ << __LINE__ << " postCObject error" << endl;
             return;
         }
@@ -321,7 +366,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
                 },
             }
         };
-        if (!postCObject(send_port, &msg)) {
+        if (!postToDart(postCObject, send_port, &msg, postGeneration)) {
             clog << __func__ << __LINE__ << "postCObject error" << endl;
             return true;
         }
@@ -397,7 +442,7 @@ FVP_EXPORT void MdkCallbacksRegisterPort(int64_t handle, void* post_c_object, in
                 },
             }
         };
-        if (!postCObject(send_port, &msg)) {
+        if (!postToDart(postCObject, send_port, &msg, postGeneration)) {
             clog << __func__ << __LINE__ << "postCObject error" << endl;
             return;
         }
@@ -421,6 +466,37 @@ FVP_EXPORT void MdkCallbacksUnregisterPort(int64_t handle)
     sp->stopCallbacks();
     players.erase(it);
 }
+
+#ifdef _WIN32
+FVP_EXPORT void MdkCallbacksShutdown()
+{
+    const scoped_lock lifecycleLock(pluginLifecycleMutex);
+    bool finalPlugin = false;
+    {
+        unique_lock lock(dartPostMutex);
+        if (--activeWindowsPlugins == 0) {
+            finalPlugin = true;
+            dartPostEnabled = false;
+            ++dartPostGeneration;
+            dartPostCv.wait(lock, [] { return activeDartPosts == 0; });
+        }
+    }
+    if (finalPlugin) {
+        // MDK may continue logging after the Flutter engine is gone.
+        mdk::setLogHandler(nullptr);
+        gCallbackTypes = 0;
+    }
+}
+
+FVP_EXPORT void MdkCallbacksStartup()
+{
+    const scoped_lock lifecycleLock(pluginLifecycleMutex);
+    const scoped_lock lock(dartPostMutex);
+    if (activeWindowsPlugins++ == 0)
+        ++dartPostGeneration;
+    dartPostEnabled = true;
+}
+#endif
 
 FVP_EXPORT void MdkCallbacksRegisterType(int64_t handle, int type, bool reply)
 {
@@ -483,13 +559,14 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
         return false;
     }
     const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
+    const auto postGeneration = currentDartPostGeneration();
     auto sp = it->second;
     auto wp = weak_ptr<Player>(sp);
     const auto callbackState = sp->callbackState;
     const auto tid = this_thread::get_id();
     sp->set(mdk::State::Stopped);
     sp->waitFor(mdk::State::Stopped); // ensure correct state
-    sp->prepare(pos, [send_port, postCObject, wp, callbackState, tid](int64_t position, bool* boost){
+    sp->prepare(pos, [send_port, postCObject, postGeneration, wp, callbackState, tid](int64_t position, bool* boost){
         Player::CallbackGuard callback(wp, callbackState);
         if (!callback)
             return false;
@@ -527,7 +604,7 @@ FVP_EXPORT bool MdkPrepare(int64_t handle, int64_t pos, int64_t seekFlags, void*
                 },
             },
         };
-        if (!postCObject(send_port, &msg)) {
+        if (!postToDart(postCObject, send_port, &msg, postGeneration)) {
             clog << __func__ << __LINE__ << " postCObject error" << endl; // when?
             return false;
         }
@@ -553,6 +630,7 @@ FVP_EXPORT bool MdkSeek(int64_t handle, int64_t pos, int64_t seekFlags, void* po
         return false;
     }
     const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
+    const auto postGeneration = currentDartPostGeneration();
     auto sp = it->second;
     return sp->seek(pos, mdk::SeekFlag(seekFlags), [=](int64_t position){
         Dart_CObject t{
@@ -577,7 +655,7 @@ FVP_EXPORT bool MdkSeek(int64_t handle, int64_t pos, int64_t seekFlags, void* po
                 },
             },
         };
-        if (!postCObject(send_port, &msg)) {
+        if (!postToDart(postCObject, send_port, &msg, postGeneration)) {
             clog << __func__ << __LINE__ << " postCObject error" << endl; // when?
             return false;
         }
@@ -594,6 +672,7 @@ FVP_EXPORT bool MdkSnapshot(int64_t handle, int64_t texId, int w, int h, void* p
         return false;
     }
     const auto postCObject = reinterpret_cast<bool(*)(Dart_Port, Dart_CObject*)>(post_c_object);
+    const auto postGeneration = currentDartPostGeneration();
     auto sp = it->second;
     Player::SnapshotRequest req{
         .width = w,
@@ -626,7 +705,7 @@ FVP_EXPORT bool MdkSnapshot(int64_t handle, int64_t texId, int w, int h, void* p
                 },
             },
         };
-        if (!postCObject(send_port, &msg)) {
+        if (!postToDart(postCObject, send_port, &msg, postGeneration)) {
             clog << __func__ << __LINE__ << " postCObject error" << endl; // when?
             return {};
         }
