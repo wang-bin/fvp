@@ -60,6 +60,7 @@ class MdkVideoPlayer extends mdk.Player {
         }
         _initialized = true;
         textureSize.then((size) {
+          if (streamCtl.isClosed) return;
           if (size == null) {
             return;
           }

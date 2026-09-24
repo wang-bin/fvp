@@ -98,6 +98,10 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
                   @Override
                   public void onSurfaceAvailable() {
                     Log.d("FvpPlugin", "SurfaceProducer.onSurfaceAvailable for textureId " + texId);
+                    // removed by ReleaseRT, player is being destroyed
+                    if (surfaces == null || !surfaces.containsKey(texId)) {
+                      return;
+                    }
                     final Surface newSurface = sp.getSurface();
                     surfaces.put(texId, newSurface);
                     // will do nothing if same surface
@@ -107,7 +111,10 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
                   @Override
                   public void onSurfaceCleanup() {
                     Log.d("FvpPlugin", "SurfaceProducer.onSurfaceCleanup for textureId " + texId);
-                    textures.remove(texId);
+                    if (surfaces == null || !surfaces.containsKey(texId)) {
+                      return; // already detached by ReleaseRT
+                    }
+                    // keep textures entry for DestroyRT
                     nativeSetSurface(handle, texId, null, 0, 0, tunnel);
                   }
                 }
@@ -115,22 +122,31 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
       }
 //// FLUTTER_3.24_END
     } else if (call.method.equals("ReleaseRT")) {
+      // detach only. TextureEntry (and its Surface) is released by DestroyRT after mdkPlayerAPI_delete() in dart,
+      // mdk render thread may still be attaching the surface, releasing ImageReader here destroys the Surface under it
       final int texId = call.argument("texture"); // 32bit int, 0, 1, 2 .... but SurfaceTexture.id() is long
       final long texId64 = texId; // MUST cast texId to long, otherwise remove() error
       nativeSetSurface(0, texId, null, -1, -1, false);
-      TextureEntry te = textures.get(texId64);
-      if (te == null) {
+      if (!textures.containsKey(texId64)) {
         Log.w("FvpPlugin", "onMethodCall: ReleaseRT texId not found: " + texId);
-      } else {
-        te.release();
-      }
-      if (textures.remove(texId64) == null) {
-        Log.w("FvpPlugin", "onMethodCall: ReleaseRT texture not found for " + texId);
       }
       if (surfaces.remove(texId64) == null) {
         Log.w("FvpPlugin", "onMethodCall: ReleaseRT surface not found for " + texId);
       }
       Log.i("FvpPlugin", "onMethodCall: ReleaseRT texId: " + texId + ", surfaces: " + surfaces.size() + " textures: " + textures.size());
+      result.success(null);
+    } else if (call.method.equals("DestroyRT")) {
+      // called from dart after mdkPlayerAPI_delete()
+      final int texId = call.argument("texture");
+      final long texId64 = texId;
+      TextureEntry te = textures.remove(texId64);
+      if (te == null) {
+        Log.w("FvpPlugin", "onMethodCall: DestroyRT texture not found for " + texId);
+      } else {
+        te.release();
+      }
+      surfaces.remove(texId64);
+      Log.i("FvpPlugin", "onMethodCall: DestroyRT texId: " + texId + ", surfaces: " + surfaces.size() + " textures: " + textures.size());
       result.success(null);
     } else if (call.method.equals("MixWithOthers")) {
       // TODO: Implement actual business.
@@ -144,7 +160,11 @@ public class FvpPlugin implements FlutterPlugin, MethodCallHandler {
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     channel.setMethodCallHandler(null);
     Log.i("FvpPlugin", "onDetachedFromEngine: ");
-    for (long texId : textures.keySet()) { nativeSetSurface(0, texId, null, -1, -1, false);}
+    // DestroyRT is never called for remaining textures. release here, otherwise onImageAvailable may call scheduleFrame() on a detached FlutterJNI
+    for (Map.Entry<Long, TextureEntry> e : textures.entrySet()) {
+      nativeSetSurface(0, e.getKey(), null, -1, -1, false);
+      e.getValue().release();
+    }
     surfaces = null;
     textures = null;
   }
