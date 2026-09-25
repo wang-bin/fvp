@@ -169,13 +169,15 @@ class Player {
     Libfvp.registerType(nativeHandle, 0, false);
   }
 
-  /// Release resources
-  void dispose() async {
+  /// Release resources.
+  void dispose() => unawaited(disposeAsync());
+
+  /// Release resources and wait for native teardown to finish.
+  Future<void> disposeAsync() async {
     if (_pp == nullptr) {
       textureId.dispose();
       return;
     }
-    // await: ensure no player ref in fvp plugin before mdkPlayerAPI_delete() in dart
     await updateTexture(width: -1);
     state = PlaybackState.stopped;
     Libfvp.unregisterPort(nativeHandle);
@@ -203,6 +205,11 @@ class Player {
     if ((textureId.value ?? -1) >= 0) {
       await FvpPlatform.instance.releaseTexture(nativeHandle, textureId.value!);
       textureId.value = null;
+    }
+    // Releasing a texture must not wait for media/video size. That future may
+    // never complete when an in-flight load is cancelled by disposal.
+    if ((width != null && width <= 0) || (height != null && height <= 0)) {
+      return -1;
     }
     final size = await _videoSize.future;
     if (size == null) {
