@@ -42,6 +42,15 @@ class MethodChannelFvp extends FvpPlatform {
   }
 
   @override
+  Future<void> destroyTexture(int textureId) async {
+    try {
+      await methodChannel.invokeMethod('DestroyRT', {"texture": textureId});
+    } on MissingPluginException {
+      // only android has DestroyRT
+    }
+  }
+
+  @override
   Future<void> setMixWithOthers(bool mixWithOthers) async {
     await methodChannel.invokeMethod('MixWithOthers', {
       "value": mixWithOthers,
