@@ -154,7 +154,14 @@ static gboolean player_texture_populate(FlTextureGL *texture, uint32_t *target, 
     self->player->setRenderAPI(&ra);
   }
 
+  // Impeller (GLES) can call populate with GL_SCISSOR_TEST enabled and the
+  // box set to the Flutter view size, which clips rendering into our FBO.
+  const GLboolean scissor = glIsEnabled(GL_SCISSOR_TEST);
+  if (scissor)
+    glDisable(GL_SCISSOR_TEST);
   self->player->renderVideo();
+  if (scissor)
+    glEnable(GL_SCISSOR_TEST);
 
   *target = GL_TEXTURE_2D;
   *name = self->texture_id;
