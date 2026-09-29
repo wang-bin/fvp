@@ -63,6 +63,9 @@ class MdkVideoPlayer extends mdk.Player {
           if (size == null) {
             return;
           }
+          if (streamCtl.isClosed) {
+            return;
+          }
           streamCtl.add(VideoEvent(
               eventType: VideoEventType.initialized,
               duration: Duration(
@@ -74,10 +77,14 @@ class MdkVideoPlayer extends mdk.Player {
         });
       } else if (!oldValue.test(mdk.MediaStatus.buffering) &&
           newValue.test(mdk.MediaStatus.buffering)) {
-        streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingStart));
+        if (!streamCtl.isClosed) {
+          streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingStart));
+        }
       } else if (!oldValue.test(mdk.MediaStatus.buffered) &&
           newValue.test(mdk.MediaStatus.buffered)) {
-        streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingEnd));
+        if (!streamCtl.isClosed) {
+          streamCtl.add(VideoEvent(eventType: VideoEventType.bufferingEnd));
+        }
       }
     });
 
@@ -87,11 +94,13 @@ class MdkVideoPlayer extends mdk.Player {
       if (ev.category == "reader.buffering") {
         final pos = position;
         final bufLen = buffered();
-        streamCtl.add(
-            VideoEvent(eventType: VideoEventType.bufferingUpdate, buffered: [
-          DurationRange(
-              Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))
-        ]));
+        if (!streamCtl.isClosed) {
+          streamCtl.add(
+              VideoEvent(eventType: VideoEventType.bufferingUpdate, buffered: [
+            DurationRange(
+                Duration(microseconds: pos), Duration(milliseconds: pos + bufLen))
+          ]));
+        }
       }
     });
 
@@ -100,12 +109,16 @@ class MdkVideoPlayer extends mdk.Player {
           '$hashCode player$nativeHandle onPlaybackStateChanged: ${event.oldValue} => ${event.newValue}');
       if (event.newValue == mdk.PlaybackState.stopped) {
         // FIXME: keep_open no stopped
-        streamCtl.add(VideoEvent(eventType: VideoEventType.completed));
+        if (!streamCtl.isClosed) {
+          streamCtl.add(VideoEvent(eventType: VideoEventType.completed));
+        }
         return;
       }
-      streamCtl.add(VideoEvent(
-          eventType: VideoEventType.isPlayingStateUpdate,
-          isPlaying: event.newValue == mdk.PlaybackState.playing));
+      if (!streamCtl.isClosed) {
+        streamCtl.add(VideoEvent(
+            eventType: VideoEventType.isPlayingStateUpdate,
+            isPlaying: event.newValue == mdk.PlaybackState.playing));
+      }
     });
   }
 }
@@ -333,10 +346,12 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     if (ret < 0) {
       // no throw, handle error in controller.addListener
       _players[-hashCode] = player;
-      player.streamCtl.addError(PlatformException(
-        code: 'media open error',
-        message: 'invalid or unsupported media',
-      ));
+      if (!player.streamCtl.isClosed) {
+        player.streamCtl.addError(PlatformException(
+          code: 'media open error',
+          message: 'invalid or unsupported media',
+        ));
+      }
       //player.dispose(); // dispose for throw
       return -hashCode;
     }
@@ -349,10 +364,12 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       final size = await player.textureSize;
       if (size == null || size.width <= 0 || size.height <= 0) {
         _players[-hashCode] = player;
-        player.streamCtl.addError(PlatformException(
-          code: 'video size error',
-          message: 'invalid or unsupported media with invalid video size',
-        ));
+        if (!player.streamCtl.isClosed) {
+          player.streamCtl.addError(PlatformException(
+            code: 'video size error',
+            message: 'invalid or unsupported media with invalid video size',
+          ));
+        }
         return -hashCode;
       }
       final id = player.nativeHandle;
@@ -407,10 +424,12 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
         fit: _fitMaxSize);
     if (tex < 0) {
       _players[-hashCode] = player;
-      player.streamCtl.addError(PlatformException(
-        code: 'video size error',
-        message: 'invalid or unsupported media with invalid video size',
-      ));
+      if (!player.streamCtl.isClosed) {
+        player.streamCtl.addError(PlatformException(
+          code: 'video size error',
+          message: 'invalid or unsupported media with invalid video size',
+        ));
+      }
       //player.dispose();
       return -hashCode;
     }
@@ -460,13 +479,15 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     final pos = player.position;
     final bufLen = player.buffered();
     final ranges = player.bufferedTimeRanges();
-    player.streamCtl.add(VideoEvent(
-        eventType: VideoEventType.bufferingUpdate,
-        buffered: ranges +
-            [
-              DurationRange(Duration(milliseconds: pos),
-                  Duration(milliseconds: pos + bufLen))
-            ]));
+    if (!player.streamCtl.isClosed) {
+      player.streamCtl.add(VideoEvent(
+          eventType: VideoEventType.bufferingUpdate,
+          buffered: ranges +
+              [
+                DurationRange(Duration(milliseconds: pos),
+                    Duration(milliseconds: pos + bufLen))
+              ]));
+    }
     return Duration(milliseconds: pos);
   }
 
