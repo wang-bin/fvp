@@ -1,3 +1,11 @@
+# 0.39.0
+
+* android require java 17, compileSdk 36
+* drain callbacks before deleting player, fix UAF if disposed
+* windows: fix texture callback triggered after player destroyed
+* windows: fix dart posts after engine shutdown
+* linux: disable scissor test
+
 # 0.38.1
 
 * align SPM mdk with CocoaPods (~> 0.38.0)
