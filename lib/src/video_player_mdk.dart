@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:ffi/ffi.dart';
 import 'fvp_platform_interface.dart';
+import 'create_cancellation.dart';
 import 'extensions.dart';
 import 'lib.dart';
 import 'media_info.dart';
@@ -36,14 +37,18 @@ class MdkVideoPlayer extends mdk.Player {
   bool _initialized = false;
 
   @override
-  void dispose() {
-    streamCtl.close();
+  void dispose() => unawaited(disposeAsync());
+
+  @override
+  Future<void> disposeAsync() async {
+    if (!streamCtl.isClosed) streamCtl.close();
     _initialized = false;
-    super.dispose();
+    await super.disposeAsync();
   }
 
   MdkVideoPlayer() : super() {
     onMediaStatus.listen((event) {
+      if (streamCtl.isClosed) return;
       final oldValue = event.oldValue;
       final newValue = event.newValue;
       _log.fine(
@@ -60,7 +65,7 @@ class MdkVideoPlayer extends mdk.Player {
         }
         _initialized = true;
         textureSize.then((size) {
-          if (size == null) {
+          if (size == null || streamCtl.isClosed) {
             return;
           }
           streamCtl.add(VideoEvent(
@@ -82,6 +87,7 @@ class MdkVideoPlayer extends mdk.Player {
     });
 
     onEvent.listen((ev) {
+      if (streamCtl.isClosed) return;
       _log.fine(
           '$hashCode player$nativeHandle onEvent: ${ev.category} - ${ev.detail} - ${ev.error}');
       if (ev.category == "reader.buffering") {
@@ -96,6 +102,7 @@ class MdkVideoPlayer extends mdk.Player {
     });
 
     onStateChanged.listen((event) {
+      if (streamCtl.isClosed) return;
       _log.fine(
           '$hashCode player$nativeHandle onPlaybackStateChanged: ${event.oldValue} => ${event.newValue}');
       if (event.newValue == mdk.PlaybackState.stopped) {
@@ -112,6 +119,8 @@ class MdkVideoPlayer extends mdk.Player {
 
 class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static final _players = <int, MdkVideoPlayer>{};
+  static final _failedEvents = <int, Stream<VideoEvent>>{};
+  static int _nextFailureId = -0x100000000;
   static Map<String, Object>? _globalOpts;
   static Map<String, String>? _playerOpts;
   static int? _maxWidth;
@@ -264,8 +273,15 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> dispose(int playerId) async {
+    final player = _players.remove(playerId);
+    try {
+      await player?.disposeAsync();
+    } catch (_) {
+      if (player != null) _players[playerId] = player;
+      rethrow;
+    }
     _platformViewParams.remove(playerId);
-    _players.remove(playerId)?.dispose();
+    _failedEvents.remove(playerId);
   }
 
   /// Creation parameters for players rendering into a platform view
@@ -283,7 +299,48 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   Future<int?> create(DataSource dataSource) =>
       _create(dataSource, VideoViewType.textureView);
 
+  Future<({bool cancelled, T? value})> _untilCancelled<T>(
+      Future<T> operation, FvpCreateCancellation? cancellation) async {
+    if (cancellation == null) {
+      return (cancelled: false, value: await operation);
+    }
+    return Future.any<({bool cancelled, T? value})>([
+      operation.then((value) => (cancelled: false, value: value)),
+      cancellation.whenCancelled.then((_) => (cancelled: true, value: null)),
+    ]);
+  }
+
+  int _failedCreate(PlatformException error,
+      {MdkVideoPlayer? player, StackTrace? stackTrace}) {
+    // video_player requires a non-null message in its event error listener.
+    if (error.message == null) {
+      error = PlatformException(
+          code: error.code,
+          message: error.code,
+          details: error.details,
+          stacktrace: error.stacktrace);
+    }
+    final id = _nextFailureId--;
+    if (player != null) _players[id] = player;
+    _failedEvents[id] = Stream<VideoEvent>.error(error, stackTrace);
+    return id;
+  }
+
+  Future<int> _finishCancelledCreate(MdkVideoPlayer player) async {
+    // Finish native teardown before returning the failed ID. If texture release
+    // fails, keep the player so the controller can retry through dispose().
+    try {
+      await player.disposeAsync();
+    } on PlatformException catch (error, stackTrace) {
+      // Keep the player for dispose() to retry instead of rejecting creation:
+      // video_player waits for a player ID before it can dispose its controller.
+      return _failedCreate(error, player: player, stackTrace: stackTrace);
+    }
+    return _failedCreate(FvpCreateCancelledException());
+  }
+
   Future<int?> _create(DataSource dataSource, VideoViewType viewType) async {
+    final cancellation = currentFvpCreateCancellation;
     final uri = _toUri(dataSource);
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
@@ -329,7 +386,14 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       player.setProperty('avio.headers', headers);
     }
     player.media = uri;
-    int ret = await player.prepare(); // required!
+    if (cancellation?.isCancelled ?? false) {
+      return _finishCancelledCreate(player);
+    }
+    final preparation = await _untilCancelled(player.prepare(), cancellation);
+    if (preparation.cancelled || (cancellation?.isCancelled ?? false)) {
+      return _finishCancelledCreate(player);
+    }
+    final ret = preparation.value!;
     if (ret < 0) {
       // no throw, handle error in controller.addListener
       _players[-hashCode] = player;
@@ -340,13 +404,20 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       //player.dispose(); // dispose for throw
       return -hashCode;
     }
+    // Waiting for video geometry can also outlive a cancelled network load.
+    final videoGeometry =
+        await _untilCancelled(player.textureSize, cancellation);
+    if (videoGeometry.cancelled || (cancellation?.isCancelled ?? false)) {
+      return _finishCancelledCreate(player);
+    }
+    final videoSize = videoGeometry.value;
     if (viewType == VideoViewType.platformView) {
       // SurfaceView output (Android): no Flutter texture. The surface is
       // created by the FvpVideoView platform view and attached to the player
       // natively; buffers are sized to the video so TVs with an upscaled UI
       // layer (e.g. 1080p UI on a 4K panel) still scan out at full video
       // resolution. playerId is the native handle instead of a texture id.
-      final size = await player.textureSize;
+      final size = videoSize;
       if (size == null || size.width <= 0 || size.height <= 0) {
         _players[-hashCode] = player;
         player.streamCtl.addError(PlatformException(
@@ -400,11 +471,27 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     }
 // FIXME: pending events will be processed after texture returned, but no events before prepared
 // FIXME: set tunnel too late
-    final tex = await player.updateTexture(
-        width: _maxWidth,
-        height: _maxHeight,
-        tunnel: _tunnel,
-        fit: _fitMaxSize);
+    int tex;
+    // Finish texture allocation before disposal so its result can be released
+    // before the native player is deleted.
+    try {
+      tex = await player.updateTexture(
+          width: _maxWidth,
+          height: _maxHeight,
+          tunnel: _tunnel,
+          fit: _fitMaxSize);
+    } catch (error, stackTrace) {
+      if (cancellation?.isCancelled ?? false) {
+        return _finishCancelledCreate(player);
+      }
+      if (error is PlatformException) {
+        return _failedCreate(error, player: player, stackTrace: stackTrace);
+      }
+      rethrow;
+    }
+    if (cancellation?.isCancelled ?? false) {
+      return _finishCancelledCreate(player);
+    }
     if (tex < 0) {
       _players[-hashCode] = player;
       player.streamCtl.addError(PlatformException(
@@ -472,6 +559,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Stream<VideoEvent> videoEventsFor(int playerId) {
+    final failedEvents = _failedEvents[playerId];
+    if (failedEvents != null) {
+      return failedEvents;
+    }
     final player = _players[playerId];
     if (player != null) {
       return player.streamCtl.stream;
