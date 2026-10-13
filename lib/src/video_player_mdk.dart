@@ -1,4 +1,5 @@
 // Copyright 2022-2026 Wang Bin. All rights reserved.
+// AI participated
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -44,6 +45,7 @@ class MdkVideoPlayer extends mdk.Player {
 
   MdkVideoPlayer() : super() {
     onMediaStatus.listen((event) {
+      if (streamCtl.isClosed) return;
       final oldValue = event.oldValue;
       final newValue = event.newValue;
       _log.fine(
@@ -60,7 +62,7 @@ class MdkVideoPlayer extends mdk.Player {
         }
         _initialized = true;
         textureSize.then((size) {
-          if (size == null) {
+          if (size == null || streamCtl.isClosed) {
             return;
           }
           streamCtl.add(VideoEvent(
@@ -82,6 +84,7 @@ class MdkVideoPlayer extends mdk.Player {
     });
 
     onEvent.listen((ev) {
+      if (streamCtl.isClosed) return;
       _log.fine(
           '$hashCode player$nativeHandle onEvent: ${ev.category} - ${ev.detail} - ${ev.error}');
       if (ev.category == "reader.buffering") {
@@ -96,6 +99,7 @@ class MdkVideoPlayer extends mdk.Player {
     });
 
     onStateChanged.listen((event) {
+      if (streamCtl.isClosed) return;
       _log.fine(
           '$hashCode player$nativeHandle onPlaybackStateChanged: ${event.oldValue} => ${event.newValue}');
       if (event.newValue == mdk.PlaybackState.stopped) {
