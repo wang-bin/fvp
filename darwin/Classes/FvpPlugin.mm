@@ -138,6 +138,13 @@ private:
 #if TARGET_OS_OSX
 #else
   [registrar addApplicationDelegate:instance];
+#if __has_include(<Flutter/FlutterSceneLifeCycle.h>)
+  // With UIScene, the engine is destroyed on scene disconnect, before applicationWillTerminate
+  if (@available(iOS 13.0, *)) {
+    if ([registrar respondsToSelector:@selector(addSceneDelegate:)])
+      [registrar addSceneDelegate:(NSObject<FlutterSceneLifeCycleDelegate>*)instance];
+  }
+#endif
 #endif
     [registrar publish:instance];
     [registrar addMethodCallDelegate:instance channel:channel];
@@ -190,6 +197,10 @@ private:
 #if TARGET_OS_OSX
 #else
 - (void)applicationWillTerminate:(UIApplication *)application {
+  players.clear();
+}
+
+- (void)sceneDidDisconnect:(UIScene*)scene API_AVAILABLE(ios(13.0)) {
   players.clear();
 }
 #endif
