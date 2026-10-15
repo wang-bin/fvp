@@ -1,3 +1,8 @@
+# 0.39.1
+
+* ios: release texture players on scene disconnect, fix crash
+* fix: `Unhandled Exception: Bad state: Cannot add event after closing`
+
 # 0.39.0
 
 * android require java 17, compileSdk 36
