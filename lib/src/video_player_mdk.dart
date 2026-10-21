@@ -16,6 +16,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:ffi/ffi.dart';
 import 'fvp_platform_interface.dart';
+import 'create_cancellation.dart';
 import 'extensions.dart';
 import 'lib.dart';
 import 'media_info.dart';
@@ -299,6 +300,17 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   Future<int?> create(DataSource dataSource) =>
       _create(dataSource, VideoViewType.textureView);
 
+  Future<({bool cancelled, T? value})> _untilCancelled<T>(
+      Future<T> operation, FvpCreateCancellation? cancellation) async {
+    if (cancellation == null) {
+      return (cancelled: false, value: await operation);
+    }
+    return Future.any<({bool cancelled, T? value})>([
+      operation.then((value) => (cancelled: false, value: value)),
+      cancellation.whenCancelled.then((_) => (cancelled: true, value: null)),
+    ]);
+  }
+
   int _failedCreate(PlatformException error,
       {MdkVideoPlayer? player, StackTrace? stackTrace}) {
     // video_player requires a non-null message in its event error listener.
@@ -315,7 +327,21 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     return id;
   }
 
+  Future<int> _finishCancelledCreate(MdkVideoPlayer player) async {
+    // Finish native teardown before returning the failed ID. If texture release
+    // fails, keep the player so the controller can retry through dispose().
+    try {
+      await player.disposeAsync();
+    } on PlatformException catch (error, stackTrace) {
+      // Keep the player for dispose() to retry instead of rejecting creation:
+      // video_player waits for a player ID before it can dispose its controller.
+      return _failedCreate(error, player: player, stackTrace: stackTrace);
+    }
+    return _failedCreate(FvpCreateCancelledException());
+  }
+
   Future<int?> _create(DataSource dataSource, VideoViewType viewType) async {
+    final cancellation = currentFvpCreateCancellation;
     final uri = _toUri(dataSource);
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
@@ -361,7 +387,14 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       player.setProperty('avio.headers', headers);
     }
     player.media = uri;
-    int ret = await player.prepare(); // required!
+    if (cancellation?.isCancelled ?? false) {
+      return _finishCancelledCreate(player);
+    }
+    final preparation = await _untilCancelled(player.prepare(), cancellation);
+    if (preparation.cancelled || (cancellation?.isCancelled ?? false)) {
+      return _finishCancelledCreate(player);
+    }
+    final ret = preparation.value!;
     if (ret < 0) {
       // no throw, handle error in controller.addListener
       _players[-hashCode] = player;
@@ -372,13 +405,20 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       //player.dispose(); // dispose for throw
       return -hashCode;
     }
+    // Waiting for video geometry can also outlive a cancelled network load.
+    final videoGeometry =
+        await _untilCancelled(player.textureSize, cancellation);
+    if (videoGeometry.cancelled || (cancellation?.isCancelled ?? false)) {
+      return _finishCancelledCreate(player);
+    }
+    final videoSize = videoGeometry.value;
     if (viewType == VideoViewType.platformView) {
       // SurfaceView output (Android): no Flutter texture. The surface is
       // created by the FvpVideoView platform view and attached to the player
       // natively; buffers are sized to the video so TVs with an upscaled UI
       // layer (e.g. 1080p UI on a 4K panel) still scan out at full video
       // resolution. playerId is the native handle instead of a texture id.
-      final size = await player.textureSize;
+      final size = videoSize;
       if (size == null || size.width <= 0 || size.height <= 0) {
         _players[-hashCode] = player;
         player.streamCtl.addError(PlatformException(
@@ -433,14 +473,25 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 // FIXME: pending events will be processed after texture returned, but no events before prepared
 // FIXME: set tunnel too late
     int tex;
+    // Finish texture allocation before disposal so its result can be released
+    // before the native player is deleted.
     try {
       tex = await player.updateTexture(
           width: _maxWidth,
           height: _maxHeight,
           tunnel: _tunnel,
           fit: _fitMaxSize);
-    } on PlatformException catch (error, stackTrace) {
-      return _failedCreate(error, player: player, stackTrace: stackTrace);
+    } catch (error, stackTrace) {
+      if (cancellation?.isCancelled ?? false) {
+        return _finishCancelledCreate(player);
+      }
+      if (error is PlatformException) {
+        return _failedCreate(error, player: player, stackTrace: stackTrace);
+      }
+      rethrow;
+    }
+    if (cancellation?.isCancelled ?? false) {
+      return _finishCancelledCreate(player);
     }
     if (tex < 0) {
       _players[-hashCode] = player;
