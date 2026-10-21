@@ -37,10 +37,13 @@ class MdkVideoPlayer extends mdk.Player {
   bool _initialized = false;
 
   @override
-  void dispose() {
-    streamCtl.close();
+  void dispose() => unawaited(disposeAsync());
+
+  @override
+  Future<void> disposeAsync() async {
+    if (!streamCtl.isClosed) streamCtl.close();
     _initialized = false;
-    super.dispose();
+    await super.disposeAsync();
   }
 
   MdkVideoPlayer() : super() {
@@ -268,8 +271,14 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Future<void> dispose(int playerId) async {
+    final player = _players.remove(playerId);
+    try {
+      await player?.disposeAsync();
+    } catch (_) {
+      if (player != null) _players[playerId] = player;
+      rethrow;
+    }
     _platformViewParams.remove(playerId);
-    _players.remove(playerId)?.dispose();
   }
 
   /// Creation parameters for players rendering into a platform view
