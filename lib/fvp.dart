@@ -7,6 +7,8 @@ import 'src/video_player_mdk.dart'
     if (dart.library.html) 'src/video_player_dummy.dart';
 
 export 'src/controller.dart';
+export 'src/create_cancellation.dart'
+    show FvpCreateCancellation, FvpCreateCancelledException;
 
 /// Registers this plugin as the default instance of VideoPlayerPlatform. Then your [VideoPlayer] will support all platforms.
 /// If registerWith is not called, the previous(usually official) implementation will be used when available.
