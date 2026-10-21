@@ -119,6 +119,8 @@ class MdkVideoPlayer extends mdk.Player {
 
 class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   static final _players = <int, MdkVideoPlayer>{};
+  static final _failedEvents = <int, Stream<VideoEvent>>{};
+  static int _nextFailureId = -0x100000000;
   static Map<String, Object>? _globalOpts;
   static Map<String, String>? _playerOpts;
   static int? _maxWidth;
@@ -279,6 +281,7 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       rethrow;
     }
     _platformViewParams.remove(playerId);
+    _failedEvents.remove(playerId);
   }
 
   /// Creation parameters for players rendering into a platform view
@@ -295,6 +298,22 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
   @override
   Future<int?> create(DataSource dataSource) =>
       _create(dataSource, VideoViewType.textureView);
+
+  int _failedCreate(PlatformException error,
+      {MdkVideoPlayer? player, StackTrace? stackTrace}) {
+    // video_player requires a non-null message in its event error listener.
+    if (error.message == null) {
+      error = PlatformException(
+          code: error.code,
+          message: error.code,
+          details: error.details,
+          stacktrace: error.stacktrace);
+    }
+    final id = _nextFailureId--;
+    if (player != null) _players[id] = player;
+    _failedEvents[id] = Stream<VideoEvent>.error(error, stackTrace);
+    return id;
+  }
 
   Future<int?> _create(DataSource dataSource, VideoViewType viewType) async {
     final uri = _toUri(dataSource);
@@ -413,11 +432,16 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     }
 // FIXME: pending events will be processed after texture returned, but no events before prepared
 // FIXME: set tunnel too late
-    final tex = await player.updateTexture(
-        width: _maxWidth,
-        height: _maxHeight,
-        tunnel: _tunnel,
-        fit: _fitMaxSize);
+    int tex;
+    try {
+      tex = await player.updateTexture(
+          width: _maxWidth,
+          height: _maxHeight,
+          tunnel: _tunnel,
+          fit: _fitMaxSize);
+    } on PlatformException catch (error, stackTrace) {
+      return _failedCreate(error, player: player, stackTrace: stackTrace);
+    }
     if (tex < 0) {
       _players[-hashCode] = player;
       player.streamCtl.addError(PlatformException(
@@ -485,6 +509,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   @override
   Stream<VideoEvent> videoEventsFor(int playerId) {
+    final failedEvents = _failedEvents[playerId];
+    if (failedEvents != null) {
+      return failedEvents;
+    }
     final player = _players[playerId];
     if (player != null) {
       return player.streamCtl.stream;
