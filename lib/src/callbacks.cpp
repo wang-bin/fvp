@@ -11,6 +11,9 @@
 #include <unordered_map>
 #include <iostream>
 #include <thread>
+#include <string>
+#include <vector>
+#include <cstring>
 #include "dart_api_types.h"
 #include "callbacks.h"
 #if __has_include("version.h")
