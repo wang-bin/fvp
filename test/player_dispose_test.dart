@@ -8,14 +8,21 @@ import 'package:fvp/mdk.dart';
 // Exercise the real disposal path; texture release and the stop request are
 // isolated so only synchronous native destruction can block this test.
 class _PlayerWithoutTexture extends Player {
+  bool failTextureRelease = false;
+
   @override
   Future<int> updateTexture({
     int? width,
     int? height,
     bool? tunnel,
     bool? fit,
-  }) async =>
-      -1;
+  }) async {
+    if (failTextureRelease) {
+      failTextureRelease = false;
+      throw StateError('texture release failed');
+    }
+    return -1;
+  }
 
   @override
   set state(PlaybackState value) {}
@@ -52,7 +59,10 @@ void main() {
       'deletedPlayers',
     );
 
-    final player = _PlayerWithoutTexture();
+    final player = _PlayerWithoutTexture()..failTextureRelease = true;
+    await expectLater(player.disposeAsync(), throwsStateError);
+    expect(deletedPlayers(), 0);
+    // A failed texture release must allow disposal to be retried.
     final elapsed = Stopwatch()..start();
     final heartbeat = Completer<Duration>();
     Timer(const Duration(milliseconds: 10), () {
