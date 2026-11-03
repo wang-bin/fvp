@@ -18,6 +18,7 @@ import 'package:ffi/ffi.dart';
 import 'fvp_platform_interface.dart';
 import 'create_cancellation.dart';
 import 'extensions.dart';
+import 'initial_tracks.dart';
 import 'lib.dart';
 import 'media_info.dart';
 
@@ -387,6 +388,18 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       player.setProperty('avio.headers', headers);
     }
     player.media = uri;
+    // setMedia() resets the active tracks: set them now, before prepare(), as
+    // MDK expects. See FvpInitialTracks.
+    final tracks = currentFvpInitialTracks;
+    if (tracks?.audio != null) {
+      player.activeAudioTracks = tracks!.audio!;
+    }
+    if (tracks?.video != null) {
+      player.activeVideoTracks = tracks!.video!;
+    }
+    if (tracks?.subtitle != null) {
+      player.activeSubtitleTracks = tracks!.subtitle!;
+    }
     if (cancellation?.isCancelled ?? false) {
       return _finishCancelledCreate(player);
     }
