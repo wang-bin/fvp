@@ -99,7 +99,7 @@ private:
 template<typename T>
 auto View_GetGraphicsAdapter(T* v) -> decltype(v->GetGraphicsAdapter())
 {
-    return v->GetGraphicsAdapter();
+    return v ? v->GetGraphicsAdapter() : nullptr;
 }
 
 template<typename T>
@@ -107,17 +107,32 @@ IDXGIAdapter* View_GetGraphicsAdapter(T v) {
     return nullptr;
 }
 
+// Asking the registrar works without an implicit view (headless engine, multi-window apps).
+template<typename T>
+auto Registrar_GetGraphicsAdapter(T* r, int) -> decltype((void)r->GetGraphicsAdapter((IDXGIAdapter**)nullptr), ComPtr<IDXGIAdapter>())
+{
+    ComPtr<IDXGIAdapter> adapter;
+    r->GetGraphicsAdapter(&adapter);
+    return adapter;
+}
+
+template<typename T>
+ComPtr<IDXGIAdapter> Registrar_GetGraphicsAdapter(T* r, long)
+{
+    return ComPtr<IDXGIAdapter>(View_GetGraphicsAdapter(r->GetView()));
+}
+
 // static
 void FvpPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
-  IDXGIAdapter *adapter = View_GetGraphicsAdapter(registrar->GetView());
+  ComPtr<IDXGIAdapter> adapter = Registrar_GetGraphicsAdapter(registrar, 0);
   if (!adapter)
-    clog << "FlutterView::GetGraphicsAdapter() is not available, texture may be invisible" << endl;
+    clog << "Flutter graphics adapter is not available, texture may be invisible" << endl;
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           registrar->messenger(), "fvp",
           &flutter::StandardMethodCodec::GetInstance());
-  auto plugin = std::make_unique<FvpPlugin>(registrar->texture_registrar(), adapter);
+  auto plugin = std::make_unique<FvpPlugin>(registrar->texture_registrar(), adapter.Get());
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
