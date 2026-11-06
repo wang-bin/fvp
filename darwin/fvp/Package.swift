@@ -46,8 +46,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "mdk",
-            url: "https://github.com/wang-bin/mdk-sdk/releases/download/v0.39.0/mdk-sdk-apple.zip",
-            checksum: "b6d0fcb6bd6eed4bdb86b70c21bd01523f8adf7aee947935ea09b9fd6c4831c8"
+            url: "https://github.com/wang-bin/mdk-sdk/releases/download/v0.40.1/mdk-sdk-apple.zip",
+            checksum: "984c63f95064b630fa019e9afd36a1421f314ebc92f0d5ad79e15c9633c36a1a"
         ),
     ],
     cxxLanguageStandard: .cxx20

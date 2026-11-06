@@ -1,3 +1,9 @@
+# 0.40.0
+
+* add opt-in `FvpCreateCancellation` to cancel stalled player creation
+* make player disposal awaitable
+* windows: fix crash at plugin registration without an implicit view
+
 # 0.39.1
 
 * ios: release texture players on scene disconnect, fix crash
