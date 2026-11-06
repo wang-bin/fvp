@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2023 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2023-2026 WangBin <wbsecg1 at gmail.com>
+ * AI participated
  */
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -119,7 +120,10 @@ auto Registrar_GetGraphicsAdapter(T* r, int) -> decltype((void)r->GetGraphicsAda
 template<typename T>
 ComPtr<IDXGIAdapter> Registrar_GetGraphicsAdapter(T* r, long)
 {
-    return ComPtr<IDXGIAdapter>(View_GetGraphicsAdapter(r->GetView()));
+    ComPtr<IDXGIAdapter> adapter;
+// Flutter transfers ownership of the returned reference to the caller.
+    adapter.Attach(View_GetGraphicsAdapter(r->GetView()));
+    return adapter;
 }
 
 // static
