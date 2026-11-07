@@ -17,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ffi/ffi.dart';
 import 'fvp_platform_interface.dart';
 import 'create_cancellation.dart';
+import 'audio_only_scope.dart';
 import 'extensions.dart';
 import 'lib.dart';
 import 'media_info.dart';
@@ -36,13 +37,14 @@ const _kDefaultMdkKey =
 class MdkVideoPlayer extends mdk.Player {
   final streamCtl = StreamController<VideoEvent>();
   bool _initialized = false;
+  final bool audioOnly = currentFvpAudioOnly;
 
   @override
   void dispose() => unawaited(disposeAsync());
 
   @override
   Future<void> disposeAsync() async {
-    if (!streamCtl.isClosed) streamCtl.close();
+    if (!streamCtl.isClosed) await streamCtl.close();
     _initialized = false;
     await super.disposeAsync();
   }
@@ -66,7 +68,24 @@ class MdkVideoPlayer extends mdk.Player {
         }
         _initialized = true;
         textureSize.then((size) {
-          if (size == null || streamCtl.isClosed) {
+          if (streamCtl.isClosed) {
+            return;
+          }
+          if (size == null) {
+            if (!audioOnly) {
+              return;
+            }
+            streamCtl.add(
+              VideoEvent(
+                eventType: VideoEventType.initialized,
+                duration: Duration(
+                  microseconds: isLive
+                      ? double.maxFinite.toInt()
+                      : mediaInfo.duration * 1000,
+                ),
+                size: const Size(0, 0),
+              ),
+            );
             return;
           }
           streamCtl.add(VideoEvent(
@@ -386,6 +405,9 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       });
       player.setProperty('avio.headers', headers);
     }
+    if (currentFvpAudioOnly) {
+      player.activeVideoTracks = const [];
+    }
     player.media = uri;
     if (cancellation?.isCancelled ?? false) {
       return _finishCancelledCreate(player);
@@ -404,6 +426,17 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
       ));
       //player.dispose(); // dispose for throw
       return -hashCode;
+    }
+    if (cancellation?.isCancelled ?? false) {
+      return _finishCancelledCreate(player);
+    }
+    if (currentFvpAudioOnly) {
+      final id = player.nativeHandle;
+      _players[id] = player;
+      _log.fine(
+        '$hashCode player$id audio-only: texture creation disabled',
+      );
+      return id;
     }
     // Waiting for video geometry can also outlive a cancelled network load.
     final videoGeometry =
