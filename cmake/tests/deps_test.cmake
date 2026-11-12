@@ -78,6 +78,38 @@ _fvp_resolve_deps_options("https://default.example.invalid/" RESOLVED_URL RESOLV
 assert_equal("${RESOLVED_URL}" "https://default.example.invalid" "Non-HTTP environment URL behavior changed")
 set(ENV{FVP_DEPS_URL} "")
 
+# The archive name follows the same precedence and defaults to the platform
+# archive. It must stay a file name, since it is also the cached archive name.
+set(ENV{FVP_DEPS_ARCHIVE} "mdk-sdk-environment.7z")
+set(FVP_DEPS_ARCHIVE "   ")
+_fvp_resolve_deps_archive("mdk-sdk-platform.7z" RESOLVED_ARCHIVE)
+assert_equal("${RESOLVED_ARCHIVE}" "mdk-sdk-environment.7z" "Environment archive name was not used")
+
+set(FVP_DEPS_ARCHIVE "mdk-sdk-cmake.7z")
+_fvp_resolve_deps_archive("mdk-sdk-platform.7z" RESOLVED_ARCHIVE)
+assert_equal("${RESOLVED_ARCHIVE}" "mdk-sdk-cmake.7z" "CMake archive name did not take precedence")
+
+set(ENV{FVP_DEPS_ARCHIVE} "")
+set(FVP_DEPS_ARCHIVE "")
+_fvp_resolve_deps_archive("mdk-sdk-platform.7z" RESOLVED_ARCHIVE)
+assert_equal("${RESOLVED_ARCHIVE}" "mdk-sdk-platform.7z" "Default archive name was not used")
+
+foreach(ARCHIVE_PATH "../mdk-sdk.7z" "mirror\\mdk-sdk.7z" "..")
+  execute_process(
+    COMMAND "${CMAKE_COMMAND}"
+      "-DDEPS_FILE=${DEPS_FILE}"
+      "-DFVP_DEPS_ARCHIVE=${ARCHIVE_PATH}"
+      -P "${CMAKE_CURRENT_LIST_DIR}/macro_test.cmake"
+    WORKING_DIRECTORY "${TEST_ROOT}"
+    RESULT_VARIABLE ARCHIVE_PATH_RESULT
+    OUTPUT_VARIABLE ARCHIVE_PATH_OUTPUT
+    ERROR_VARIABLE ARCHIVE_PATH_ERROR
+  )
+  if(ARCHIVE_PATH_RESULT EQUAL 0 OR NOT "${ARCHIVE_PATH_ERROR}" MATCHES "must be a file name")
+    message(FATAL_ERROR "FVP_DEPS_ARCHIVE accepted a path (${ARCHIVE_PATH}):\n${ARCHIVE_PATH_OUTPUT}\n${ARCHIVE_PATH_ERROR}")
+  endif()
+endforeach()
+
 # A valid pin downloads, verifies, and stamps the extracted SDK.
 set(PINNED_ROOT "${TEST_ROOT}/pinned cache")
 set(PINNED_ARCHIVE "${PINNED_ROOT}/mdk-sdk.tar")

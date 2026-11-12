@@ -81,6 +81,30 @@ set_tests_properties(fvp_deps_integration PROPERTIES
   WORKING_DIRECTORY "${INTEGRATION_ROOT}"
 )
 
+# A release that names its archive differently is only reachable through
+# FVP_DEPS_ARCHIVE: this release directory has no platform archive name.
+set(INTEGRATION_ARCHIVE_RELEASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/integration-archive-release")
+set(INTEGRATION_ARCHIVE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/integration archive root")
+file(MAKE_DIRECTORY "${INTEGRATION_ARCHIVE_RELEASE_DIR}" "${INTEGRATION_ARCHIVE_ROOT}")
+configure_file(
+  "${FIXTURE_V1_ARCHIVE}"
+  "${INTEGRATION_ARCHIVE_RELEASE_DIR}/mdk-sdk-custom-name.7z"
+  COPYONLY
+)
+
+add_test(
+  NAME fvp_deps_integration_archive
+  COMMAND "${CMAKE_COMMAND}"
+    "-DDEPS_FILE=${CMAKE_CURRENT_LIST_DIR}/../deps.cmake"
+    "-DFVP_DEPS_URL=${FILE_URL_PREFIX}${INTEGRATION_ARCHIVE_RELEASE_DIR}"
+    "-DFVP_DEPS_ARCHIVE=mdk-sdk-custom-name.7z"
+    "-DFVP_DEPS_SHA256=${FIXTURE_V1_SHA256}"
+    -P "${CMAKE_CURRENT_LIST_DIR}/macro_test.cmake"
+)
+set_tests_properties(fvp_deps_integration_archive PROPERTIES
+  WORKING_DIRECTORY "${INTEGRATION_ARCHIVE_ROOT}"
+)
+
 add_test(
   NAME fvp_deps_integration_bad_sha
   COMMAND "${CMAKE_COMMAND}"
