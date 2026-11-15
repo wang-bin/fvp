@@ -30,7 +30,9 @@ jobs:
       working-directory: build/cmake-tests
 
   macOS:
-    runs-on: macos-15
+    # video_player_avfoundation 2.12.2+ needs Xcode 26 (AVAsset.load(_:isolation:));
+    # macos-15 defaults to Xcode 16.4.
+    runs-on: macos-26
     defaults:
       run:
         working-directory: example
@@ -58,7 +60,7 @@ jobs:
         path: example/fvp_example_macos.7z
 
   iOS:
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         working-directory: example
@@ -264,6 +266,13 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: '17'
+    - name: Use the Android toolchain Flutter 3.22 supports
+      # The example targets current Flutter, which requires AGP 9.1.1 and
+      # Gradle 9.3.1; Flutter 3.22's Gradle plugin predates AGP 9.
+      if: matrix.version == '3.22.x'
+      run: |
+        sed -i "s/version '9.1.1'/version '8.11.1'/; s/version \"2.3.20\"/version \"2.2.20\"/" android/settings.gradle
+        sed -i 's/gradle-9.3.1-all.zip/gradle-8.14-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
     - run: flutter doctor --verbose
     - run: flutter pub get
     - run: flutter build apk --verbose
