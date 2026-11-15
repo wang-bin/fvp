@@ -89,4 +89,8 @@ abstract class Libfvp {
       .lookupFunction<Bool Function(), bool Function()>('MdkIsEmulator');
   static final getVid = instance.lookupFunction<Pointer<Void> Function(Int64),
       Pointer<Void> Function(int)>('MdkGetPlayerVid');
+  // Android only.
+  static final releasePlayerSurfaces =
+      instance.lookupFunction<Void Function(Int64), void Function(int)>(
+          'MdkReleasePlayerSurfaces');
 }

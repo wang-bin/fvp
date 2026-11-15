@@ -21,8 +21,11 @@ class TexturePlayer final : public mdk::Player
 public:
     TexturePlayer(jlong handle)
         : mdk::Player(reinterpret_cast<mdkPlayerAPI*>(handle))
+        , handle(handle)
     {
     }
+
+    const jlong handle; // the Dart-owned mdkPlayerAPI*; not owned here
 
     int width = 0;
     int height = 0;
@@ -33,6 +36,24 @@ private:
 };
 
 static unordered_map<int64_t, shared_ptr<TexturePlayer>> players;
+
+// Detaches a surface binding from its player. In direct-surface mode the codec
+// is released BEFORE the surface dies, or it wedges (dequeue -10000) and the
+// stream is marked decode-error, so the next surface never shows a frame.
+// Empty list, not a surface-less re-open: that costs ~600ms of codec restart
+// and pipeline re-prime, here on the UI thread.
+static void releaseSurface(JNIEnv *env, TexturePlayer& player)
+{
+    auto s = player.surface;
+    if (player.directSurface) {
+        player.setDecoders(mdk::MediaType::Video, {});
+    }
+    player.updateNativeSurface(nullptr);
+    player.surface = nullptr;
+    if (s && env) {
+        env->DeleteGlobalRef(s);
+    }
+}
 
 
 extern "C" {
@@ -62,22 +83,8 @@ Java_com_mediadevkit_fvp_FvpPlugin_nativeSetSurface(JNIEnv *env, jobject thiz, j
                                                     jlong tex_id, jobject surface, jint w, jint h, jboolean tunnel) {
     if (!player_handle || !surface) {
         if (auto it = players.find(tex_id); it != players.end()) {
-            auto& player = it->second;
-            auto s = player->surface;
-            if (player->directSurface) {
-                // Release the codec BEFORE the surface dies, or it wedges
-                // (dequeue -10000) and the stream is marked decode-error, so
-                // the next surface never shows a frame. Empty list, not a
-                // surface-less re-open: that costs ~600ms of codec restart
-                // and pipeline re-prime, here on the UI thread inside
-                // surfaceDestroyed.
-                player->setDecoders(mdk::MediaType::Video, {});
-            }
-            player->updateNativeSurface(nullptr);
+            releaseSurface(env, *it->second);
             players.erase(it);
-            if (s) {
-                env->DeleteGlobalRef(s);
-            }
         } else {
             clog << "player not found(already removed?) for textureId " + std::to_string(tex_id) + " surface " + std::to_string((intptr_t)surface) << endl;
         }
@@ -149,6 +156,33 @@ MdkIsEmulator()
     if (strstr(v, "emulator"))
         return true;
     return false;
+}
+
+// Called by the Dart player right before it deletes the mdkPlayerAPI. A
+// platform view's binding otherwise outlives the player: a SurfaceView torn
+// down after the deletion reached the freed player from surfaceDestroyed
+// (SIGSEGV). Releasing here also frees the codec while its surface is alive.
+extern "C"
+JNIEXPORT void JNICALL
+MdkReleasePlayerSurfaces(int64_t player_handle)
+{
+    auto vm = static_cast<JavaVM *>(mdk::javaVM(nullptr));
+    JNIEnv *env = nullptr;
+    bool attached = false;
+    if (vm && vm->GetEnv((void **) &env, JNI_VERSION_1_4) == JNI_EDETACHED) {
+        attached = vm->AttachCurrentThread(&env, nullptr) == JNI_OK;
+    }
+    for (auto it = players.begin(); it != players.end();) {
+        if (it->second->handle != player_handle) {
+            ++it;
+            continue;
+        }
+        releaseSurface(env, *it->second);
+        it = players.erase(it);
+    }
+    if (attached) {
+        vm->DetachCurrentThread();
+    }
 }
 
 extern "C"
