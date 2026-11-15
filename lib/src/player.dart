@@ -190,6 +190,12 @@ class Player {
 
     _receivePort.close();
 
+    if (Platform.isAndroid) {
+      // A platform view's native binding points at this player and is
+      // otherwise only dropped by surfaceDestroyed, which can run after the
+      // delete below and then touch freed memory.
+      Libfvp.releasePlayerSurfaces(nativeHandle);
+    }
     Libmdk.instance.mdkPlayerAPI_delete(_pp);
     calloc.free(_pp);
     _pp = nullptr;
