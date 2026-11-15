@@ -19,6 +19,7 @@ import 'fvp_platform_interface.dart';
 import 'create_cancellation.dart';
 import 'extensions.dart';
 import 'lib.dart';
+import 'media_fragment.dart';
 import 'media_info.dart';
 
 import '../mdk.dart' as mdk;
@@ -342,7 +343,13 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
 
   Future<int?> _create(DataSource dataSource, VideoViewType viewType) async {
     final cancellation = currentFvpCreateCancellation;
-    final uri = _toUri(dataSource);
+    // A `#t=` media fragment opens the media at that time. Starting there
+    // through prepare() instead of a seekTo() right after initialize() keeps
+    // the open from racing the platform view's surface: when the surface
+    // arrives mid-seek the video decoder restarts, and MDK can end the seek
+    // on a frame before the target and discard every frame after it.
+    final source = takeMediaFragmentStart(_toUri(dataSource));
+    final uri = source.uri;
     final player = MdkVideoPlayer();
     _log.fine('$hashCode player${player.nativeHandle} create($uri)');
 
@@ -390,7 +397,10 @@ class MdkVideoPlayerPlatform extends VideoPlayerPlatform {
     if (cancellation?.isCancelled ?? false) {
       return _finishCancelledCreate(player);
     }
-    final preparation = await _untilCancelled(player.prepare(), cancellation);
+    final preparation = await _untilCancelled(
+        player.prepare(
+            position: source.startMs, flags: mdk.SeekFlag(_seekFlags)),
+        cancellation);
     if (preparation.cancelled || (cancellation?.isCancelled ?? false)) {
       return _finishCancelledCreate(player);
     }
