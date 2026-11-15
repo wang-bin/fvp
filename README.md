@@ -100,7 +100,16 @@ FVP_DEPS_SHA256="replace-with-64-character-sha256" \
 flutter build apk
 ```
 
-Replace the SHA-256 placeholder with the archive's 64-character digest. Both options can also be set as CMake cache variables. A non-empty CMake value takes precedence over the corresponding environment variable. When `FVP_DEPS_SHA256` is set, the downloaded archive is verified and the extracted SDK cache is reused only if its recorded checksum matches. `FVP_DEPS_LATEST` is ignored in this mode.
+Replace the SHA-256 placeholder with the archive's 64-character digest. When the release names the archive differently, set `FVP_DEPS_ARCHIVE` to that file name. For example, [mdk-sdk GitHub releases](https://github.com/wang-bin/mdk-sdk/releases) publish the Windows x64 archive as `mdk-sdk-windows-x64-vs2026.7z`:
+
+```bash
+FVP_DEPS_URL=https://github.com/wang-bin/mdk-sdk/releases/download/vX.Y.Z \
+FVP_DEPS_ARCHIVE=mdk-sdk-windows-x64-vs2026.7z \
+FVP_DEPS_SHA256="replace-with-64-character-sha256" \
+flutter build windows
+```
+
+These options can also be set as CMake cache variables. A non-empty CMake value takes precedence over the corresponding environment variable. When `FVP_DEPS_SHA256` is set, the downloaded archive is verified and the extracted SDK cache is reused only if its recorded checksum matches. `FVP_DEPS_LATEST` is ignored in this mode.
 
 
 # Design

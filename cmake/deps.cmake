@@ -4,6 +4,9 @@ endif()
 if(NOT DEFINED FVP_DEPS_SHA256)
   set(FVP_DEPS_SHA256 "" CACHE STRING "Expected SHA-256 of the MDK SDK archive")
 endif()
+if(NOT DEFINED FVP_DEPS_ARCHIVE)
+  set(FVP_DEPS_ARCHIVE "" CACHE STRING "MDK SDK archive name appended to the base URL")
+endif()
 
 
 function(fvp_version)
@@ -58,6 +61,23 @@ function(_fvp_resolve_deps_options DEFAULT_URL OUT_URL OUT_SHA256)
 
   set(${OUT_URL} "${DEPS_URL}" PARENT_SCOPE)
   set(${OUT_SHA256} "${DEPS_SHA256}" PARENT_SCOPE)
+endfunction()
+
+
+function(_fvp_resolve_deps_archive DEFAULT_ARCHIVE OUT_ARCHIVE)
+  set(DEPS_ARCHIVE "${FVP_DEPS_ARCHIVE}")
+  string(STRIP "${DEPS_ARCHIVE}" DEPS_ARCHIVE)
+  if("${DEPS_ARCHIVE}" STREQUAL "")
+    set(DEPS_ARCHIVE "$ENV{FVP_DEPS_ARCHIVE}")
+    string(STRIP "${DEPS_ARCHIVE}" DEPS_ARCHIVE)
+  endif()
+  if("${DEPS_ARCHIVE}" STREQUAL "")
+    set(DEPS_ARCHIVE "${DEFAULT_ARCHIVE}")
+  elseif("${DEPS_ARCHIVE}" MATCHES "[/\\\\]" OR "${DEPS_ARCHIVE}" MATCHES "^\\.\\.?$")
+    message(FATAL_ERROR "FVP_DEPS_ARCHIVE must be a file name, not a path: ${DEPS_ARCHIVE}")
+  endif()
+
+  set(${OUT_ARCHIVE} "${DEPS_ARCHIVE}" PARENT_SCOPE)
 endfunction()
 
 
@@ -284,6 +304,7 @@ macro(fvp_setup_deps)
     endif()
   else()
   endif()
+  _fvp_resolve_deps_archive("${MDK_SDK_PKG}" MDK_SDK_PKG)
   _fvp_resolve_deps_options(
     "https://sourceforge.net/projects/mdk-sdk/files/nightly"
     FVP_DEPS_URL_EFFECTIVE
