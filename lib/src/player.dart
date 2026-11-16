@@ -129,6 +129,7 @@ class Player {
 
     onStateChanged.listen((event) {
       _state = event.newValue;
+      _nativeState = event.newValue;
     });
     Libfvp.registerType(nativeHandle, 1, false);
     onMediaStatus.listen((event) {
@@ -169,17 +170,63 @@ class Player {
     Libfvp.registerType(nativeHandle, 0, false);
   }
 
-  /// Release resources.
+  /// Release resources without waiting for native teardown to finish.
   void dispose() => unawaited(disposeAsync());
 
-  /// Release resources and wait for native teardown to finish.
-  Future<void> disposeAsync() async {
+  /// Release resources and wait for the requested native teardown phases.
+  Future<void> disposeAsync() {
+    if (_disposeCompleted) {
+      return Future<void>.value();
+    }
+    if (_disposeFuture != null) {
+      return _disposeFuture!;
+    }
+
+    final future = _dispose();
+    _disposeFuture = future;
+    unawaited(
+      future.then(
+        (_) {
+          _disposeCompleted = true;
+          if (identical(_disposeFuture, future)) {
+            _disposeFuture = null;
+          }
+        },
+        onError: (Object error) {
+          if (identical(_disposeFuture, future)) {
+            _disposeFuture = null;
+          }
+        },
+      ),
+    );
+    return future;
+  }
+
+  Future<void> _dispose() async {
     if (_pp == nullptr) {
       textureId.dispose();
       return;
     }
+
+    // XAudio2 may still own submitted buffers when the pause command returns.
+    // Wait for MDK's callback rather than the locally cached command state.
+    if (_state == PlaybackState.playing ||
+        _nativeState == PlaybackState.playing) {
+      await _transitionTo(
+        PlaybackState.paused,
+        const Duration(seconds: 1),
+      );
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    // Stopped releases decoder/audio renderer resources. Keep it before
+    // releasing the Flutter texture so MDK never renders into a dead texture.
+    await _transitionTo(
+      PlaybackState.stopped,
+      const Duration(seconds: 3),
+    );
+
     await updateTexture(width: -1);
-    state = PlaybackState.stopped;
     Libfvp.unregisterPort(nativeHandle);
     _eventCb.close();
     Libfvp.unregisterType(nativeHandle, 0);
@@ -194,6 +241,42 @@ class Player {
     calloc.free(_pp);
     _pp = nullptr;
     textureId.dispose();
+  }
+
+  Future<bool> _transitionTo(
+    PlaybackState target,
+    Duration timeout,
+  ) {
+    final wait = _waitForNativeState(target, timeout);
+    state = target;
+    return wait;
+  }
+
+  Future<bool> _waitForNativeState(
+    PlaybackState target,
+    Duration timeout,
+  ) async {
+    if (_nativeState == target) {
+      return true;
+    }
+
+    final completer = Completer<bool>();
+    late final StreamSubscription<
+      ({PlaybackState oldValue, PlaybackState newValue})
+    > subscription;
+    subscription = onStateChanged.listen((event) {
+      if (event.newValue == target && !completer.isCompleted) {
+        completer.complete(true);
+      }
+    });
+    try {
+      return await completer.future.timeout(
+        timeout,
+        onTimeout: () => false,
+      );
+    } finally {
+      await subscription.cancel();
+    }
   }
 
   /// Release current texture then create a new one for current [media], and update [textureId].
@@ -818,6 +901,8 @@ class Player {
 
   final _player = Libmdk.instance.mdkPlayerAPI_new();
   var _pp = calloc<Pointer<mdkPlayerAPI>>();
+  Future<void>? _disposeFuture;
+  bool _disposeCompleted = false;
 
   bool _live = false;
   var _videoSize = Completer<ui.Size?>();
@@ -843,6 +928,7 @@ class Player {
   List<int> _activeVT = [0];
   List<int> _activeST = [0];
   PlaybackState _state = PlaybackState.stopped;
+  PlaybackState _nativeState = PlaybackState.stopped;
   int _loop = 0;
   bool _preloadImmediately = true;
   double _playbackRate = 1.0;
