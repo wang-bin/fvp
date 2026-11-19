@@ -12,8 +12,8 @@ final Object _initialTracksZoneKey = Object();
 /// MDK resets the active tracks when the media is set, then enables the first
 /// track of each type: a media with embedded subtitles starts rendering its
 /// first subtitle track. Changing the tracks once the media is loaded costs
-/// more: MDK seeks again to apply them (one more request to the source), and
-/// disabling rendered subtitles stops MDK's subtitle render thread on the
+/// more: MDK seeks again to apply them (a new request to a network source),
+/// and disabling rendered subtitles stops MDK's subtitle render thread on the
 /// calling thread, usually the UI thread. MDK can miss that stop (seen with
 /// 0.39.0, still present in 0.40.1), and `setActiveTracks()` then never
 /// returns. Tracks chosen before preparation avoid both.
@@ -35,8 +35,10 @@ class FvpInitialTracks {
   final List<int>? video;
   final List<int>? subtitle;
 
-  Future<T> run<T>(Future<T> Function() action) =>
-      runZoned(action, zoneValues: {_initialTracksZoneKey: this});
+  Future<T> run<T>(Future<T> Function() action) => runZoned(
+        () => Future.sync(action),
+        zoneValues: {_initialTracksZoneKey: this},
+      );
 }
 
 FvpInitialTracks? get currentFvpInitialTracks =>
